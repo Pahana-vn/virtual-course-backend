@@ -1,7 +1,9 @@
 package com.mytech.virtualcourse.controllers;
 
+import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,4 +64,22 @@ public class StudentController {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{studentId}/wishlist")
+    public ResponseEntity<String> addCourseToWishlist(
+            @PathVariable Long studentId,
+            @RequestBody CourseDTO courseDTO) {
+        try {
+            // Thêm khóa học vào wishlist của học viên
+            studentService.addCourseToWishlist(studentId, courseDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Course added to wishlist successfully");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student or Course not found: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Bad request: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add course to wishlist: " + e.getMessage());
+        }
+    }
+
 }

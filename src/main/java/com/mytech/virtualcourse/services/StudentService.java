@@ -4,15 +4,13 @@ import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
 import com.mytech.virtualcourse.entities.Course;
+import com.mytech.virtualcourse.entities.FavoriteCourse;
 import com.mytech.virtualcourse.entities.LearningProgress;
 import com.mytech.virtualcourse.entities.Student;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.StudentMapper;
-import com.mytech.virtualcourse.repositories.CourseRepository;
-import com.mytech.virtualcourse.repositories.LearningProgressRepository;
-import com.mytech.virtualcourse.repositories.PaymentRepository;
-import com.mytech.virtualcourse.repositories.StudentRepository;
+import com.mytech.virtualcourse.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +43,9 @@ public class StudentService {
 
     @Autowired
     private LearningProgressRepository learningProgressRepository;
+
+    @Autowired
+    private WishlistRepository wishlistRepository;
 
     private static final String AVATAR_BASE_URL = "http://localhost:8080/uploads/student/";
     private static final String INSTRUCTOR_PHOTO_BASE_URL = "http://localhost:8080/uploads/instructor/";
@@ -222,4 +223,28 @@ public class StudentService {
                 })
                 .collect(Collectors.toList());
     }
+
+    public void addCourseToWishlist(Long studentId, CourseDTO courseDTO) {
+        // Kiểm tra xem học viên có tồn tại không
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        // Kiểm tra xem khóa học có tồn tại không
+        Course course = courseRepository.findById(courseDTO.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseDTO.getId()));
+
+        // Kiểm tra nếu khóa học đã có trong wishlist của học viên
+        if (wishlistRepository.existsByStudentAndCourse(student, course)) {
+            throw new IllegalArgumentException("Course is already in the wishlist");
+        }
+
+        // Thêm khóa học vào wishlist của học viên
+        FavoriteCourse wishlist = new FavoriteCourse();
+        wishlist.setStudent(student);
+        wishlist.setCourse(course);
+
+        // Lưu vào cơ sở dữ liệu
+        wishlistRepository.save(wishlist);
+    }
+
 }

@@ -24,5 +24,5 @@ public class AnswerOption extends AbstractEntity {
     private Question question;
 
     @OneToMany(mappedBy = "selectedOption", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudentAnswer> answers; // Danh sách câu trả lời chọn đáp án này
+    private List<StudentAnswer> answers;
 }

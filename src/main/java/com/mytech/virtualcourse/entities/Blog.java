@@ -26,14 +26,14 @@ public class Blog extends AbstractEntity {
     private String imageMain; // Ảnh đại diện
 
     @Column(name = "image_background")
-    private String imageBackground; // Ảnh đại diện
+    private String imageBackground;
 
     @Column(name = "author", nullable = false)
     private String author;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private Category category; // Liên kết danh mục (nếu có)
+    private Category category;
 
 
 }
