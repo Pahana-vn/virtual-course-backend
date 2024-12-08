@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.controllers;
 
+import com.mytech.virtualcourse.dtos.CartItemDTO;
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
@@ -45,8 +46,6 @@ public class StudentController {
         return ResponseEntity.ok(dashboard);
     }
 
-
-
     @PostMapping
     public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
         StudentDTO createdStudent = studentService.createStudent(studentDTO);
@@ -70,7 +69,6 @@ public class StudentController {
             @PathVariable Long studentId,
             @RequestBody CourseDTO courseDTO) {
         try {
-            // Thêm khóa học vào wishlist của học viên
             studentService.addCourseToWishlist(studentId, courseDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body("Course added to wishlist successfully");
         } catch (ResourceNotFoundException e) {
@@ -81,5 +79,42 @@ public class StudentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add course to wishlist: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{studentId}/cart")
+    public ResponseEntity<String> addCourseToCart(
+            @PathVariable Long studentId,
+            @RequestBody CourseDTO courseDTO) {
+        try {
+            studentService.addCourseToCart(studentId, courseDTO, 1);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Course added to cart successfully");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student or Course not found: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add course to cart: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{studentId}/cart-items")
+    public ResponseEntity<List<CartItemDTO>> getCartItems(@PathVariable Long studentId) {
+        List<CartItemDTO> cartItems = studentService.getCartItemsForStudent(studentId);
+        return ResponseEntity.ok(cartItems);
+    }
+
+    @DeleteMapping("/{studentId}/cart-items/{cartItemId}")
+    public ResponseEntity<String> removeCourseFromCart(
+            @PathVariable Long studentId,
+            @PathVariable Long cartItemId) {
+        try {
+            studentService.removeCourseFromCart(studentId, cartItemId);
+            return ResponseEntity.status(HttpStatus.OK).body("Course removed from cart successfully");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cart item not found: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to remove course from cart: " + e.getMessage());
+        }
+    }
+
 
 }

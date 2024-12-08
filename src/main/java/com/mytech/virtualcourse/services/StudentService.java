@@ -1,12 +1,10 @@
 package com.mytech.virtualcourse.services;
 
+import com.mytech.virtualcourse.dtos.CartItemDTO;
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
-import com.mytech.virtualcourse.entities.Course;
-import com.mytech.virtualcourse.entities.FavoriteCourse;
-import com.mytech.virtualcourse.entities.LearningProgress;
-import com.mytech.virtualcourse.entities.Student;
+import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.StudentMapper;
@@ -16,10 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,11 +40,19 @@ public class StudentService {
     private LearningProgressRepository learningProgressRepository;
 
     @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
     private WishlistRepository wishlistRepository;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
 
     private static final String AVATAR_BASE_URL = "http://localhost:8080/uploads/student/";
     private static final String INSTRUCTOR_PHOTO_BASE_URL = "http://localhost:8080/uploads/instructor/";
     private static final String COURSE_IMAGE_BASE_URL = "http://localhost:8080/uploads/course/";
+
+
 
     public List<StudentDTO> getAllStudents() {
         List<Student> students = studentRepository.findAll();
@@ -225,26 +228,86 @@ public class StudentService {
     }
 
     public void addCourseToWishlist(Long studentId, CourseDTO courseDTO) {
-        // Kiểm tra xem học viên có tồn tại không
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        // Kiểm tra xem khóa học có tồn tại không
         Course course = courseRepository.findById(courseDTO.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseDTO.getId()));
 
-        // Kiểm tra nếu khóa học đã có trong wishlist của học viên
         if (wishlistRepository.existsByStudentAndCourse(student, course)) {
             throw new IllegalArgumentException("Course is already in the wishlist");
         }
 
-        // Thêm khóa học vào wishlist của học viên
         FavoriteCourse wishlist = new FavoriteCourse();
         wishlist.setStudent(student);
         wishlist.setCourse(course);
 
-        // Lưu vào cơ sở dữ liệu
         wishlistRepository.save(wishlist);
     }
+
+    public void addCourseToCart(Long studentId, CourseDTO courseDTO, Integer quantity) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Course course = courseRepository.findById(courseDTO.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseDTO.getId()));
+
+        Cart cart = student.getCart();
+        if (cart == null) {
+            cart = new Cart();
+            cart.setStudent(student);
+            cart = cartRepository.save(cart);
+        }
+
+        Optional<CartItem> existingCartItem = cartItemRepository.findByCartAndCourse(cart, course);
+        if (existingCartItem.isPresent()) {
+            throw new IllegalArgumentException("This course is already in the cart.");
+        } else {
+            CartItem cartItem = new CartItem();
+            cartItem.setCart(cart);
+            cartItem.setCourse(course);
+            cartItem.setQuantity(1);
+            cartItemRepository.save(cartItem);
+        }
+    }
+
+    public List<CartItemDTO> getCartItemsForStudent(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Cart cart = student.getCart();
+        if (cart == null) {
+            return Collections.emptyList(); // Nếu không có giỏ hàng, trả về danh sách rỗng
+        }
+
+        List<CartItem> cartItems = cartItemRepository.findByCart(cart);
+        return cartItems.stream()
+                .map(cartItem -> {
+                    CourseDTO courseDTO = courseMapper.courseToCourseDTO(cartItem.getCourse()); // Lấy CourseDTO
+                    return new CartItemDTO(cartItem.getId(), courseDTO, cartItem.getQuantity());
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public void removeCourseFromCart(Long studentId, Long cartItemId) throws ResourceNotFoundException {
+        // Kiểm tra xem sinh viên có tồn tại không
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        // Kiểm tra xem cartItem có tồn tại không
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with id: " + cartItemId));
+
+        // Kiểm tra xem CartItem có thuộc về Cart của sinh viên này không
+        if (!cartItem.getCart().getStudent().equals(student)) {
+            throw new ResourceNotFoundException("Cart item does not belong to the student");
+        }
+
+        // Xóa item khỏi giỏ hàng
+        cartItemRepository.delete(cartItem);
+    }
+
+
 
 }
