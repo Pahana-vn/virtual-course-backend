@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mytech.virtualcourse.enums.CourseLevel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -67,8 +68,9 @@ public class Course extends AbstractEntity {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoursePromotion> promotions; // Chương trình khuyến mãi
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Payment> payments; // Thanh toán liên quan đến khóa học
+    @ManyToMany(mappedBy = "courses")
+    @JsonIgnore
+    private List<Payment> payments;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assignment> assignments; // Bài tập liên quan đến khóa học
