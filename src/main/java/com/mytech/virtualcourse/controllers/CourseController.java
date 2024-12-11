@@ -55,10 +55,15 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
+//    @GetMapping("/student-courses/{studentId}")
+//    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long studentId) {
+//        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId);
+//        return ResponseEntity.ok(courses);
+//    }
+
     @GetMapping("/student-courses/{studentId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long studentId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId);
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
+        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
         return ResponseEntity.ok(courses);
     }
-
 }

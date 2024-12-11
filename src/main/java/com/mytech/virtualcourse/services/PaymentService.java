@@ -2,16 +2,20 @@ package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.configs.VnPayConfig;
 import com.mytech.virtualcourse.entities.Course;
+import com.mytech.virtualcourse.entities.LearningProgress;
 import com.mytech.virtualcourse.entities.Payment;
 import com.mytech.virtualcourse.entities.Student;
 import com.mytech.virtualcourse.enums.PaymentMethod;
 import com.mytech.virtualcourse.enums.PaymentStatus;
 import com.mytech.virtualcourse.repositories.CourseRepository;
+import com.mytech.virtualcourse.repositories.LearningProgressRepository;
 import com.mytech.virtualcourse.repositories.PaymentRepository;
 import com.mytech.virtualcourse.repositories.StudentRepository;
+import com.mytech.virtualcourse.configs.VnPayConfig;
 import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +43,9 @@ public class PaymentService {
     private CourseRepository courseRepository;
 
     @Autowired
+    private LearningProgressRepository learningProgressRepository; // Thêm repository này
+
+    @Autowired
     private APIContext apiContext;
 
     @Autowired
@@ -51,6 +58,7 @@ public class PaymentService {
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
+        // Course được lấy từ DB => entity managed
 
         BigDecimal amount = course.getBasePrice();
         if (amount == null) {
@@ -65,10 +73,11 @@ public class PaymentService {
         dbPayment.setStudent(student);
 
         List<Course> singleCourseList = new ArrayList<>();
-        singleCourseList.add(course);
+        singleCourseList.add(course); // course là managed entity
         dbPayment.setCourses(singleCourseList);
 
         dbPayment = paymentRepository.save(dbPayment);
+        // Lúc này payment_course phải được insert
 
         String cancelUrl = "http://localhost:3000/cancel";
         String successUrl = "http://localhost:3000/success";
@@ -93,6 +102,7 @@ public class PaymentService {
         }
         throw new RuntimeException("No approval URL returned by PayPal");
     }
+
 
     public String initiatePaypalPaymentForMultipleCourses(List<Long> courseIds) throws Exception {
         Student student = studentRepository.findById(1L)
@@ -164,10 +174,26 @@ public class PaymentService {
         String state = executedPayment.getState();
         if ("approved".equalsIgnoreCase(state) || "completed".equalsIgnoreCase(state)) {
             dbPayment.setStatus(PaymentStatus.Completed);
+            paymentRepository.save(dbPayment);
+
+            // Sau khi thanh toán thành công
+            Student student = dbPayment.getStudent();
+            if (student.getCourses() == null) {
+                student.setCourses(new ArrayList<>());
+            }
+
+            List<Course> purchasedCourses = dbPayment.getCourses();
+            for (Course c : purchasedCourses) {
+                if (!student.getCourses().contains(c)) {
+                    student.getCourses().add(c);
+                }
+            }
+            studentRepository.save(student); // Cập nhật student_course_mapping
+
         } else {
             dbPayment.setStatus(PaymentStatus.Failed);
+            paymentRepository.save(dbPayment);
         }
-        paymentRepository.save(dbPayment);
 
         return dbPayment;
     }
@@ -204,8 +230,10 @@ public class PaymentService {
     public String initiateVnPayPayment(Long courseId) throws Exception {
         Student student = studentRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
+        // Course là managed entity
 
         BigDecimal amount = course.getBasePrice();
         if (amount == null) {
@@ -220,14 +248,16 @@ public class PaymentService {
         dbPayment.setStudent(student);
 
         List<Course> singleCourseList = new ArrayList<>();
-        singleCourseList.add(course);
+        singleCourseList.add(course); // course là managed entity
         dbPayment.setCourses(singleCourseList);
 
         dbPayment = paymentRepository.save(dbPayment);
+        // Lúc này payment_course phải được insert
 
         String paymentUrl = createVnpayPaymentUrl(dbPayment);
         return paymentUrl;
     }
+
 
     public String initiateVnPayPaymentForMultipleCourses(List<Long> courseIds) throws Exception {
         Student student = studentRepository.findById(1L)
@@ -271,30 +301,19 @@ public class PaymentService {
         String vnp_Command = vnPayConfig.getCommand();
         String vnp_Locale = vnPayConfig.getLocale();
         String vnp_CurrCode = vnPayConfig.getCurrCode();
-        String vnp_OrderType = "other"; // hoặc vnPayConfig.getOrderType()
+        String vnp_OrderType = "other";
 
-        // Lấy số tiền, giả sử payment.getAmount() là VND
         long amountVND = payment.getAmount().longValue();
         String vnp_Amount = String.valueOf(amountVND * 100);
-
-        // Mã giao dịch (mã đơn hàng), có thể dùng payment.getId()
         String vnp_TxnRef = String.valueOf(payment.getId());
-
-        // Thông tin mô tả, không dấu và đơn giản
         String vnp_OrderInfo = URLEncoder.encode("Thanh toan don hang", StandardCharsets.US_ASCII.toString());
 
-
-
-        // Thời gian tạo giao dịch
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
-
-        // IP address của người dùng, tạm thời hardcode IP public, không dùng 127.0.0.1
-        // Khi chạy thực tế, lấy từ HttpServletRequest
-        String vnp_IpAddr = "116.102.86.199"; // Ví dụ IP public
+        String vnp_IpAddr = "116.102.86.199";
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -317,17 +336,14 @@ public class PaymentService {
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
 
-        for (int i = 0; i < fieldNames.size(); i++) {
-            String fieldName = fieldNames.get(i);
+        for (String fieldName : fieldNames) {
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                // Append vào hashData
                 if (hashData.length() > 0) {
                     hashData.append('&');
                 }
                 hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
 
-                // Append vào query
                 if (query.length() > 0) {
                     query.append('&');
                 }
@@ -342,7 +358,6 @@ public class PaymentService {
 
         return vnp_PayUrl + "?" + query.toString();
     }
-
 
     private String hmacSHA512(String key, String data) {
         try {
@@ -360,9 +375,6 @@ public class PaymentService {
         }
     }
 
-
-
-    // Xác minh callback từ VNPay
     public boolean verifyVnpayResponse(Map<String, String> params) {
         String vnp_SecureHash = params.get("vnp_SecureHash");
         if (vnp_SecureHash == null) return false;
@@ -371,7 +383,6 @@ public class PaymentService {
         filtered.remove("vnp_SecureHash");
         filtered.remove("vnp_SecureHashType");
 
-        // Sắp xếp key
         List<String> fieldNames = new ArrayList<>(filtered.keySet());
         Collections.sort(fieldNames);
 
@@ -382,13 +393,11 @@ public class PaymentService {
                 if (hashData.length() > 0) {
                     hashData.append('&');
                 }
-                // Sử dụng nguyên vẹn value, không encode lại
                 hashData.append(fieldName).append('=').append(fieldValue);
             }
         }
 
         String calculatedHash = hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
-
         return calculatedHash.equals(vnp_SecureHash);
     }
 
@@ -415,13 +424,25 @@ public class PaymentService {
 
         if ("00".equals(transactionStatus)) {
             payment.setStatus(PaymentStatus.Completed);
+            paymentRepository.save(payment);
+
+            // Sau khi thanh toán VNPAY thành công
+            Student student = payment.getStudent();
+            if (student.getCourses() == null) {
+                student.setCourses(new ArrayList<>());
+            }
+
+            List<Course> purchasedCourses = payment.getCourses();
+            for (Course c : purchasedCourses) {
+                if (!student.getCourses().contains(c)) {
+                    student.getCourses().add(c);
+                }
+            }
+            studentRepository.save(student);
+
         } else {
             payment.setStatus(PaymentStatus.Failed);
+            paymentRepository.save(payment);
         }
-
-        // Cập nhật trạng thái vào database
-        paymentRepository.save(payment);
     }
-
-
 }

@@ -39,14 +39,15 @@ public class Payment extends AbstractEntity {
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinTable(
             name = "payment_course",
             joinColumns = @JoinColumn(name = "payment_id"),
             inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     @JsonIgnoreProperties("payments")
-    private List<Course> courses; // Danh sách các khóa học trong payment này
+    private List<Course> courses;
+
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions;

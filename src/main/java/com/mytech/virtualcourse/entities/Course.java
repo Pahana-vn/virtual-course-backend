@@ -48,13 +48,9 @@ public class Course extends AbstractEntity {
     @Column(nullable = false)
     private String status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
 
-    @ManyToMany
-    @JoinTable(
-            name = "student_course_mapping",
-            joinColumns = @JoinColumn(name = "course_id"),
-            inverseJoinColumns = @JoinColumn(name = "student_id")
-    )
-    private List<Student> students; // Sinh viên đăng ký khóa học
+    @ManyToMany(mappedBy = "courses")
+    private List<Student> students;
+
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Section> sections; // Các phần học trong khóa học

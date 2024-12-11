@@ -181,11 +181,18 @@ public class StudentService {
     }
 
     public Map<String, List<CourseDTO>> getStudentCourses(Long studentId) {
-
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
 
         List<LearningProgress> learningProgresses = learningProgressRepository.findByStudentId(student.getId());
+
+        // Tạo map courseId -> progressPercentage
+        Map<Long, Integer> courseProgressMap = learningProgresses.stream()
+                .collect(Collectors.toMap(
+                        lp -> lp.getCourse().getId(),
+                        LearningProgress::getProgressPercentage,
+                        (oldVal, newVal) -> oldVal // Nếu trùng khóa, giữ oldVal
+                ));
 
         List<Course> enrolledCourses = learningProgresses.stream()
                 .map(LearningProgress::getCourse)
@@ -204,13 +211,31 @@ public class StudentService {
                 .distinct()
                 .collect(Collectors.toList());
 
+        // Chuyển đổi Course -> CourseDTO
+        List<CourseDTO> enrolledDTO = mapCoursesWithFullImageUrl(enrolledCourses);
+        List<CourseDTO> activeDTO = mapCoursesWithFullImageUrl(activeCourses);
+        List<CourseDTO> completedDTO = mapCoursesWithFullImageUrl(completedCourses);
+
+        // Gán progress cho từng DTO dựa trên courseProgressMap
+        for (CourseDTO dto : enrolledDTO) {
+            dto.setProgress(courseProgressMap.getOrDefault(dto.getId(), 0));
+        }
+        for (CourseDTO dto : activeDTO) {
+            dto.setProgress(courseProgressMap.getOrDefault(dto.getId(), 0));
+        }
+        for (CourseDTO dto : completedDTO) {
+            dto.setProgress(courseProgressMap.getOrDefault(dto.getId(), 100));
+            // Completed thì có thể set luôn 100 hoặc lấy từ map
+        }
+
         Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
-        categorizedCourses.put("enrolled", mapCoursesWithFullImageUrl(enrolledCourses));
-        categorizedCourses.put("active", mapCoursesWithFullImageUrl(activeCourses));
-        categorizedCourses.put("completed", mapCoursesWithFullImageUrl(completedCourses));
+        categorizedCourses.put("enrolled", enrolledDTO);
+        categorizedCourses.put("active", activeDTO);
+        categorizedCourses.put("completed", completedDTO);
 
         return categorizedCourses;
     }
+
 
 
     private List<CourseDTO> mapCoursesWithFullImageUrl(List<Course> courses) {
@@ -306,6 +331,24 @@ public class StudentService {
         cartItemRepository.delete(cartItem);
     }
 
+    public Map<String, List<CourseDTO>> getStudentPurchasedCourses(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
+
+        // Lấy tất cả khóa học đã mua từ ManyToMany
+        List<Course> purchasedCourses = student.getCourses();
+
+        // Map sang DTO
+        List<CourseDTO> purchasedDTOs = mapCoursesWithFullImageUrl(purchasedCourses);
+
+        // Ở đây bạn có thể phân loại tùy thích. Nếu không cần phân loại nữa,
+        // bạn có thể đặt tất cả vào "enrolled"
+        Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
+        categorizedCourses.put("enrolled", purchasedDTOs);
+        categorizedCourses.put("active", new ArrayList<>());
+        categorizedCourses.put("completed", new ArrayList<>());
+        return categorizedCourses;
+    }
 
 
 }

@@ -45,6 +45,6 @@ public class LearningProgress extends AbstractEntity {
     private List<StudySession> studySessions;
 
     @ManyToOne
-    @JoinColumn(name = "section_id", nullable = false) // Liên kết ngược với Section
+    @JoinColumn(name = "section_id", nullable = true)
     private Section section;
 }
