@@ -180,15 +180,13 @@ public class StudentService {
         return dashboard;
     }
 
-    public Map<String, List<CourseDTO>> getStudentCourses(Long accountId) {
+    public Map<String, List<CourseDTO>> getStudentCourses(Long studentId) {
 
-        Student student = studentRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with account ID: " + accountId));
-
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
 
         List<LearningProgress> learningProgresses = learningProgressRepository.findByStudentId(student.getId());
 
-        // Categorize courses
         List<Course> enrolledCourses = learningProgresses.stream()
                 .map(LearningProgress::getCourse)
                 .distinct()
@@ -206,7 +204,6 @@ public class StudentService {
                 .distinct()
                 .collect(Collectors.toList());
 
-
         Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
         categorizedCourses.put("enrolled", mapCoursesWithFullImageUrl(enrolledCourses));
         categorizedCourses.put("active", mapCoursesWithFullImageUrl(activeCourses));
@@ -214,6 +211,7 @@ public class StudentService {
 
         return categorizedCourses;
     }
+
 
     private List<CourseDTO> mapCoursesWithFullImageUrl(List<Course> courses) {
         return courses.stream()
