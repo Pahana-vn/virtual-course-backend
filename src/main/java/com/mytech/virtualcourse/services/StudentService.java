@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -184,16 +185,10 @@ public class StudentService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
 
+        // Lấy tất cả LearningProgress cho student
         List<LearningProgress> learningProgresses = learningProgressRepository.findByStudentId(student.getId());
 
-        // Tạo map courseId -> progressPercentage
-        Map<Long, Integer> courseProgressMap = learningProgresses.stream()
-                .collect(Collectors.toMap(
-                        lp -> lp.getCourse().getId(),
-                        LearningProgress::getProgressPercentage,
-                        (oldVal, newVal) -> oldVal // Nếu trùng khóa, giữ oldVal
-                ));
-
+        // Tách ra các nhóm khóa học (enrolled, active, completed) dựa vào LearningProgress
         List<Course> enrolledCourses = learningProgresses.stream()
                 .map(LearningProgress::getCourse)
                 .distinct()
@@ -211,23 +206,50 @@ public class StudentService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Chuyển đổi Course -> CourseDTO
-        List<CourseDTO> enrolledDTO = mapCoursesWithFullImageUrl(enrolledCourses);
-        List<CourseDTO> activeDTO = mapCoursesWithFullImageUrl(activeCourses);
-        List<CourseDTO> completedDTO = mapCoursesWithFullImageUrl(completedCourses);
+        // Hàm tiện ích để map Course -> CourseDTO kèm progress
+        // Hàm này sẽ tìm LearningProgress tương ứng (studentId, courseId) để lấy progress.
+        // Nếu không có thì progress = 0.
+        Function<Course, CourseDTO> toCourseDTOWithProgress = (course) -> {
+            CourseDTO dto = courseMapper.courseToCourseDTO(course);
+            Optional<LearningProgress> lpOpt = learningProgressRepository.findByStudentIdAndCourseId(studentId, course.getId());
+            int progress = lpOpt.map(LearningProgress::getProgressPercentage).orElse(0);
+            dto.setProgress(progress);
 
-        // Gán progress cho từng DTO dựa trên courseProgressMap
-        for (CourseDTO dto : enrolledDTO) {
-            dto.setProgress(courseProgressMap.getOrDefault(dto.getId(), 0));
-        }
-        for (CourseDTO dto : activeDTO) {
-            dto.setProgress(courseProgressMap.getOrDefault(dto.getId(), 0));
-        }
-        for (CourseDTO dto : completedDTO) {
-            dto.setProgress(courseProgressMap.getOrDefault(dto.getId(), 100));
-            // Completed thì có thể set luôn 100 hoặc lấy từ map
-        }
+            // Nếu cần set lại imageCover đầy đủ URL (do mapper đã set sẵn nhưng có thể cần override)
+            if (course.getImageCover() != null) {
+                dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+            }
 
+            return dto;
+        };
+
+        // Map enrolledCourses sang DTO kèm theo progress
+        List<CourseDTO> enrolledDTO = enrolledCourses.stream()
+                .map(toCourseDTOWithProgress)
+                .collect(Collectors.toList());
+
+        // Map activeCourses sang DTO kèm theo progress
+        List<CourseDTO> activeDTO = activeCourses.stream()
+                .map(toCourseDTOWithProgress)
+                .collect(Collectors.toList());
+
+        // Map completedCourses sang DTO kèm theo progress
+        // Đối với completed, nếu lp không tìm thấy, đặt mặc định 100%
+        List<CourseDTO> completedDTO = completedCourses.stream()
+                .map(course -> {
+                    CourseDTO dto = courseMapper.courseToCourseDTO(course);
+                    Optional<LearningProgress> lpOpt = learningProgressRepository.findByStudentIdAndCourseId(studentId, course.getId());
+                    int progress = lpOpt.map(LearningProgress::getProgressPercentage).orElse(100);
+                    dto.setProgress(progress);
+
+                    if (course.getImageCover() != null) {
+                        dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        // Cuối cùng tạo Map chứa 3 danh sách
         Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
         categorizedCourses.put("enrolled", enrolledDTO);
         categorizedCourses.put("active", activeDTO);
@@ -235,8 +257,6 @@ public class StudentService {
 
         return categorizedCourses;
     }
-
-
 
     private List<CourseDTO> mapCoursesWithFullImageUrl(List<Course> courses) {
         return courses.stream()
@@ -348,6 +368,31 @@ public class StudentService {
         categorizedCourses.put("active", new ArrayList<>());
         categorizedCourses.put("completed", new ArrayList<>());
         return categorizedCourses;
+    }
+
+    public void enrollStudentToCourse(Long studentId, Long courseId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
+        // Thêm khóa học vào student (nếu chưa)
+        if (!student.getCourses().contains(course)) {
+            student.getCourses().add(course);
+            studentRepository.save(student); // Lưu để cập nhật student_course mapping
+        }
+
+        // Kiểm tra nếu LearningProgress đã tồn tại
+        Optional<LearningProgress> lpOpt = learningProgressRepository.findByStudentIdAndCourseId(studentId, courseId);
+        if (lpOpt.isEmpty()) {
+            LearningProgress lp = new LearningProgress();
+            lp.setStudent(student);
+            lp.setCourse(course);
+            lp.setProgressPercentage(0);
+            lp.setCompleted(false);
+            learningProgressRepository.save(lp);
+        }
     }
 
 

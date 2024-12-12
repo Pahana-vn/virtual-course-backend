@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
@@ -114,6 +115,12 @@ public class StudentController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to remove course from cart: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/student-courses-status/{studentId}")
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCoursesWithProgress(@PathVariable Long studentId) {
+        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId);
+        return ResponseEntity.ok(courses);
     }
 
 

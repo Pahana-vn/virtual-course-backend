@@ -51,6 +51,9 @@ public class PaymentService {
     @Autowired
     private VnPayConfig vnPayConfig;
 
+    @Autowired
+    private StudentService studentService;
+
     // -------------------- PAYPAL -------------------------
     public String initiatePaypalPayment(Long courseId) throws Exception {
         Student student = studentRepository.findById(1L)
@@ -176,7 +179,6 @@ public class PaymentService {
             dbPayment.setStatus(PaymentStatus.Completed);
             paymentRepository.save(dbPayment);
 
-            // Sau khi thanh toán thành công
             Student student = dbPayment.getStudent();
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
@@ -188,7 +190,14 @@ public class PaymentService {
                     student.getCourses().add(c);
                 }
             }
-            studentRepository.save(student); // Cập nhật student_course_mapping
+            studentRepository.save(student);
+
+            // Gọi enrollStudentToCourse cho mỗi khóa học vừa mua
+            for (Course c : purchasedCourses) {
+                // Giả sử bạn có @Autowired StudentService studentService;
+                studentService.enrollStudentToCourse(student.getId(), c.getId());
+            }
+
 
         } else {
             dbPayment.setStatus(PaymentStatus.Failed);
@@ -426,7 +435,6 @@ public class PaymentService {
             payment.setStatus(PaymentStatus.Completed);
             paymentRepository.save(payment);
 
-            // Sau khi thanh toán VNPAY thành công
             Student student = payment.getStudent();
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
@@ -440,6 +448,10 @@ public class PaymentService {
             }
             studentRepository.save(student);
 
+            // Gọi enrollStudentToCourse
+            for (Course c : purchasedCourses) {
+                studentService.enrollStudentToCourse(student.getId(), c.getId());
+            }
         } else {
             payment.setStatus(PaymentStatus.Failed);
             paymentRepository.save(payment);

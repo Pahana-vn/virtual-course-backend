@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface LearningProgressRepository extends JpaRepository<LearningProgress, Long> {
@@ -27,4 +28,8 @@ public interface LearningProgressRepository extends JpaRepository<LearningProgre
 
     @Query("SELECT lp FROM LearningProgress lp WHERE lp.student.id = :studentId")
     List<LearningProgress> findAllCoursesByStudentId(@Param("studentId") Long studentId);
+
+    Optional<LearningProgress> findByStudentIdAndCourseId(Long studentId, Long courseId);
+
+
 }

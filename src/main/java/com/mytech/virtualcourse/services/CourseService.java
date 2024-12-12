@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.dtos.CourseDTO;
+import com.mytech.virtualcourse.dtos.CourseDetailDTO;
 import com.mytech.virtualcourse.entities.Course;
 import com.mytech.virtualcourse.enums.CourseLevel;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
@@ -95,6 +96,16 @@ public class CourseService {
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public CourseDetailDTO getCourseDetailsById(Long id) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+        CourseDetailDTO dto = courseMapper.courseToCourseDetailDTO(course);
+        if (course.getImageCover() != null) {
+            dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+        }
+        return dto;
     }
 
 }
