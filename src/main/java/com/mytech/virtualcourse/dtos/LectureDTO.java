@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.dtos;
 
 import lombok.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -13,4 +14,5 @@ public class LectureDTO {
     private String lectureVideo;
     private String lectureResource;
     private Integer lectureOrder;
+    private List<ArticleDTO> articles;
 }
