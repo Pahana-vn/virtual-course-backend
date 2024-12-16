@@ -32,4 +32,7 @@ public interface LearningProgressRepository extends JpaRepository<LearningProgre
     Optional<LearningProgress> findByStudentIdAndCourseId(Long studentId, Long courseId);
 
 
+    // LearningProgressRepository.java
+    @Query("SELECT COUNT(lp) FROM LearningProgress lp WHERE lp.student.id = :studentId AND lp.course.id = :courseId AND lp.completed = true")
+    int countCompletedLecturesByStudentAndCourse(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 }

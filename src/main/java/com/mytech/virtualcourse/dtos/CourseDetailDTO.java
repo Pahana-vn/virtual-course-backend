@@ -27,4 +27,8 @@ public class CourseDetailDTO {
     private String instructorLastName;
     private Integer progress;
     private List<SectionDTO> sections;
+
+    private Boolean allLecturesCompleted;
+    private Long finalTestId;
+    private String finalTestTitle;
 }

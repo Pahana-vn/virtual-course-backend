@@ -67,4 +67,12 @@ public class CourseController {
         CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
         return ResponseEntity.ok(courseDetails);
     }
+
+    @GetMapping("/{courseId}/details-for-student")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsForStudent(
+            @PathVariable Long courseId,
+            @RequestParam Long studentId) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId);
+        return ResponseEntity.ok(courseDetails);
+    }
 }

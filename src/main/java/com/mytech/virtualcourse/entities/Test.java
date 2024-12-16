@@ -33,8 +33,8 @@ public class Test extends AbstractEntity {
     private Boolean isFinalTest = false; // Đánh dấu đây là bài kiểm tra cuối khóa
 
     @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
     private StatusTest statusTest;
-
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)

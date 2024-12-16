@@ -394,6 +394,4 @@ public class StudentService {
             learningProgressRepository.save(lp);
         }
     }
-
-
 }

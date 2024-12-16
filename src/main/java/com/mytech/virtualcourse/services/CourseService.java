@@ -3,15 +3,22 @@ package com.mytech.virtualcourse.services;
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.CourseDetailDTO;
 import com.mytech.virtualcourse.entities.Course;
+import com.mytech.virtualcourse.entities.Lecture;
+import com.mytech.virtualcourse.entities.Test;
 import com.mytech.virtualcourse.enums.CourseLevel;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.repositories.CourseRepository;
+import com.mytech.virtualcourse.repositories.LearningProgressRepository;
+import com.mytech.virtualcourse.repositories.StudentLectureProgressRepository;
+import com.mytech.virtualcourse.repositories.TestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +30,16 @@ public class CourseService {
 
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private TestRepository testRepository;
+
+    @Autowired
+    private LearningProgressRepository learningProgressRepository;
+
+    @Autowired
+    private StudentLectureProgressRepository studentLectureProgressRepository;
+
 
     public List<CourseDTO> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
@@ -108,4 +125,30 @@ public class CourseService {
         return dto;
     }
 
+    public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        CourseDetailDTO dto = courseMapper.courseToCourseDetailDTO(course);
+
+        // Lấy tất cả lecture trong khóa
+        List<Lecture> allLectures = new ArrayList<>();
+        course.getSections().forEach(sec -> allLectures.addAll(sec.getLectures()));
+        int totalLectures = allLectures.size();
+
+        // Đếm lecture đã hoàn thành bằng StudentLectureProgress
+        int completedCount = studentLectureProgressRepository.countCompletedLecturesByStudentAndCourse(studentId, courseId);
+        dto.setAllLecturesCompleted(completedCount == totalLectures && totalLectures > 0);
+
+        // Kiểm tra test cuối khóa
+        Optional<Test> finalTestOpt = testRepository.findFinalTestByCourseId(courseId);
+        if (finalTestOpt.isPresent()) {
+            dto.setFinalTestId(finalTestOpt.get().getId());
+            dto.setFinalTestTitle(finalTestOpt.get().getTitle());
+        }
+
+        if (course.getImageCover() != null) {
+            dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+        }
+        return dto;
+    }
 }
