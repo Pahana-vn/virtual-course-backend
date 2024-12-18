@@ -14,5 +14,6 @@ import org.mapstruct.ReportingPolicy;
 public interface LectureMapper {
     @Mapping(source = "articles", target = "articles")
     LectureDTO lectureToLectureDTO(Lecture lecture);
+
     Lecture lectureDTOToLecture(LectureDTO lectureDTO);
 }

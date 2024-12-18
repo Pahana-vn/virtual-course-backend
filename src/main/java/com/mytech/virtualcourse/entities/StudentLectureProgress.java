@@ -15,12 +15,12 @@ public class StudentLectureProgress {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "student_id")
     private Student student;
 
-    @ManyToOne
-    @JoinColumn(name = "lecture_id", nullable = false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "lecture_id")
     private Lecture lecture;
 
     @Column(name = "completed", nullable = false)

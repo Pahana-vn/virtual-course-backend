@@ -14,5 +14,6 @@ public class LectureDTO {
     private String lectureVideo;
     private String lectureResource;
     private Integer lectureOrder;
+    private boolean completed;
     private List<ArticleDTO> articles;
 }

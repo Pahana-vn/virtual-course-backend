@@ -14,7 +14,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     boolean existsByTitleCourse(String titleCourse);
 
-
     @Query("SELECT c FROM Course c JOIN c.students s WHERE s.id = :studentId ORDER BY c.createdAt DESC")
     List<Course> findRecentCoursesByStudentId(@Param("studentId") Long studentId);
 

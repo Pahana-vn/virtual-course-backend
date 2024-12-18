@@ -50,7 +50,7 @@ public class ProgressService {
         slp.setCompleted(true);
         studentLectureProgressRepository.save(slp);
 
-        // Cập nhật learningProgress
+        // Cập nhật LearningProgress
         updateLearningProgress(studentId, lecture.getSection().getCourse().getId());
     }
 
@@ -60,17 +60,19 @@ public class ProgressService {
                 .orElseThrow(() -> new ResourceNotFoundException("Learning Progress not found for studentId: "
                         + studentId + " and courseId: " + courseId));
 
-        // Tính lại số lecture đã hoàn thành
+        // Tính lại số bài giảng đã hoàn thành
         int completedLecturesCount = studentLectureProgressRepository.countCompletedLecturesByStudentAndCourse(studentId, courseId);
 
-        // Tính tổng số lecture trong course
+        // Tính tổng số bài giảng trong khóa học
         int totalLectures = courseRepository.findById(courseId).get()
                 .getSections().stream()
                 .mapToInt(section -> section.getLectures().size())
                 .sum();
 
+        // Tính phần trăm tiến độ
         int progressPercentage = (int)((completedLecturesCount * 100.0) / totalLectures);
 
+        // Cập nhật LearningProgress
         lp.setProgressPercentage(progressPercentage);
         lp.setCompleted(progressPercentage == 100);
 
