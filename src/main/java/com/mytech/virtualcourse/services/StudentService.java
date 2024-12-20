@@ -49,6 +49,9 @@ public class StudentService {
     @Autowired
     private CartItemRepository cartItemRepository;
 
+    @Autowired
+    private FavoriteCourseRepository favoriteCourseRepository;
+
     private static final String AVATAR_BASE_URL = "http://localhost:8080/uploads/student/";
     private static final String INSTRUCTOR_PHOTO_BASE_URL = "http://localhost:8080/uploads/instructor/";
     private static final String COURSE_IMAGE_BASE_URL = "http://localhost:8080/uploads/course/";
@@ -394,4 +397,17 @@ public class StudentService {
             learningProgressRepository.save(lp);
         }
     }
+
+    public void removeCourseFromWishlist(Long studentId, Long courseId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
+        FavoriteCourse favoriteCourse = favoriteCourseRepository.findByStudentAndCourse(student, course)
+                .orElseThrow(() -> new ResourceNotFoundException("Wishlist entry not found for student and course"));
+
+        favoriteCourseRepository.delete(favoriteCourse);
+    }
+
 }

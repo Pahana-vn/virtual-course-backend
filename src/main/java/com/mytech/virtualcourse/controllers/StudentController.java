@@ -123,5 +123,12 @@ public class StudentController {
         return ResponseEntity.ok(courses);
     }
 
+    @DeleteMapping("/{studentId}/wishlist/{courseId}")
+    public ResponseEntity<Void> removeCourseFromWishlist(@PathVariable Long studentId, @PathVariable Long courseId) {
+        studentService.removeCourseFromWishlist(studentId, courseId);
+        return ResponseEntity.noContent().build();
+    }
+
+    
 
 }
