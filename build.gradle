@@ -35,6 +35,14 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// JJWT API
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+
+	// JJWT Implementation
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+
+	// JJWT Jackson (Để xử lý JSON)
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // Hoặc sử dụng jjwt-gson nếu bạn thích
 
 	// https://mvnrepository.com/artifact/com.google.firebase/firebase-admin
 	implementation 'com.google.firebase:firebase-admin:9.4.1'

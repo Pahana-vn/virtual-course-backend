@@ -1,30 +1,32 @@
+// src/main/java/com/mytech/virtualcourse/dtos/InstructorDTO.java
+
 package com.mytech.virtualcourse.dtos;
+import jakarta.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import com.mytech.virtualcourse.enums.Gender;
+import lombok.Data;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
+@Data
 public class InstructorDTO {
-
     private Long id;
+    @NotNull(message = "First name is required")
     private String firstName;
+
+    @NotNull(message = "Last name is required")
     private String lastName;
-    private String gender;
+
+    @NotNull(message = "Gender is required")
+    private Gender gender;
+    @NotNull(message = "Status is required")
+    private String status;
     private String address;
     private String phone;
-    private Boolean verifiedPhone;
     private String bio;
-    private String title;
+    private boolean verifiedPhone;
     private String photo;
+    private String title;
     private String workplace;
-    private String accountUsername;
+    @NotNull(message = "Account ID is required")
+    private Long accountId; // Thêm trường này
+    // Các trường khác nếu cần
 }

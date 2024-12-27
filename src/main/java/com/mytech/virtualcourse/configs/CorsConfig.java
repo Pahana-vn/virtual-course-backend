@@ -13,7 +13,9 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins("http://localhost:3000")
-                        .allowedMethods("*");
+                        .allowedMethods("*")
+                        .allowedHeaders("*")
+                        .allowCredentials(true); // Nếu bạn muốn cho phép cookie
             }
         };
     }

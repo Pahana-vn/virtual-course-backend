@@ -3,16 +3,16 @@ package com.mytech.virtualcourse.services;
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.entities.Course;
 import com.mytech.virtualcourse.entities.LearningProgress;
 import com.mytech.virtualcourse.entities.Student;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.StudentMapper;
-import com.mytech.virtualcourse.repositories.CourseRepository;
-import com.mytech.virtualcourse.repositories.LearningProgressRepository;
-import com.mytech.virtualcourse.repositories.PaymentRepository;
-import com.mytech.virtualcourse.repositories.StudentRepository;
+import com.mytech.virtualcourse.repositories.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class StudentService {
+    private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
 
     @Autowired
     private StudentRepository studentRepository;
@@ -38,6 +39,9 @@ public class StudentService {
     private CourseMapper courseMapper;
 
     @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
     private CourseRepository courseRepository;
 
     @Autowired
@@ -45,6 +49,8 @@ public class StudentService {
 
     @Autowired
     private LearningProgressRepository learningProgressRepository;
+    @Autowired
+    private AccountRepository accountRepository; // Thêm repository của Account
 
     private static final String AVATAR_BASE_URL = "http://localhost:8080/uploads/student/";
     private static final String INSTRUCTOR_PHOTO_BASE_URL = "http://localhost:8080/uploads/instructor/";
@@ -83,34 +89,75 @@ public class StudentService {
         return dto;
     }
 
-    public StudentDTO createStudent(StudentDTO studentDTO) {
-        Student student = studentMapper.studentDTOToStudent(studentDTO);
-        Student savedStudent = studentRepository.save(student);
-        return studentMapper.studentToStudentDTO(savedStudent);
+//    public StudentDTO createStudent(StudentDTO studentDTO) {
+//        Student student = studentMapper.studentDTOToStudent(studentDTO);
+//        Student savedStudent = studentRepository.save(student);
+//        return studentMapper.studentToStudentDTO(savedStudent);
+//    }
+public StudentDTO createStudent(Long accountId, StudentDTO studentDTO) {
+    // Kiểm tra xem accountId có được cung cấp không
+    if (studentDTO.getAccountId() == null) {
+        throw new IllegalArgumentException("Account ID cannot be null");
     }
+
+    // Lấy Account từ accountId
+    Account account = accountRepository.findById(studentDTO.getAccountId())
+            .orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + studentDTO.getAccountId()));
+
+    // Kiểm tra xem Account đã có Student chưa
+    if (account.getStudent() != null) {
+        throw new RuntimeException("Account already has a Student.");
+    }
+
+    // Map DTO sang Student entity
+    Student student = studentMapper.studentDTOToStudent(studentDTO);
+    student.setAccount(account); // Thiết lập Account cho Student
+
+    // Liên kết Student với Account
+    account.setStudent(student);
+
+    // Lưu Student vào cơ sở dữ liệu
+    Student savedStudent = studentRepository.save(student);
+    return studentMapper.studentToStudentDTO(savedStudent);
+}
 
     public StudentDTO updateStudent(Long id, StudentDTO studentDTO) {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
+        // Nếu avatar cũ khác avatar mới => xóa avatar cũ
+        if (existingStudent.getAvatar() != null
+                && !existingStudent.getAvatar().isEmpty()
+                && studentDTO.getAvatar() != null
+                && !studentDTO.getAvatar().equals(existingStudent.getAvatar())) {
+
+            // Xóa file cũ trong uploads/student
+            fileStorageService.deleteFile(existingStudent.getAvatar(), "student");
+        }
+
+        // Cập nhật các trường
         existingStudent.setFirstName(studentDTO.getFirstName());
         existingStudent.setLastName(studentDTO.getLastName());
         existingStudent.setDob(studentDTO.getDob());
         existingStudent.setAddress(studentDTO.getAddress());
+        existingStudent.setGender(studentDTO.getGender());
         existingStudent.setPhone(studentDTO.getPhone());
-        existingStudent.setAvatar(studentDTO.getAvatar());
-        existingStudent.setVerifiedPhone(studentDTO.getVerifiedPhone());
+//        existingStudent.setBio(studentDTO.getBio());
         existingStudent.setCategoryPrefer(studentDTO.getCategoryPrefer());
         existingStudent.setStatusStudent(studentDTO.getStatusStudent());
+        existingStudent.setVerifiedPhone(studentDTO.isVerifiedPhone());
 
-        Student updatedStudent = studentRepository.save(existingStudent);
-        StudentDTO dto = studentMapper.studentToStudentDTO(updatedStudent);
-        if (updatedStudent.getAvatar() != null) {
-            dto.setAvatar(AVATAR_BASE_URL + updatedStudent.getAvatar());
+        // Cập nhật avatar (nếu có)
+        if (studentDTO.getAvatar() != null) {
+            existingStudent.setAvatar(studentDTO.getAvatar());
         }
-        return dto;
-    }
 
+        // Lưu vào cơ sở dữ liệu
+        Student updatedStudent = studentRepository.save(existingStudent);
+        logger.info("Student updated successfully with id: {}", updatedStudent.getId());
+
+        return studentMapper.studentToStudentDTO(updatedStudent);
+    }
     public void deleteStudent(Long id) {
         if (!studentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Student not found with id: " + id);
@@ -129,7 +176,7 @@ public class StudentService {
         List<Course> enrolledCourses = learningProgresses.stream()
                 .map(LearningProgress::getCourse)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
 
         int totalCourses = enrolledCourses.size();

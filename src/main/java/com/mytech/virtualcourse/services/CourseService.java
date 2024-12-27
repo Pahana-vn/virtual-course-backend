@@ -18,10 +18,29 @@ import java.util.stream.Collectors;
 public class CourseService {
 
     @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
     private CourseRepository courseRepository;
 
     @Autowired
     private CourseMapper courseMapper;
+
+    // Method to disable a course (set status to "inactive")
+    public void disableCourse(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        course.setStatus("inactive");
+        courseRepository.save(course);
+    }
+
+    // Method to enable a course (set status to "active")
+    public void enableCourse(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        course.setStatus("active");
+        courseRepository.save(course);
+    }
 
     public List<CourseDTO> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
@@ -60,6 +79,15 @@ public class CourseService {
         Course existingCourse = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
 
+        // Nếu imageCover cũ khác imageCover mới => xóa imageCover cũ
+        if (existingCourse.getImageCover() != null
+                && !existingCourse.getImageCover().isEmpty()
+                && courseDTO.getImageCover() != null
+                && !courseDTO.getImageCover().equals(existingCourse.getImageCover())) {
+
+            // Xóa file cũ trong uploads/course
+            fileStorageService.deleteFile(existingCourse.getImageCover(), "course");
+        }
         existingCourse.setTitleCourse(courseDTO.getTitleCourse());
         existingCourse.setDescription(courseDTO.getDescription());
         existingCourse.setBasePrice(courseDTO.getBasePrice());
@@ -69,6 +97,10 @@ public class CourseService {
         existingCourse.setStatus(courseDTO.getStatus());
         existingCourse.setHashtag(courseDTO.getHashtag());
 
+// Cập nhật imageCover (nếu có)
+        if (courseDTO.getImageCover() != null) {
+            existingCourse.setImageCover(courseDTO.getImageCover());
+        }
 
         if (courseDTO.getLevel() != null) {
             existingCourse.setLevel(CourseLevel.valueOf(courseDTO.getLevel().toUpperCase()));

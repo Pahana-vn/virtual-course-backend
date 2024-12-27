@@ -1,11 +1,12 @@
+// src/main/java/com/mytech/virtualcourse/dtos/StudentDTO.java
 package com.mytech.virtualcourse.dtos;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.mytech.virtualcourse.enums.Gender;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
+import java.time.LocalDate;
 import java.util.Date;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,14 +17,13 @@ public class StudentDTO {
     private String firstName;
     private String lastName;
     private Date dob;
+    @NotNull(message = "Gender is required")
+    private Gender gender;
     private String address;
-    private String gender;
     private String phone;
     private String avatar;
-    private String bio;
-    private Boolean verifiedPhone;
+    private boolean verifiedPhone;
     private String categoryPrefer;
     private String statusStudent;
-    private String username;
-    private String email;
+    private Long accountId; // Thêm trường này
 }

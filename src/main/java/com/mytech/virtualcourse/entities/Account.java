@@ -1,10 +1,13 @@
+// src/main/java/com/mytech/virtualcourse/entities/Account.java
 package com.mytech.virtualcourse.entities;
 
 import com.mytech.virtualcourse.enums.AuthenticationType;
+import com.mytech.virtualcourse.enums.RoleName;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -20,37 +23,32 @@ public class Account extends AbstractEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    private Boolean enable;
+    private Boolean verifiedEmail;
+
+    @Enumerated(EnumType.STRING)
+    private AuthenticationType authenticationType;
+
     private String password;
-
-    @Column(nullable = false)
-    private Boolean enable = true;
-
-    @Column(name = "verified_email", nullable = false)
-    private Boolean verifiedEmail = false;
-
-    private String token;
-
-    @Column(name = "reset_password_token")
-    private String resetPasswordToken;
-
-    @Column(nullable = false)
+    private String type;
+    private String status;
     private Integer version;
 
-    @Column(name = "authentication_type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private AuthenticationType authenticationType; // Kiểu xác thực: local, google, facebook, etc.
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications;
-
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "account_role_mapping",
+            name = "account_roles",
             joinColumns = @JoinColumn(name = "account_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private List<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Instructor instructor;
 
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Student student;
+
+    // Getters and Setters (Lombok đã tạo)
+// Thêm trường mới
+    private String resetPasswordToken;
 }

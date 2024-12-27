@@ -14,6 +14,8 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courses")
+@CrossOrigin(origins = "http://localhost:3000") // Cho phép origin cụ thể
+
 public class CourseController {
 
     @Autowired
@@ -22,6 +24,19 @@ public class CourseController {
     @Autowired
     private StudentService studentService;
 
+    // API to disable a course
+    @PutMapping("/{courseId}/disable")
+    public ResponseEntity<String> disableCourse(@PathVariable Long courseId) {
+        courseService.disableCourse(courseId);
+        return ResponseEntity.ok("Course disabled successfully");
+    }
+
+    // API to enable a course
+    @PutMapping("/{courseId}/enable")
+    public ResponseEntity<String> enableCourse(@PathVariable Long courseId) {
+        courseService.enableCourse(courseId);
+        return ResponseEntity.ok("Course enabled successfully");
+    }
     @GetMapping
     public ResponseEntity<List<CourseDTO>> getAllCourses() {
         List<CourseDTO> courses = courseService.getAllCourses();

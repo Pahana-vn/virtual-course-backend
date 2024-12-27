@@ -12,7 +12,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000") // Cho phép origin cụ thể
+
 public class StudentController {
 
     @Autowired
@@ -45,9 +46,9 @@ public class StudentController {
 
 
 
-    @PostMapping
-    public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
-        StudentDTO createdStudent = studentService.createStudent(studentDTO);
+    @PostMapping("/add-student/{accountId}")
+    public ResponseEntity<StudentDTO> addStudent(@PathVariable Long accountId, @RequestBody StudentDTO studentDTO) {
+        StudentDTO createdStudent = studentService.createStudent(accountId, studentDTO);
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 

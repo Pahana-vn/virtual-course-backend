@@ -1,3 +1,5 @@
+// src/main/java/com/mytech/virtualcourse/entities/Instructor.java
+
 package com.mytech.virtualcourse.entities;
 
 import com.mytech.virtualcourse.enums.Gender;
@@ -24,6 +26,9 @@ public class Instructor extends AbstractEntity {
     @Column(nullable = false)
     private Gender gender;
 
+    @Column(name = "status", nullable = false)
+    private String status; // This will store "active" or "inactive"
+
     private String address;
 
     private String phone;
@@ -32,7 +37,7 @@ public class Instructor extends AbstractEntity {
     private String bio;
 
     @Column(name = "verified_phone", nullable = false)
-    private Boolean verifiedPhone = false;
+    private boolean verifiedPhone = false; // Changed to primitive type
 
     private String photo;
 
