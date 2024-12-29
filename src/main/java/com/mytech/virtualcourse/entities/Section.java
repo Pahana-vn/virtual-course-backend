@@ -41,8 +41,8 @@ public class Section extends AbstractEntity {
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Lecture> lectures;
 
-    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assignment> assignments; // Bài tập thuộc phần học
+//    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Assignment> assignments; // Bài tập thuộc phần học
 
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LearningProgress> progress; // Tiến trình học từng phần

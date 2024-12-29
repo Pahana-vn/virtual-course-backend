@@ -1,16 +1,21 @@
 package com.mytech.virtualcourse.controllers;
 
+import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.InstructorDTO;
+import com.mytech.virtualcourse.dtos.InstructorStatisticsDTO;
 import com.mytech.virtualcourse.services.InstructorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/instructors")
+@RequestMapping("/api/instructor")
 public class InstructorController {
 
     @Autowired
@@ -44,5 +49,35 @@ public class InstructorController {
     public ResponseEntity<Void> deleteInstructor(@PathVariable Long id) {
         instructorService.deleteInstructor(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/courses")
+    public ResponseEntity<List<CourseDTO>> getCoursesByInstructor(@PathVariable Long id) {
+        // Lấy danh sách các khóa học của instructor
+        List<CourseDTO> courseDTOs = instructorService.getCoursesByInstructor(id);
+        return ResponseEntity.ok(courseDTOs);
+    }
+
+    @GetMapping("/{id}/statistics")
+    public ResponseEntity<InstructorStatisticsDTO> getInstructorStatistics(@PathVariable Long id) {
+        return ResponseEntity.ok(instructorService.getInstructorStatistics(id));
+    }
+
+    @GetMapping("/{id}/avatar")
+    public ResponseEntity<Map<String, String>> getInstructorAvatar(@PathVariable Long id) {
+        String avatarFileName = instructorService.getInstructorAvatar(id);
+
+        if (avatarFileName == null || avatarFileName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Avatar not found"));
+        }
+
+        String avatarUrl = "http://localhost:8080/uploads/instructor/" + avatarFileName;
+
+        // Trả về đối tượng JSON chứa URL
+        Map<String, String> response = new HashMap<>();
+        response.put("url", avatarUrl);
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -19,4 +19,5 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     int countRegisteredCourses(Long studentId);
 
 
+    boolean existsStudentByAccountId(Long accountId);
 }

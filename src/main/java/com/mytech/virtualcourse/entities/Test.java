@@ -35,7 +35,6 @@ public class Test extends AbstractEntity {
     @Column(name = "status", nullable = false)
     private StatusTest statusTest;
 
-
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course; // Bài kiểm tra thuộc khóa học nào

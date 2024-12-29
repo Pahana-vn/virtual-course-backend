@@ -8,7 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
@@ -61,5 +64,22 @@ public class StudentController {
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/{id}/avatar")
+    public ResponseEntity<Map<String, String>> getStudentAvatar(@PathVariable Long id) {
+        String avatarFileName = studentService.getStudentAvatar(id);
+
+        if (avatarFileName == null || avatarFileName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Avatar not found"));
+        }
+
+        String avatarUrl = "http://localhost:8080/uploads/student/" + avatarFileName;
+
+        // Trả về đối tượng JSON chứa URL
+        Map<String, String> response = new HashMap<>();
+        response.put("url", avatarUrl);
+
+        return ResponseEntity.ok(response);
     }
 }

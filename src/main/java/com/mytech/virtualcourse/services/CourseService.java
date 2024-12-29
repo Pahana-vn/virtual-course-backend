@@ -1,15 +1,20 @@
 package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.dtos.CourseDTO;
-import com.mytech.virtualcourse.entities.Course;
+import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.enums.CourseLevel;
+import com.mytech.virtualcourse.enums.EStatusCourse;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
-import com.mytech.virtualcourse.mappers.CourseMapper;
+import com.mytech.virtualcourse.mappers.*;
+import com.mytech.virtualcourse.repositories.CategoryRepository;
 import com.mytech.virtualcourse.repositories.CourseRepository;
+import com.mytech.virtualcourse.repositories.InstructorRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +26,31 @@ public class CourseService {
     private CourseRepository courseRepository;
 
     @Autowired
+    private InstructorRepository instructorRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private SectionMapper sectionMapper;
+
+    @Autowired
+    private LectureMapper lectureMapper;
+
+    @Autowired
+    private ArticleMapper articleMapper;
+
+    @Autowired
+    private TestMapper testMapper;
+
+    @Autowired
+    private QuestionMapper questionMapper;
+
+    @Autowired
+    private AnswerOptionMapper answerOptionMapper;
 
     public List<CourseDTO> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
@@ -31,6 +60,11 @@ public class CourseService {
                     if (course.getImageCover() != null) {
 
                         dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+
+                        // Thêm URL đầy đủ cho instructor photo
+                        if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                            dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
+                        }
                     }
                     return dto;
                 })
@@ -42,16 +76,98 @@ public class CourseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
         CourseDTO dto = courseMapper.courseToCourseDTO(course);
         if (course.getImageCover() != null) {
-            dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+            dto.setImageCover("http://localhost:8080/uploads/courses/" + course.getImageCover());
+            if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
+            }
         }
         return dto;
     }
 
+    @Transactional
     public CourseDTO createCourse(CourseDTO courseDTO) {
-        if (courseRepository.existsByTitleCourse(courseDTO.getTitleCourse())) {
-            throw new IllegalArgumentException("Course with title '" + courseDTO.getTitleCourse() + "' already exists");
+        // Kiểm tra đầu vào
+        if (courseDTO.getInstructorId() == null || courseDTO.getCategoryId() == null) {
+            throw new IllegalArgumentException("Instructor ID and Category ID are required.");
         }
+
+        // Tìm Instructor và Category
+        Instructor instructor = instructorRepository.findById(courseDTO.getInstructorId())
+                .orElseThrow(() -> new EntityNotFoundException("Instructor not found."));
+        Category category = categoryRepository.findById(courseDTO.getCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("Category not found."));
+
+        // Ánh xạ từ CourseDTO sang Course
         Course course = courseMapper.courseDTOToCourse(courseDTO);
+
+        // Thiết lập thông tin bổ sung
+        course.setInstructor(instructor);
+        course.setCategory(category);
+//        course.setCreatedAt(LocalDateTime.now());
+//        course.setUpdatedAt(LocalDateTime.now());
+
+        // Xử lý các Section, Lectures, Articles như trước
+        if (courseDTO.getSections() != null && !courseDTO.getSections().isEmpty()) {
+            List<Section> sections = courseDTO.getSections().stream()
+                    .map(sectionDTO -> {
+                        Section section = sectionMapper.sectionDTOToSection(sectionDTO);
+                        section.setCourse(course);
+
+                        if (sectionDTO.getLectures() != null && !sectionDTO.getLectures().isEmpty()) {
+                            List<Lecture> lectures = sectionDTO.getLectures().stream()
+                                    .map(lectureDTO -> {
+                                        Lecture lecture = lectureMapper.lectureDTOToLecture(lectureDTO);
+                                        lecture.setSection(section);
+
+                                        if (lectureDTO.getArticles() != null && !lectureDTO.getArticles().isEmpty()) {
+                                            List<Article> articles = lectureDTO.getArticles().stream()
+                                                    .map(articleDTO -> {
+                                                        Article article = articleMapper.articleDTOToArticle(articleDTO);
+                                                        article.setLecture(lecture);
+                                                        return article;
+                                                    })
+                                                    .toList();
+                                            lecture.setArticles(articles);
+                                        }
+
+                                        return lecture;
+                                    })
+                                    .toList();
+                            section.setLectures(lectures);
+                        }
+
+                        return section;
+                    })
+                    .toList();
+            course.setSections(sections);
+        }
+
+        // Xử lý danh sách Questions trong Course
+        if (courseDTO.getQuestions() != null && !courseDTO.getQuestions().isEmpty()) {
+            List<Question> questions = courseDTO.getQuestions().stream()
+                    .map(questionDTO -> {
+                        Question question = questionMapper.questionDTOToQuestion(questionDTO);
+                        question.setCourse(course);
+
+                        // Xử lý danh sách AnswerOptions trong Question
+                        if (questionDTO.getAnswerOptions() != null && !questionDTO.getAnswerOptions().isEmpty()) {
+                            List<AnswerOption> answerOptions = questionDTO.getAnswerOptions().stream()
+                                    .map(answerOptionDTO -> {
+                                        AnswerOption answerOption = answerOptionMapper.answerOptionDTOToAnswerOption(answerOptionDTO);
+                                        answerOption.setQuestion(question);
+                                        return answerOption;
+                                    })
+                                    .toList();
+                            question.setAnswerOptions(answerOptions);
+                        }
+
+                        return question;
+                    })
+                    .toList();
+            course.setQuestions(questions);
+        }
+
+        // Lưu khóa học vào cơ sở dữ liệu
         Course savedCourse = courseRepository.save(course);
         return courseMapper.courseToCourseDTO(savedCourse);
     }
@@ -66,12 +182,29 @@ public class CourseService {
         existingCourse.setDuration(courseDTO.getDuration());
         existingCourse.setImageCover(courseDTO.getImageCover());
         existingCourse.setUrlVideo(courseDTO.getUrlVideo());
-        existingCourse.setStatus(courseDTO.getStatus());
-        existingCourse.setHashtag(courseDTO.getHashtag());
+        // Cập nhật danh sách hashtags nếu có
+//        if (courseDTO.getHashtags() != null) {
+//            existingCourse.setHashtags(courseDTO.getHashtags());
+//        }
 
-
+        // Cập nhật level (enum)
         if (courseDTO.getLevel() != null) {
-            existingCourse.setLevel(CourseLevel.valueOf(courseDTO.getLevel().toUpperCase()));
+            try {
+                CourseLevel level = CourseLevel.valueOf(courseDTO.getLevel().toString().toUpperCase());
+                existingCourse.setLevel(level);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid level value: " + courseDTO.getLevel());
+            }
+        }
+
+        // Cập nhật status (enum)
+        if (courseDTO.getStatus() != null) {
+            try {
+                EStatusCourse status = EStatusCourse.valueOf(courseDTO.getStatus().toString().toUpperCase());
+                existingCourse.setStatus(status);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid status value: " + courseDTO.getStatus());
+            }
         }
 
         Course updatedCourse = courseRepository.save(existingCourse);

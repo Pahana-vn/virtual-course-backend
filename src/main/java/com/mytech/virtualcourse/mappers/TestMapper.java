@@ -1,0 +1,23 @@
+package com.mytech.virtualcourse.mappers;
+
+import com.mytech.virtualcourse.dtos.TestDTO;
+import com.mytech.virtualcourse.entities.Test;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+@Mapper(componentModel = "spring", uses = {QuestionMapper.class})
+public interface TestMapper {
+    TestMapper INSTANCE = Mappers.getMapper(TestMapper.class);
+
+    // Chuyển từ Test sang TestDTO
+    @Mapping(source = "course.id", target = "courseId")
+    @Mapping(source = "instructor.id", target = "instructorId")
+    TestDTO testToTestDTO(Test test);
+
+    // Chuyển từ TestDTO sang Test
+    @Mapping(target = "course", ignore = true) // Set ở Service
+    @Mapping(target = "instructor", ignore = true) // Set ở Service
+    @Mapping(target = "questions", ignore = true)  // Sử dụng QuestionMapper ở service
+    Test testDTOToTest(TestDTO testDTO);
+}

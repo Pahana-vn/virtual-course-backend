@@ -3,6 +3,7 @@ package com.mytech.virtualcourse.services;
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.entities.Course;
 import com.mytech.virtualcourse.entities.LearningProgress;
 import com.mytech.virtualcourse.entities.Student;
@@ -18,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -118,9 +116,19 @@ public class StudentService {
         studentRepository.deleteById(id);
     }
 
+    public String getStudentAvatar(Long id) {
+        if (!studentRepository.existsStudentByAccountId(id)) {
+            throw new ResourceNotFoundException("Student not found with account id: " + id);
+        }
+        Optional<Student> student = studentRepository.findByAccountId(id);
+
+        return student
+                .map(Student::getAvatar) // Lấy avatar nếu student tồn tại
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with account id: " + id));
+    }
     public DashboardDTO getStudentDashboardData(Long accountId) {
 
-        Student student = studentRepository.findByAccountId(accountId)
+            Student student = studentRepository.findByAccountId(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with account id: " + accountId));
         Long studentId = student.getId();
 
