@@ -120,11 +120,13 @@ public class StudentService {
         if (!studentRepository.existsStudentByAccountId(id)) {
             throw new ResourceNotFoundException("Student not found with account id: " + id);
         }
-        Optional<Student> student = studentRepository.findByAccountId(id);
+        Optional<Student> optionalStudent = studentRepository.findByAccountId(id);
 
-        return student
-                .map(Student::getAvatar) // Lấy avatar nếu student tồn tại
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with account id: " + id));
+        if (optionalStudent.isPresent()) {
+            return optionalStudent.get().getAvatar();
+        } else {
+            throw new ResourceNotFoundException("Student not found with account id: " + id);
+        }
     }
     public DashboardDTO getStudentDashboardData(Long accountId) {
 
