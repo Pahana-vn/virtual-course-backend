@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -138,8 +139,12 @@ public class InstructorService {
             throw new ResourceNotFoundException("Instructor not found with account id: " + id);
         }
 
-        Instructor instructor = instructorRepository.findByAccountId(id);
+        Optional<Instructor> optionalInstructor = instructorRepository.findByAccountId(id);
 
-        return instructor.getPhoto();
+        if (optionalInstructor.isPresent()) {
+            return optionalInstructor.get().getPhoto();
+        } else {
+            throw new ResourceNotFoundException("Instructor not found with account id: " + id);
+        }
     }
 }

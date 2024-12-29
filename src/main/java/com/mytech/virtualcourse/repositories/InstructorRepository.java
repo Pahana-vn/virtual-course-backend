@@ -6,10 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface InstructorRepository extends JpaRepository<Instructor, Long> {
 
-    Instructor findByAccountId(Long accountId);
+    Optional<Instructor> findByAccountId(Long accountId);
 
     boolean existsInstructorByAccountId(Long accountId);
 

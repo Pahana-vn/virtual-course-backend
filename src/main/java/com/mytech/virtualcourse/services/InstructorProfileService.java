@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Transactional
 public class InstructorProfileService {
@@ -35,11 +37,15 @@ public class InstructorProfileService {
             throw new IllegalArgumentException("Account not found");
         }
 
-        Instructor instructor = instructorRepository.findByAccountId(account.getId());
-        InstructorProfileDTO dto = profileMapper.EntitiestoInstructorProfileDTO(account, instructor);
-        if (instructor.getPhoto() != null) {
-            dto.setPhoto("http://localhost:8080/uploads/instructor/" + instructor.getPhoto());
+        Optional<Instructor> optionalInstructor = instructorRepository.findByAccountId(account.getId());
+
+        InstructorProfileDTO dto = profileMapper.EntitiestoInstructorProfileDTO(account, optionalInstructor.orElse(null));
+
+        if (optionalInstructor.isPresent() && optionalInstructor.get().getPhoto() != null) {
+            dto.setPhoto("http://localhost:8080/uploads/instructor/" + optionalInstructor.get().getPhoto());
         }
+
         return dto;
     }
+
 }

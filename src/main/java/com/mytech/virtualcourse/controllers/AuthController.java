@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.entities.Student;
 import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.entities.RefreshToken;
+import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.exceptions.TokenRefreshException;
 import com.mytech.virtualcourse.payload.request.LoginRequest;
 import com.mytech.virtualcourse.payload.response.JwtResponse;
@@ -98,14 +99,22 @@ public class AuthController {
                         .build();
 
         if (userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_INSTRUCTOR"))) {
-            Instructor instructor = instructorRepository.findByAccountId(account.getId()); // Tìm Instructor theo Account
-            if (instructor != null) {
-                jwtResponse.setDataFromInstructor(instructor);// Gán thông tin từ Instructor
+            Optional<Instructor> optionalInstructor = instructorRepository.findByAccountId(account.getId());
+
+            if (optionalInstructor.isPresent()) {
+                Instructor instructor = optionalInstructor.get();
+                jwtResponse.setDataFromInstructor(instructor); // Gán thông tin từ Instructor
+            } else {
+                throw new ResourceNotFoundException("Instructor not found with accountId: " + account.getId());
             }
         } else if (userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_STUDENT"))) {
-            Student student = studentRepository.findByAccountId(account.getId()); // Tìm Student theo Account
-            if (student != null) {
+            Optional<Student> optionalStudent = studentRepository.findByAccountId(account.getId());
+
+            if (optionalStudent.isPresent()) {
+                Student student = optionalStudent.get();
                 jwtResponse.setDataFromStudent(student); // Gán thông tin từ Student
+            } else {
+                throw new ResourceNotFoundException("Student not found with accountId: " + account.getId());
             }
         }
 
