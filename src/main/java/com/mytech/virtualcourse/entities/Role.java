@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,5 +21,6 @@ public class Role extends AbstractEntity {
     private String description;
 
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private List<Account> accounts;
 }

@@ -52,5 +52,11 @@ public class Account extends AbstractEntity {
     )
     private List<Role> roles;
 
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    private Instructor instructor;
+
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    private Student student;
+
 
 }
