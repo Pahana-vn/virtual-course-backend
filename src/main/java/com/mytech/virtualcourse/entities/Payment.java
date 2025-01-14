@@ -2,6 +2,7 @@ package com.mytech.virtualcourse.entities;
 
 import com.mytech.virtualcourse.enums.PaymentMethod;
 import com.mytech.virtualcourse.enums.PaymentStatus;
+import com.mytech.virtualcourse.enums.TransactionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,7 +30,7 @@ public class Payment extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private PaymentStatus status;
+    private TransactionStatus status;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)

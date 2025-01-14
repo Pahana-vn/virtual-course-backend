@@ -30,4 +30,7 @@ public class Review extends AbstractEntity {
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
+
+    @Column(name = "reply", columnDefinition = "TEXT")
+    private String reply;
 }

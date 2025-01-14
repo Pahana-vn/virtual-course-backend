@@ -6,5 +6,8 @@ public enum NotificationType {
     CourseUpdate,
     Assignment,
     TestReminder,
-    General
+    General,
+    TRANSACTION,
+    COURSE_UPDATE,
+    COURSE_APPROVED
 }

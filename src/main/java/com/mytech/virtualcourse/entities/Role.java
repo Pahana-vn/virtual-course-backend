@@ -1,7 +1,7 @@
 // src/main/java/com/mytech/virtualcourse/entities/Role.java
 package com.mytech.virtualcourse.entities;
 
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.ERole;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +17,7 @@ public class Role extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private RoleName name;
+    private ERole name;
 
     @Column(columnDefinition = "TEXT")
     private String description;

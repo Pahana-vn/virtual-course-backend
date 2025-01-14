@@ -12,8 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "http://localhost:3000") // Cho phép origin cụ thể
-
 public class StudentController {
 
     @Autowired
@@ -63,4 +61,23 @@ public class StudentController {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
     }
+
+
+    /**
+     * Vô hiệu hóa Instructor.
+     */
+//    @PutMapping("/{studentId}/disable")
+//    public ResponseEntity<String> disableStudent(@PathVariable Long studentId) {
+//        studentService.disableStudent(studentId);
+//        return ResponseEntity.ok("Student account disabled successfully");
+//    }
+//
+//    /**
+//     * Kích hoạt Instructor.
+//     */
+//    @PutMapping("/{studentId}/enable")
+//    public ResponseEntity<String> enableStudent(@PathVariable Long studentId) {
+//        studentService.enableStudent(studentId);
+//        return ResponseEntity.ok("Student account enabled successfully");
+//    }
 }

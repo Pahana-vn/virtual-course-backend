@@ -6,6 +6,7 @@ import com.mytech.virtualcourse.dtos.InstructorDTO;
 import com.mytech.virtualcourse.entities.Instructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(
@@ -14,19 +15,23 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface InstructorMapper {
 
+    InstructorMapper INSTANCE = Mappers.getMapper(InstructorMapper.class);
+
     /**
      * Chuyển đổi InstructorDTO thành Instructor Entity.
      * Bỏ qua liên kết với Account vì sẽ được xử lý trong service.
      */
     @Mapping(target = "account", ignore = true)
+    @Mapping(source = "walletId", target = "wallet.id") // Sử dụng walletId thay vì wallet.id
+    @Mapping(target = "account.status",ignore = true)
     Instructor instructorDTOToInstructor(InstructorDTO instructorDTO);
 
     /**
      * Chuyển đổi Instructor Entity thành InstructorDTO.
      * Map account.id thành accountId trong DTO.
      */
-//    @Mapping(target = "gender", source = "gender") // Nếu cần, có thể thêm mapping cho các trường khác
-
     @Mapping(target = "accountId", source = "account.id")
+    @Mapping(target = "walletId", source = "wallet.id")
+    @Mapping(target = "status", source = "account.status")
     InstructorDTO instructorToInstructorDTO(Instructor instructor);
 }

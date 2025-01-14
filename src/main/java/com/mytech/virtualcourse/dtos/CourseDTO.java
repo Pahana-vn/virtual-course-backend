@@ -32,4 +32,6 @@ public class CourseDTO {
     private String instructorPhoto;
     private String instructorFirstName;
     private String instructorLastName;
+    private Long instructorId; // Thêm nếu cần
+
 }

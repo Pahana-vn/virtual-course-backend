@@ -13,7 +13,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 
-@Component
+//@Component
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
@@ -28,6 +28,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+            if (jwt != null) {
+                System.out.println("Extracted JWT: " + jwt); // Thêm dòng log
+            } else {
+                System.out.println("No JWT found in request");
+            }
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String email = jwtUtils.getUserNameFromJwtToken(jwt);
 

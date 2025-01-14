@@ -3,7 +3,7 @@ package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.dtos.RoleDTO;
 import com.mytech.virtualcourse.entities.Role;
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.ERole;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.RoleMapper;
 import com.mytech.virtualcourse.repositories.RoleRepository;
@@ -54,7 +54,7 @@ public class RoleService {
 
         // Kiểm tra xem tên Role có phải là một giá trị hợp lệ của enum RoleName không
         try {
-            RoleName.valueOf(roleDTO.getName().name());
+            ERole.valueOf(roleDTO.getName().name());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid Role name: " + roleDTO.getName());
         }
@@ -79,7 +79,7 @@ public class RoleService {
 
         // Kiểm tra xem tên Role có phải là một giá trị hợp lệ của enum RoleName không
         try {
-            RoleName.valueOf(roleDTO.getName().name());
+            ERole.valueOf(roleDTO.getName().name());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid Role name: " + roleDTO.getName());
         }

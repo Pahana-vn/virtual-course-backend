@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,5 +40,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleAllExceptions(Exception ex) {
         logger.error("An unexpected error occurred: ", ex);
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public static class UnauthorizedActionException extends RuntimeException {
+        public UnauthorizedActionException(String message) {
+            super(message);
+        }
     }
 }

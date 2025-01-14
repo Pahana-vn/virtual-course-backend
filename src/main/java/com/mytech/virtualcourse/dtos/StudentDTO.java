@@ -4,7 +4,6 @@ package com.mytech.virtualcourse.dtos;
 import com.mytech.virtualcourse.enums.Gender;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -26,4 +25,6 @@ public class StudentDTO {
     private String categoryPrefer;
     private String statusStudent;
     private Long accountId; // Thêm trường này
+    private Long walletId; // Thêm trường này
+
 }

@@ -1,6 +1,8 @@
 // src/main/java/com/mytech/virtualcourse/dtos/InstructorDTO.java
 
 package com.mytech.virtualcourse.dtos;
+import com.mytech.virtualcourse.entities.Account;
+import com.mytech.virtualcourse.enums.EAccountStatus;
 import jakarta.validation.constraints.NotNull;
 
 import com.mytech.virtualcourse.enums.Gender;
@@ -18,7 +20,7 @@ public class InstructorDTO {
     @NotNull(message = "Gender is required")
     private Gender gender;
     @NotNull(message = "Status is required")
-    private String status;
+    private AccountDTO status;
     private String address;
     private String phone;
     private String bio;
@@ -29,4 +31,6 @@ public class InstructorDTO {
     @NotNull(message = "Account ID is required")
     private Long accountId; // Thêm trường này
     // Các trường khác nếu cần
+    private Long walletId; // Thêm trường này
+
 }

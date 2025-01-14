@@ -79,6 +79,7 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
+            System.out.println("Validating JWT Token: " + authToken); // Thêm dòng log
             Jwts.parserBuilder()
                     .setSigningKey(signingKey)
                     .build()

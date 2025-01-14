@@ -6,13 +6,13 @@ import com.mytech.virtualcourse.services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "http://localhost:3000") // Cho phép origin cụ thể
 public class CategoryController {
 
     @Autowired
@@ -24,6 +24,7 @@ public class CategoryController {
      * ví dụ "1734854100323_Picture5.png". Không thêm "/uploads/category/" ở đây.
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')") // Nếu bạn muốn getListCategory cũng cần ADMIN
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
         List<CategoryDTO> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
@@ -35,6 +36,7 @@ public class CategoryController {
      * Không thêm "/uploads/category/" vào field 'image'.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')") // Nếu bạn muốn getListCategory cũng cần ADMIN
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
         CategoryDTO category = categoryService.getCategoryById(id);
         if (category == null) {
@@ -48,6 +50,8 @@ public class CategoryController {
      * Tạo mới category.
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<CategoryDTO> createCategory(@RequestBody CategoryDTO categoryDTO) {
         CategoryDTO createdCategory = categoryService.createCategory(categoryDTO);
         return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
@@ -57,6 +61,8 @@ public class CategoryController {
      * Cập nhật category.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id,
                                                       @RequestBody CategoryDTO categoryDTO) {
         CategoryDTO updatedCategory = categoryService.updateCategory(id, categoryDTO);
@@ -67,6 +73,8 @@ public class CategoryController {
      * Xóa category.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();

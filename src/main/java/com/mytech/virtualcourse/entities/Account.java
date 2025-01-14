@@ -1,13 +1,11 @@
-// src/main/java/com/mytech/virtualcourse/entities/Account.java
 package com.mytech.virtualcourse.entities;
 
 import com.mytech.virtualcourse.enums.AuthenticationType;
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.EAccountStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -23,24 +21,40 @@ public class Account extends AbstractEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    private Boolean enable;
-    private Boolean verifiedEmail;
+    @Column(nullable = false)
+    private String password;
 
     @Enumerated(EnumType.STRING)
-    private AuthenticationType authenticationType;
+    private EAccountStatus status;
 
-    private String password;
-    private String type;
-    private String status;
+    @Column(nullable = false)
+    private Boolean enable = true;
+
+    @Column(name = "verified_email", nullable = false)
+    private Boolean verifiedEmail = false;
+
+    private String token;
+
+    @Column(name = "reset_password_token")
+    private String resetPasswordToken;
+
+    @Column(nullable = false)
     private Integer version;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @Column(name = "authentication_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AuthenticationType authenticationType; // Kiểu xác thực: local, google, facebook, etc.
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications;
+
+    @ManyToMany
     @JoinTable(
-            name = "account_roles",
+            name = "account_role_mapping",
             joinColumns = @JoinColumn(name = "account_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles = new HashSet<>();
+    private List<Role> roles;
 
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private Instructor instructor;
@@ -48,7 +62,4 @@ public class Account extends AbstractEntity {
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private Student student;
 
-    // Getters and Setters (Lombok đã tạo)
-// Thêm trường mới
-    private String resetPasswordToken;
 }

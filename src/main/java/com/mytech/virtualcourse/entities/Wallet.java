@@ -29,9 +29,18 @@ public class Wallet extends AbstractEntity {
     private Timestamp lastUpdated; // Thời gian cuối cùng cập nhật ví
 
     @OneToOne
-    @JoinColumn(name = "instructor_id", nullable = false)
+    @JoinColumn(name = "instructor_id", nullable = true, unique = true)
     private Instructor instructor;
+
+    @OneToOne
+    @JoinColumn(name = "student_id", nullable = false, unique = true)
+    private Student student; // Wallet for students (optional)
 
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions;
+
+    public Wallet orElseThrow(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElseThrow'");
+    }
 }

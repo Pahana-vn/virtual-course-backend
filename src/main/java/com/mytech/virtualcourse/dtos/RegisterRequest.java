@@ -1,11 +1,12 @@
 // src/main/java/com/mytech/virtualcourse/dtos/RegisterRequest.java
 package com.mytech.virtualcourse.dtos;
 
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.ERole;
 import lombok.*;
 
 import jakarta.validation.constraints.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -26,5 +27,5 @@ public class RegisterRequest {
     private String password;
 
     @NotEmpty(message = "Chọn ít nhất một vai trò")
-    private Set<RoleName> roles;
+    private List<ERole> roles;
 }

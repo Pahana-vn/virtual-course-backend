@@ -4,7 +4,7 @@ package com.mytech.virtualcourse.mappers;
 
 import com.mytech.virtualcourse.dtos.RoleDTO;
 import com.mytech.virtualcourse.entities.Role;
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.ERole;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

@@ -1,9 +1,11 @@
-// src/main/java/com/mytech/virtualcourse/dtos/UpdateUserRequest.java
 package com.mytech.virtualcourse.dtos;
 
+import com.mytech.virtualcourse.enums.EAccountStatus;
+import com.mytech.virtualcourse.enums.AuthenticationType;
+import com.mytech.virtualcourse.enums.ERole;
 import lombok.*;
 
-import jakarta.validation.constraints.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,13 +13,13 @@ import jakarta.validation.constraints.*;
 @AllArgsConstructor
 @ToString
 public class UpdateUserRequest {
-    @NotBlank
     private String username;
-
-    @NotBlank
-    @Email
     private String email;
-//
-//    private String type;
-    private String status;
+    private EAccountStatus status;
+    private boolean enable;
+    private boolean verifiedEmail;
+    private String authenticationType;
+    private String type;
+    private Integer version;
+    private List<ERole> roles;
 }

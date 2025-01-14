@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = "http://localhost:3000") // Đảm bảo CORS được cấu hình đúng
 public class FileController {
 
     @Autowired

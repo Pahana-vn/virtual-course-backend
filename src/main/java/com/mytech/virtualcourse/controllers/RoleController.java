@@ -13,8 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/roles")
-@CrossOrigin(origins = "http://localhost:3000") // Cho phép origin cụ thể
-
 public class RoleController {
 
     @Autowired

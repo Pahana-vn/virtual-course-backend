@@ -5,7 +5,9 @@ import com.mytech.virtualcourse.entities.Category;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CategoryMapper;
 import com.mytech.virtualcourse.repositories.CategoryRepository;
+import jakarta.persistence.Cacheable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +28,7 @@ public class CategoryService {
     @Autowired
     private FileStorageService fileStorageService;
 
-
+//    @Cacheable("categories")
     public List<CategoryDTO> getAllCategories() {
         List<Category> categories = categoryRepository.findAll();
         return categories.stream()
@@ -39,7 +41,7 @@ public class CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         return categoryMapper.categoryToCategoryDTO(category);
     }
-
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         if (categoryRepository.existsByName(categoryDTO.getName())) {
             throw new IllegalArgumentException("Category with name '" + categoryDTO.getName() + "' already exists");

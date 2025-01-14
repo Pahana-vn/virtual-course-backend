@@ -3,7 +3,7 @@ package com.mytech.virtualcourse.security;
 
 import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.entities.Role;
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.ERole;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,12 +38,12 @@ public class AccountDetailsImpl implements UserDetails {
      * @return AccountDetailsImpl
      */
     public static AccountDetailsImpl build(Account account) {
-        Set<RoleName> roles = account.getRoles().stream()
+        Set<ERole> roles = account.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
 
         List<GrantedAuthority> authorities = roles.stream()
-                .map(roleName -> new SimpleGrantedAuthority(roleName.name()))
+                .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName.name())) // Thêm "ROLE_" prefix
                 .collect(Collectors.toList());
 
         return new AccountDetailsImpl(
@@ -51,7 +51,7 @@ public class AccountDetailsImpl implements UserDetails {
                 account.getUsername(),
                 account.getEmail(),
                 account.getPassword(),
-                account.getEnable() != null ? account.getEnable() : false,
+                account.getEnable(),
                 authorities
         );
     }

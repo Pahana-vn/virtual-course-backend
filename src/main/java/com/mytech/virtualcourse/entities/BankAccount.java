@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.util.List;
 
+import com.mytech.virtualcourse.enums.BankName;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,8 +15,9 @@ import java.util.List;
 @Table(name = "bank_account")
 public class BankAccount extends AbstractEntity {
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "bank_name", nullable = false)
-    private String bankName;
+    private BankName bankName;
 
     @Column(name = "account_number", nullable = false, unique = true)
     private String accountNumber;
@@ -26,6 +29,6 @@ public class BankAccount extends AbstractEntity {
     @JoinColumn(name = "instructor_id", nullable = false)
     private Instructor instructor;
 
-    @OneToMany(mappedBy = "bankAccount", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions;
+//    @OneToMany(mappedBy = "bankAccount", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Transaction> transactions;
 }

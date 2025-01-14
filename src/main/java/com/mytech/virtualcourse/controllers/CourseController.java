@@ -5,17 +5,17 @@ import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.services.CourseService;
 import com.mytech.virtualcourse.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courses")
-@CrossOrigin(origins = "http://localhost:3000") // Cho phép origin cụ thể
-
 public class CourseController {
 
     @Autowired
@@ -38,8 +38,8 @@ public class CourseController {
         return ResponseEntity.ok("Course enabled successfully");
     }
     @GetMapping
-    public ResponseEntity<List<CourseDTO>> getAllCourses() {
-        List<CourseDTO> courses = courseService.getAllCourses();
+    public ResponseEntity<List<CourseDTO>> getAllCourses(Pageable pageable) {
+        List<CourseDTO> courses = courseService.getAllCourses(pageable);
         return ResponseEntity.ok(courses);
     }
 
@@ -59,7 +59,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseDTO courseDTO) {
+    public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseDTO courseDTO, Principal principal) {
         CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
         return ResponseEntity.ok(updatedCourse);
     }

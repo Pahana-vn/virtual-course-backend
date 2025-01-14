@@ -1,7 +1,7 @@
 // src/main/java/com/mytech/virtualcourse/dtos/RoleDTO.java
 package com.mytech.virtualcourse.dtos;
 
-import com.mytech.virtualcourse.enums.RoleName;
+import com.mytech.virtualcourse.enums.ERole;
 import lombok.*;
 
 @Getter
@@ -11,6 +11,6 @@ import lombok.*;
 @ToString
 public class RoleDTO {
     private Long id;
-    private RoleName name;
+    private ERole name;
     private String description;
 }
