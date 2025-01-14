@@ -44,7 +44,7 @@ public class Student extends AbstractEntity {
     private String categoryPrefer;
 
     @Column(name = "status", nullable = false)
-    private String statusStudent = "ACTIVE"; // Trạng thái của sinh viên (ACTIVE, INACTIVE)
+    private String statusStudent = "ACTIVE";
 
     @OneToOne
     @JoinColumn(name = "account_id", nullable = false)

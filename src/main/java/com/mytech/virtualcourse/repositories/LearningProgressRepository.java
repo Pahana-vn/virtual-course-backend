@@ -16,7 +16,6 @@ public interface LearningProgressRepository extends JpaRepository<LearningProgre
     @Query("SELECT COUNT(lp) FROM LearningProgress lp WHERE lp.student.id = :studentId AND lp.completed = :completed")
     int countByStudentIdAndCompleted(@Param("studentId") Long studentId, @Param("completed") boolean completed);
 
-
     @Query("SELECT lp FROM LearningProgress lp WHERE lp.student.id = :studentId")
     List<LearningProgress> findByStudentId(@Param("studentId") Long studentId);
 
@@ -30,7 +29,6 @@ public interface LearningProgressRepository extends JpaRepository<LearningProgre
     List<LearningProgress> findAllCoursesByStudentId(@Param("studentId") Long studentId);
 
     Optional<LearningProgress> findByStudentIdAndCourseId(Long studentId, Long courseId);
-
 
     // LearningProgressRepository.java
     @Query("SELECT COUNT(lp) FROM LearningProgress lp WHERE lp.student.id = :studentId AND lp.course.id = :courseId AND lp.completed = true")
