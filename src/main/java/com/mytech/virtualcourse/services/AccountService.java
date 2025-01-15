@@ -1,10 +1,7 @@
 // src/main/java/com/mytech/virtualcourse/services/AccountService.java
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.AccountDTO;
-import com.mytech.virtualcourse.dtos.InstructorDTO;
-import com.mytech.virtualcourse.dtos.StudentDTO;
-import com.mytech.virtualcourse.dtos.WalletDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.entities.Role;
@@ -16,10 +13,7 @@ import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.enums.ERole;
 import com.mytech.virtualcourse.enums.StatusWallet;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
-import com.mytech.virtualcourse.mappers.AccountMapper;
-import com.mytech.virtualcourse.mappers.InstructorMapper; // Thêm InstructorMapper
-import com.mytech.virtualcourse.mappers.StudentMapper;
-import com.mytech.virtualcourse.mappers.WalletMapper;
+import com.mytech.virtualcourse.mappers.*;
 import com.mytech.virtualcourse.repositories.AdminAccountRepository;
 import com.mytech.virtualcourse.repositories.InstructorRepository;
 import com.mytech.virtualcourse.repositories.RoleRepository;
@@ -56,6 +50,8 @@ public class AccountService {
     private final StudentMapper studentMapper;
     private final InstructorMapper instructorMapper; // Thêm InstructorMapper
     private final WalletMapper walletMapper; // Thêm WalletMapper
+    @Autowired
+    private JwtMapper jwtMapper;
 
     public AccountService(AdminAccountRepository accountRepository,
             InstructorRepository instructorRepository,
@@ -80,13 +76,13 @@ public class AccountService {
     }
 
     @Transactional
-    public AccountDTO createAccount(AccountDTO accountDTO) {
+    public AccountDTO createAccount(LoginDTO loginDTO) {
         // Convert từ DTO sang Entity
-        Account account = accountMapper.accountDTOToAccount(accountDTO);
+        Account account = jwtMapper.toAccount(AccountDTO);
         account.setAuthenticationType(AuthenticationType.valueOf(accountDTO.getAuthenticationType()));
 
         // Mã hoá password:
-        if (accountDTO.getPassword() != null && !accountDTO.getPassword().isEmpty()) {
+        if (loginDTO.getPassword() != null && !accountDTO.getPassword().isEmpty()) {
             account.setPassword(passwordEncoder.encode(accountDTO.getPassword()));
         } else {
             throw new IllegalArgumentException("Password must not be empty");
@@ -349,7 +345,7 @@ public class AccountService {
 
         // Cập nhật roles nếu có
         if (accountDTO.getRoles() != null && !accountDTO.getRoles().isEmpty()) {
-            Set<Role> rolesSet = accountDTO.getRoles().stream()
+            List<Role> rolesList = accountDTO.getRoles().stream()
                     .map(roleName -> roleRepository.findByName(roleName)
                             .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleName)))
                     .collect(Collectors.toSet());

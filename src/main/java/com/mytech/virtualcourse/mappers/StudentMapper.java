@@ -16,11 +16,9 @@ public interface StudentMapper {
 
     @Named("studentToStudentDTO")
     @Mapping(target = "accountId", source = "account.id") // Thêm mapping cho accountId
-    @Mapping(source = "wallet.id", target = "walletId") // Chỉ ánh xạ một lần
     StudentDTO studentToStudentDTO(Student student);
 
     @Named("studentDTOToStudent")
     @Mapping(target = "account", ignore = true) // Bỏ qua khi ánh xạ, vì đã xử lý trong Service
-    @Mapping(target = "wallet", ignore = true) // Bỏ qua Wallet, xử lý trong Service
     Student studentDTOToStudent(StudentDTO dto);
 }

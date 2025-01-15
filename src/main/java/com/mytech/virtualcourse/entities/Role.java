@@ -1,11 +1,10 @@
-// src/main/java/com/mytech/virtualcourse/entities/Role.java
 package com.mytech.virtualcourse.entities;
 
-import com.mytech.virtualcourse.enums.ERole;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,15 +14,13 @@ import java.util.Set;
 @Table(name = "role")
 public class Role extends AbstractEntity {
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private ERole name;
+    private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @ManyToMany(mappedBy = "roles")
-    private Set<Account> accounts;
-
-    // Getters and Setters (Lombok đã tạo)
+    @JsonIgnore
+    private List<Account> accounts;
 }

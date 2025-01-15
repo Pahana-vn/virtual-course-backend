@@ -19,6 +19,7 @@ public class Wallet extends AbstractEntity {
     @Column(name = "balance", nullable = false)
     private BigDecimal balance;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StatusWallet statusWallet; // e.g., ACTIVE, SUSPENDED, CLOSED
 
@@ -39,8 +40,4 @@ public class Wallet extends AbstractEntity {
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions;
 
-    public Wallet orElseThrow(Object object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'orElseThrow'");
-    }
 }

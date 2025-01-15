@@ -8,10 +8,12 @@ import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.RoleMapper;
 import com.mytech.virtualcourse.repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,6 +45,11 @@ public class RoleService {
         return roleMapper.roleToRoleDTO(role);
     }
 
+
+    @Cacheable("roles")
+    public Optional<Role> findByName(ERole roleName) {
+        return roleRepository.findByName(roleName);
+    }
     /**
      * Tạo một vai trò mới.
      */

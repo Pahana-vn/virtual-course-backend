@@ -54,18 +54,6 @@ public class InstructorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + id));
     }
 
-//    public void disableInstructor(Long instructorId) {
-//        Instructor instructor = findInstructorById(instructorId);
-//        instructor.setStatus("INACTIVE");
-//        instructorRepository.save(instructor);
-//    }
-//
-//    public void enableInstructor(Long instructorId) {
-//        Instructor instructor = findInstructorById(instructorId);
-//        instructor.setStatus("ACTIVE");
-//        instructorRepository.save(instructor);
-//    }
-
     public List<InstructorDTO> getAllInstructors() {
         List<Instructor> instructors = instructorRepository.findAll();
         return instructors.stream()

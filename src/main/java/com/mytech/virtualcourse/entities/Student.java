@@ -42,9 +42,9 @@ public class Student extends AbstractEntity {
 
     @Column(name = "category_prefer")
     private String categoryPrefer;
-//
-//    @Column(name = "status", nullable = false)
-//    private String statusStudent = "ACTIVE"; // Trạng thái của sinh viên (ACTIVE, INACTIVE)
+
+    @Column(name = "status", nullable = false)
+    private String statusStudent = "ACTIVE";
 
     @OneToOne
     @JoinColumn(name = "account_id", nullable = false)
@@ -60,6 +60,7 @@ public class Student extends AbstractEntity {
             inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private List<Course> courses;
+
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LearningProgress> learningProgresses;
@@ -91,6 +92,4 @@ public class Student extends AbstractEntity {
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentAssignmentSubmission> assignmentSubmissions;
 
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Wallet wallet;
 }
