@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.enums.EAccountStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -28,9 +29,6 @@ public class Account extends AbstractEntity {
     @Column(nullable = false)
     private EAccountStatus status = EAccountStatus.ACTIVE;
 
-//    @Column(nullable = false)
-//    private Boolean enable = true;
-
     @Column(name = "verified_email", nullable = false)
     private Boolean verifiedEmail = false;
 
@@ -38,6 +36,9 @@ public class Account extends AbstractEntity {
 
     @Column(name = "reset_password_token")
     private String resetPasswordToken;
+
+    @Column(name = "reset_password_token_expiry")
+    private LocalDateTime resetPasswordTokenExpiry;
 
     @Column(nullable = false)
     private Integer version;

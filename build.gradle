@@ -39,6 +39,10 @@ dependencies {
 	// OAuth2 Client (nếu đăng nhập Google/Facebook)
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
+	// Email
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 	//JSON support
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 

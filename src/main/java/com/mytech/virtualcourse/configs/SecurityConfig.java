@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Define URL authorization
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password/**").permitAll()
                         .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructors/**").hasRole("INSTRUCTOR")
