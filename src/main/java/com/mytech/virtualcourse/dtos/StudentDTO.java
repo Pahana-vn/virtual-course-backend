@@ -26,5 +26,7 @@ public class StudentDTO {
     private String statusStudent;
     private Long accountId; // Thêm trường này
     private Long walletId; // Thêm trường này
+    private String username;
+    private String email;
 
 }

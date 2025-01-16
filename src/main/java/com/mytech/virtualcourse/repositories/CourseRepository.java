@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.repositories;
 
 import com.mytech.virtualcourse.entities.Course;
+import com.mytech.virtualcourse.entities.Instructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,5 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByInstructorId(Long instructorId);
 
+    List<Course> findByInstructor(Instructor instructor);
 }

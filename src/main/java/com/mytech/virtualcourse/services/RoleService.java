@@ -48,14 +48,14 @@ public class RoleService {
 
     @Cacheable("roles")
     public Optional<Role> findByName(ERole roleName) {
-        return roleRepository.findByName(roleName);
+        return roleRepository.findByName(String.valueOf(roleName));
     }
     /**
      * Tạo một vai trò mới.
      */
     public RoleDTO createRole(RoleDTO roleDTO) {
         // Kiểm tra nếu tên Role đã tồn tại trong hệ thống
-        if (roleRepository.existsByName(roleDTO.getName())) {
+        if (roleRepository.existsByName(String.valueOf(roleDTO.getName()))) {
             throw new IllegalArgumentException("Role name already exists: " + roleDTO.getName());
         }
 
@@ -80,7 +80,7 @@ public class RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));
 
         // Kiểm tra nếu tên Role đã thay đổi và tên mới đã tồn tại trong hệ thống
-        if (!existingRole.getName().equals(roleDTO.getName()) && roleRepository.existsByName(roleDTO.getName())) {
+        if (roleRepository.existsByName(String.valueOf(roleDTO.getName()))) {
             throw new IllegalArgumentException("Role name already exists: " + roleDTO.getName());
         }
 
@@ -92,7 +92,7 @@ public class RoleService {
         }
 
         // Cập nhật các thông tin còn lại của Role
-        existingRole.setName(roleDTO.getName());
+        existingRole.setName(String.valueOf(roleDTO.getName()));
         existingRole.setDescription(roleDTO.getDescription());
 
         // Lưu Role đã cập nhật

@@ -12,14 +12,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class UpdateUserRequest {
+public class UpdateAccountDTO {
     private String username;
     private String email;
+    private String password; // Thêm trường password
     private EAccountStatus status;
-    private boolean enable;
     private boolean verifiedEmail;
-    private String authenticationType;
-    private String type;
+    private AuthenticationType authenticationType;
     private Integer version;
     private List<ERole> roles;
 }

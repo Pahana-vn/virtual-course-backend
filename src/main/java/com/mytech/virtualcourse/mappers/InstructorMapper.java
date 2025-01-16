@@ -1,37 +1,34 @@
-// src/main/java/com/mytech/virtualcourse/mappers/InstructorMapper.java
-
 package com.mytech.virtualcourse.mappers;
 
 import com.mytech.virtualcourse.dtos.InstructorDTO;
+import com.mytech.virtualcourse.dtos.InstructorInfo;
+import com.mytech.virtualcourse.dtos.InstructorStatisticsDTO;
 import com.mytech.virtualcourse.entities.Instructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 import org.mapstruct.ReportingPolicy;
+import org.mapstruct.factory.Mappers;
 
-@Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+import java.math.BigDecimal;
+
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
 public interface InstructorMapper {
+    InstructorMapper MAPPER = Mappers.getMapper(InstructorMapper.class);
 
-    InstructorMapper INSTANCE = Mappers.getMapper(InstructorMapper.class);
+    InstructorDTO instructorToInstructorDTO(Instructor instructor);
 
-    /**
-     * Chuyển đổi InstructorDTO thành Instructor Entity.
-     * Bỏ qua liên kết với Account vì sẽ được xử lý trong service.
-     */
-    @Mapping(target = "account", ignore = true)
-    @Mapping(source = "walletId", target = "wallet.id") // Sử dụng walletId thay vì wallet.id
-    @Mapping(target = "account.status",ignore = true)
     Instructor instructorDTOToInstructor(InstructorDTO instructorDTO);
 
-    /**
-     * Chuyển đổi Instructor Entity thành InstructorDTO.
-     * Map account.id thành accountId trong DTO.
-     */
-    @Mapping(target = "accountId", source = "account.id")
-    @Mapping(target = "walletId", source = "wallet.id")
-    @Mapping(target = "status", source = "account.status")
-    InstructorDTO instructorToInstructorDTO(Instructor instructor);
+    @Mapping(target = "instructorId", source = "instructor.id")
+    @Mapping(target = "instructorName", expression = "java(instructor.getFirstName() + ' ' + instructor.getLastName())")
+    @Mapping(target = "totalCourses", source = "totalCourses")
+    @Mapping(target = "totalStudents", source = "totalStudents")
+    @Mapping(target = "avatarImage", source = "instructor.photo")
+    @Mapping(target = "balance", source = "instructor.wallet.balance")
+    InstructorStatisticsDTO toInstructorStatisticsDTO(Instructor instructor, Long totalCourses, Long totalStudents, BigDecimal balance);
+
+    @Mapping(target = "firstName", source = "firstName")
+    @Mapping(target = "lastName", source = "lastName")
+    @Mapping(target = "photo", source = "photo")
+    InstructorInfo instructorToInstructorInfo(Instructor instructor);
 }

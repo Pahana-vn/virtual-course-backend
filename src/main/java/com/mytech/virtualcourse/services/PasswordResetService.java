@@ -40,7 +40,7 @@ public class PasswordResetService {
     // Yêu cầu reset mật khẩu
     public ResponseEntity<?> forgotPassword(PasswordResetRequestDTO request) {
         Optional<Account> accountOpt = accountRepository.findByEmail(request.getEmail());
-        if (!accountOpt.isPresent()) {
+        if (accountOpt.isEmpty()) {
             throw new ResourceNotFoundException("User not found with email: " + request.getEmail());
         }
 
@@ -66,7 +66,7 @@ public class PasswordResetService {
     // Đặt lại mật khẩu
     public ResponseEntity<?> resetPassword(ResetPasswordDTO resetPasswordDTO) {
         Optional<Account> accountOpt = accountRepository.findByResetPasswordToken(resetPasswordDTO.getToken());
-        if (!accountOpt.isPresent()) {
+        if (accountOpt.isEmpty()) {
             throw new ResourceNotFoundException("Invalid reset token.");
         }
 

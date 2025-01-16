@@ -25,7 +25,11 @@ public class Question extends AbstractEntity {
     private Integer marks;
 
     @ManyToOne
-    @JoinColumn(name = "test_id", nullable = false)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course; // Khóa học chứa câu hỏi
+
+    @ManyToOne
+    @JoinColumn(name = "test_id", nullable = true)
     private Test test;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)

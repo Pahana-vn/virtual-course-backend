@@ -1,21 +1,31 @@
-// src/main/java/com/mytech/virtualcourse/services/PaymentService.java
-
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.PaymentDTO;
+import com.mytech.virtualcourse.configs.VnPayConfig;
+import com.mytech.virtualcourse.entities.Course;
 import com.mytech.virtualcourse.entities.Payment;
 import com.mytech.virtualcourse.entities.Student;
-import com.mytech.virtualcourse.enums.TransactionStatus;
-import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
-import com.mytech.virtualcourse.mappers.PaymentMapper;
+import com.mytech.virtualcourse.enums.PaymentMethod;
+import com.mytech.virtualcourse.enums.PaymentStatus;
+import com.mytech.virtualcourse.repositories.CourseRepository;
 import com.mytech.virtualcourse.repositories.PaymentRepository;
 import com.mytech.virtualcourse.repositories.StudentRepository;
+import com.paypal.api.payments.*;
+import com.paypal.base.rest.APIContext;
+import com.paypal.base.rest.PayPalRESTException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
 
 @Service
 public class PaymentService {
@@ -27,58 +37,410 @@ public class PaymentService {
     private StudentRepository studentRepository;
 
     @Autowired
-    private PaymentMapper paymentMapper;
+    private CourseRepository courseRepository;
 
-    /**
-     * Tạo mới một thanh toán.
-     *
-     * @param dto Dữ liệu thanh toán.
-     * @return PaymentDTO đã được lưu.
-     */
-    public PaymentDTO createPayment(PaymentDTO dto) {
-        Student student = studentRepository.findById(dto.getStudentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + dto.getStudentId()));
+    @Autowired
+    private APIContext apiContext;
 
-        Payment payment = paymentMapper.toEntity(dto);
-        payment.setStatus(TransactionStatus.PENDING);
-        payment.setPaymentDate(new Timestamp(System.currentTimeMillis()));
-        payment.setStudent(student);
+    @Autowired
+    private VnPayConfig vnPayConfig;
 
-        Payment savedPayment = paymentRepository.save(payment);
-        return paymentMapper.toDTO(savedPayment);
+    @Autowired
+    private StudentService studentService;
+
+    // -------------------- PAYPAL -------------------------
+    public String initiatePaypalPayment(Long courseId) throws Exception {
+        Student student = studentRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        // Course được lấy từ DB => entity managed
+
+        BigDecimal amount = course.getBasePrice();
+        if (amount == null) {
+            throw new RuntimeException("Course price not found");
+        }
+
+        Payment dbPayment = new Payment();
+        dbPayment.setAmount(amount);
+        dbPayment.setPaymentDate(Timestamp.from(Instant.now()));
+        dbPayment.setPaymentMethod(PaymentMethod.PAYPAL);
+        dbPayment.setStatus(PaymentStatus.Pending);
+        dbPayment.setStudent(student);
+
+        List<Course> singleCourseList = new ArrayList<>();
+        singleCourseList.add(course); // course là managed entity
+        dbPayment.setCourses(singleCourseList);
+
+        dbPayment = paymentRepository.save(dbPayment);
+        // Lúc này payment_course phải được insert
+
+        String cancelUrl = "http://localhost:3000/cancel";
+        String successUrl = "http://localhost:3000/success";
+
+        com.paypal.api.payments.Payment createdPayment = createPayPalPayment(
+                amount,
+                "Payment for course: " + course.getTitleCourse(),
+                cancelUrl,
+                successUrl
+        );
+
+        dbPayment.setPaypalPaymentId(createdPayment.getId());
+        paymentRepository.save(dbPayment);
+
+        for (Links link : createdPayment.getLinks()) {
+            if ("approval_url".equalsIgnoreCase(link.getRel())) {
+                return link.getHref();
+            }
+        }
+        throw new RuntimeException("No approval URL returned by PayPal");
     }
 
-    /**
-     * Lấy danh sách thanh toán của một người dùng.
-     *
-     * @param userId ID của người dùng.
-     * @return Danh sách PaymentDTO.
-     */
-    public List<PaymentDTO> getPaymentsByUser(Long userId) {
-        List<Payment> payments = paymentRepository.findByUserId(userId);
-        return payments.stream()
-                .map(paymentMapper::toDTO)
-                .collect(Collectors.toList());
+
+    public String initiatePaypalPaymentForMultipleCourses(List<Long> courseIds) throws Exception {
+        Student student = studentRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        List<Course> courses = courseRepository.findAllById(courseIds);
+        if (courses.isEmpty()) {
+            throw new RuntimeException("No courses found for given IDs");
+        }
+
+        BigDecimal totalAmount = courses.stream()
+                .map(course -> {
+                    BigDecimal price = course.getBasePrice();
+                    if (price == null) {
+                        throw new RuntimeException("Course price not found for courseId: " + course.getId());
+                    }
+                    return price;
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Payment dbPayment = new Payment();
+        dbPayment.setAmount(totalAmount);
+        dbPayment.setPaymentDate(Timestamp.from(Instant.now()));
+        dbPayment.setPaymentMethod(PaymentMethod.PAYPAL);
+        dbPayment.setStatus(PaymentStatus.Pending);
+        dbPayment.setStudent(student);
+        dbPayment.setCourses(new ArrayList<>(courses));
+
+        dbPayment = paymentRepository.save(dbPayment);
+
+        String cancelUrl = "http://localhost:3000/cancel";
+        String successUrl = "http://localhost:3000/success";
+
+        com.paypal.api.payments.Payment createdPayment = createPayPalPayment(
+                totalAmount,
+                "Payment for multiple courses",
+                cancelUrl,
+                successUrl
+        );
+
+        dbPayment.setPaypalPaymentId(createdPayment.getId());
+        paymentRepository.save(dbPayment);
+
+        for (Links link : createdPayment.getLinks()) {
+            if ("approval_url".equalsIgnoreCase(link.getRel())) {
+                return link.getHref();
+            }
+        }
+
+        throw new RuntimeException("No approval URL returned by PayPal");
     }
 
-    /**
-     * Cập nhật trạng thái của một thanh toán.
-     *
-     * @param paymentId ID của thanh toán.
-     * @param status    Trạng thái mới.
-     * @return PaymentDTO đã được cập nhật.
-     */
-    public PaymentDTO updatePaymentStatus(Long paymentId, TransactionStatus status) {
+    public Payment completePaypalPayment(String paymentId, String payerId) throws PayPalRESTException {
+        com.paypal.api.payments.Payment payment = new com.paypal.api.payments.Payment();
+        payment.setId(paymentId);
+
+        PaymentExecution execution = new PaymentExecution();
+        execution.setPayerId(payerId);
+
+        com.paypal.api.payments.Payment executedPayment = payment.execute(apiContext, execution);
+        System.out.println("PayPal executed payment state: " + executedPayment.getState());
+
+        Payment dbPayment = paymentRepository.findByPaypalPaymentId(paymentId)
+                .orElseThrow(() -> new RuntimeException("No matching Payment found for paypalPaymentId"));
+
+        String state = executedPayment.getState();
+        if ("approved".equalsIgnoreCase(state) || "completed".equalsIgnoreCase(state)) {
+            dbPayment.setStatus(PaymentStatus.Completed);
+            paymentRepository.save(dbPayment);
+
+            Student student = dbPayment.getStudent();
+            if (student.getCourses() == null) {
+                student.setCourses(new ArrayList<>());
+            }
+
+            List<Course> purchasedCourses = dbPayment.getCourses();
+            for (Course c : purchasedCourses) {
+                if (!student.getCourses().contains(c)) {
+                    student.getCourses().add(c);
+                }
+            }
+            studentRepository.save(student);
+
+            // Gọi enrollStudentToCourse cho mỗi khóa học vừa mua
+            for (Course c : purchasedCourses) {
+                // Giả sử bạn có @Autowired StudentService studentService;
+                studentService.enrollStudentToCourse(student.getId(), c.getId());
+            }
+
+
+        } else {
+            dbPayment.setStatus(PaymentStatus.Failed);
+            paymentRepository.save(dbPayment);
+        }
+
+        return dbPayment;
+    }
+
+    private com.paypal.api.payments.Payment createPayPalPayment(
+            BigDecimal total,
+            String description, String cancelUrl, String successUrl) throws PayPalRESTException {
+
+        Amount amount = new Amount();
+        amount.setCurrency("USD");
+        amount.setTotal(String.format("%.2f", total));
+
+        Transaction transaction = new Transaction();
+        transaction.setDescription(description);
+        transaction.setAmount(amount);
+
+        Payer payer = new Payer();
+        payer.setPaymentMethod("paypal");
+
+        RedirectUrls redirectUrls = new RedirectUrls();
+        redirectUrls.setCancelUrl(cancelUrl);
+        redirectUrls.setReturnUrl(successUrl);
+
+        com.paypal.api.payments.Payment payment = new com.paypal.api.payments.Payment();
+        payment.setIntent("sale");
+        payment.setPayer(payer);
+        payment.setTransactions(Collections.singletonList(transaction));
+        payment.setRedirectUrls(redirectUrls);
+
+        return payment.create(apiContext);
+    }
+
+    // -------------------- VNPAY -------------------------
+    public String initiateVnPayPayment(Long courseId) throws Exception {
+        Student student = studentRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        // Course là managed entity
+
+        BigDecimal amount = course.getBasePrice();
+        if (amount == null) {
+            throw new RuntimeException("Course price not found");
+        }
+
+        Payment dbPayment = new Payment();
+        dbPayment.setAmount(amount);
+        dbPayment.setPaymentDate(Timestamp.from(Instant.now()));
+        dbPayment.setPaymentMethod(PaymentMethod.VNPAY);
+        dbPayment.setStatus(PaymentStatus.Pending);
+        dbPayment.setStudent(student);
+
+        List<Course> singleCourseList = new ArrayList<>();
+        singleCourseList.add(course); // course là managed entity
+        dbPayment.setCourses(singleCourseList);
+
+        dbPayment = paymentRepository.save(dbPayment);
+        // Lúc này payment_course phải được insert
+
+        return createVnpayPaymentUrl(dbPayment);
+    }
+
+
+    public String initiateVnPayPaymentForMultipleCourses(List<Long> courseIds) throws Exception {
+        Student student = studentRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        List<Course> courses = courseRepository.findAllById(courseIds);
+        if (courses.isEmpty()) {
+            throw new RuntimeException("No courses found for given IDs");
+        }
+
+        BigDecimal totalAmount = courses.stream()
+                .map(course -> {
+                    BigDecimal price = course.getBasePrice();
+                    if (price == null) {
+                        throw new RuntimeException("Course price not found for courseId: " + course.getId());
+                    }
+                    return price;
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Payment dbPayment = new Payment();
+        dbPayment.setAmount(totalAmount);
+        dbPayment.setPaymentDate(Timestamp.from(Instant.now()));
+        dbPayment.setPaymentMethod(PaymentMethod.VNPAY);
+        dbPayment.setStatus(PaymentStatus.Pending);
+        dbPayment.setStudent(student);
+        dbPayment.setCourses(new ArrayList<>(courses));
+
+        dbPayment = paymentRepository.save(dbPayment);
+
+        return createVnpayPaymentUrl(dbPayment);
+    }
+
+    private String createVnpayPaymentUrl(Payment payment) throws UnsupportedEncodingException {
+        String vnp_TmnCode = vnPayConfig.getTmnCode();
+        String vnp_HashSecret = vnPayConfig.getHashSecret();
+        String vnp_PayUrl = vnPayConfig.getBaseUrl();
+        String vnp_ReturnUrl = vnPayConfig.getReturnUrl();
+        String vnp_Version = vnPayConfig.getVersion();
+        String vnp_Command = vnPayConfig.getCommand();
+        String vnp_Locale = vnPayConfig.getLocale();
+        String vnp_CurrCode = vnPayConfig.getCurrCode();
+        String vnp_OrderType = "other";
+
+        long amountVND = payment.getAmount().longValue();
+        String vnp_Amount = String.valueOf(amountVND * 100);
+        String vnp_TxnRef = String.valueOf(payment.getId());
+        String vnp_OrderInfo = URLEncoder.encode("Thanh toan don hang", StandardCharsets.US_ASCII);
+
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String vnp_CreateDate = formatter.format(cld.getTime());
+        cld.add(Calendar.MINUTE, 15);
+        String vnp_ExpireDate = formatter.format(cld.getTime());
+        String vnp_IpAddr = "116.102.86.199";
+
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", vnp_Version);
+        vnp_Params.put("vnp_Command", vnp_Command);
+        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        vnp_Params.put("vnp_Amount", vnp_Amount);
+        vnp_Params.put("vnp_CurrCode", vnp_CurrCode);
+        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", vnp_OrderInfo);
+        vnp_Params.put("vnp_OrderType", vnp_OrderType);
+        vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+        vnp_Params.put("vnp_Locale", vnp_Locale);
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+
+        for (String fieldName : fieldNames) {
+            String fieldValue = vnp_Params.get(fieldName);
+            if ((fieldValue != null) && (!fieldValue.isEmpty())) {
+                if (!hashData.isEmpty()) {
+                    hashData.append('&');
+                }
+                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+
+                if (!query.isEmpty()) {
+                    query.append('&');
+                }
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
+                query.append('=');
+                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+            }
+        }
+
+        String vnp_SecureHash = hmacSHA512(vnp_HashSecret, hashData.toString());
+        query.append("&vnp_SecureHash=").append(vnp_SecureHash);
+
+        return vnp_PayUrl + "?" + query;
+    }
+
+    private String hmacSHA512(String key, String data) {
+        try {
+            Mac sha512_HMAC = Mac.getInstance("HmacSHA512");
+            SecretKeySpec secret_key = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+            sha512_HMAC.init(secret_key);
+            byte[] hash = sha512_HMAC.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(2 * hash.length);
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while generating HMAC-SHA512", e);
+        }
+    }
+
+    public boolean verifyVnpayResponse(Map<String, String> params) {
+        String vnp_SecureHash = params.get("vnp_SecureHash");
+        if (vnp_SecureHash == null) return false;
+
+        Map<String, String> filtered = new HashMap<>(params);
+        filtered.remove("vnp_SecureHash");
+        filtered.remove("vnp_SecureHashType");
+
+        List<String> fieldNames = new ArrayList<>(filtered.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        for (String fieldName : fieldNames) {
+            String fieldValue = filtered.get(fieldName);
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                if (!hashData.isEmpty()) {
+                    hashData.append('&');
+                }
+                hashData.append(fieldName).append('=').append(fieldValue);
+            }
+        }
+
+        String calculatedHash = hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
+        return calculatedHash.equals(vnp_SecureHash);
+    }
+
+    public void handleVnpayReturn(Map<String, String> params) {
+        System.out.println("VNPAY RETURN PARAMS: " + params);
+
+        String txnRef = params.get("vnp_TxnRef");
+        Long paymentId = Long.valueOf(txnRef);
+
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
+                .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + paymentId));
 
-        payment.setStatus(status);
-        Payment updatedPayment = paymentRepository.save(payment);
-        return paymentMapper.toDTO(updatedPayment);
-    }
+        boolean valid = verifyVnpayResponse(params);
+        System.out.println("Verification Valid: " + valid);
 
-    public List<PaymentDTO> getPaymentsByStudent(Long studentId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPaymentsByStudent'");
+        if (!valid) {
+            payment.setStatus(PaymentStatus.Failed);
+            paymentRepository.save(payment);
+            return;
+        }
+
+        String transactionStatus = params.get("vnp_TransactionStatus");
+        System.out.println("Transaction Status: " + transactionStatus);
+
+        if ("00".equals(transactionStatus)) {
+            payment.setStatus(PaymentStatus.Completed);
+            paymentRepository.save(payment);
+
+            Student student = payment.getStudent();
+            if (student.getCourses() == null) {
+                student.setCourses(new ArrayList<>());
+            }
+
+            List<Course> purchasedCourses = payment.getCourses();
+            for (Course c : purchasedCourses) {
+                if (!student.getCourses().contains(c)) {
+                    student.getCourses().add(c);
+                }
+            }
+            studentRepository.save(student);
+
+            // Gọi enrollStudentToCourse
+            for (Course c : purchasedCourses) {
+                studentService.enrollStudentToCourse(student.getId(), c.getId());
+            }
+        } else {
+            payment.setStatus(PaymentStatus.Failed);
+            paymentRepository.save(payment);
+        }
     }
 }

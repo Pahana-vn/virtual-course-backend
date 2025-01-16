@@ -162,25 +162,15 @@ public class TransactionService {
 
         // Giả sử Wallet liên kết với Student thông qua Payment
         Student student = payment.getStudent();
-        Wallet wallet = student.getWallet();
-
-        if (wallet == null) {
-            throw new ResourceNotFoundException("Wallet not found for student with id: " + student.getId());
-        }
-        wallet.setBalance(wallet.getBalance().add(amount));
-        wallet.setLastUpdated(new Timestamp(System.currentTimeMillis()));
-        walletRepository.save(wallet);
 
         Transaction transaction = new Transaction();
         transaction.setAmount(amount);
         transaction.setTransactionType(TransactionType.REFUND);
         transaction.setTransactionStatus(TransactionStatus.SUCCESS);
         transaction.setProcessedAt(new Timestamp(System.currentTimeMillis()));
-        transaction.setWallet(wallet);
         transaction.setPayment(payment); // Sửa dòng này để gán đối tượng Payment
 
         Transaction savedTransaction = transactionRepository.save(transaction);
-        notifyWalletOwner(wallet, "Hoàn tiền " + amount + " cho giao dịch của bạn.", savedTransaction.getId());
 
         return transactionMapper.toDTO(savedTransaction);
     }

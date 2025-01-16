@@ -11,10 +11,6 @@ import com.mytech.virtualcourse.exceptions.GlobalExceptionHandler.UnauthorizedAc
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.ReviewMapper;
 import com.mytech.virtualcourse.repositories.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,12 +84,6 @@ public class ReviewService {
         return reviewMapper.toDTO(savedReview);
     }
 
-    // /**
-    //  * Fetch all reviews for a given instructor.
-    //  *
-    //  * @param instructorId ID of the instructor.
-    //  * @return List of ReviewDTO.
-    //  */
     // public List<ReviewDTO> getReviewsByInstructorId(Long instructorId) {
     //     List<Review> reviews = reviewRepository.findByCourseInstructorId(instructorId);
     //     if (reviews.isEmpty()) {

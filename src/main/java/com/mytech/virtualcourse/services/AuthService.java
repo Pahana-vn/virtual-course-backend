@@ -1,22 +1,23 @@
+// src/main/java/com/mytech/virtualcourse/services/AuthService.java
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.RegisterDTO;
-import com.mytech.virtualcourse.dtos.LoginDTO;
-import com.mytech.virtualcourse.dtos.MessageDTO;
-import com.mytech.virtualcourse.dtos.JwtDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.entities.Role;
 import com.mytech.virtualcourse.enums.AuthenticationType;
 import com.mytech.virtualcourse.enums.EAccountStatus;
+import com.mytech.virtualcourse.enums.ERole;
+import com.mytech.virtualcourse.mappers.*;
 import com.mytech.virtualcourse.repositories.AccountRepository;
 import com.mytech.virtualcourse.repositories.RoleRepository;
+import com.mytech.virtualcourse.repositories.WalletRepository;
 import com.mytech.virtualcourse.security.CustomUserDetails;
 import com.mytech.virtualcourse.security.JwtUtil;
-import com.mytech.virtualcourse.mappers.AccountMapper;
-import com.mytech.virtualcourse.mappers.JwtMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.security.authentication.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,14 +43,31 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private AccountMapper accountMapper;
+
+    @Autowired
+    private InstructorMapper instructorMapper;
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private WalletRepository walletRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil; // Giả sử bạn có JwtUtil để tạo token
 
     @Autowired
     private JwtMapper jwtMapper;
 
     @Autowired
-    private AccountMapper accountMapper;
-
+    private InstructorService instructorService;
+    /**
+     * Đăng ký người dùng mới.
+     *
+     * @param registerRequest Dữ liệu đăng ký.
+     * @return Phản hồi về kết quả đăng ký.
+     */
     public ResponseEntity<?> registerUser(RegisterDTO registerRequest) {
         // Kiểm tra username hoặc email đã tồn tại
         if (accountRepository.existsByUsername(registerRequest.getUsername())) {
@@ -64,48 +82,58 @@ public class AuthService {
                     .body(new MessageDTO("Error: Email is already in use!"));
         }
 
-        Account account = new Account();
-        account.setUsername(registerRequest.getUsername());
-        account.setEmail(registerRequest.getEmail());
-        account.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        account.setVerifiedEmail(false);
-        account.setVersion(1);
-        account.setAuthenticationType(AuthenticationType.LOCAL);
+        // Chuyển DTO sang Entity
+        Account account = accountMapper.registerDTOToAccount(registerRequest);
 
+        // Mã hóa password
+        account.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+
+        // Thiết lập vai trò
         Set<Role> roles = new HashSet<>();
 
-        if (registerRequest.getRole().equalsIgnoreCase("admin")) {
-            if (accountRepository.findAll().stream()
-                    .anyMatch(a -> a.getRoles().stream()
-                            .anyMatch(r -> r.getName().equals("ADMIN")))) {
-                return ResponseEntity
-                        .badRequest()
-                        .body(new MessageDTO("Error: Admin account already exists!"));
-            }
-            Role adminRole = roleRepository.findByName("ADMIN")
-                    .orElseThrow(() -> new RuntimeException("Error: Role ADMIN is not found."));
-            roles.add(adminRole);
-            account.setStatus(EAccountStatus.ACTIVE);
-            account.setVerifiedEmail(true);
-        } else if (registerRequest.getRole().equalsIgnoreCase("instructor")) {
-            Role instructorRole = roleRepository.findByName("INSTRUCTOR")
+        if (registerRequest.getRole().equalsIgnoreCase("instructor")) {
+            Role instructorRole = roleRepository.findByName(String.valueOf(ERole.INSTRUCTOR))
                     .orElseThrow(() -> new RuntimeException("Error: Role INSTRUCTOR is not found."));
             roles.add(instructorRole);
-            account.setStatus(EAccountStatus.PENDING);
-        } else {
-            Role studentRole = roleRepository.findByName("STUDENT")
+            account.setStatus(EAccountStatus.PENDING); // Chờ Admin duyệt
+        } else if (registerRequest.getRole().equalsIgnoreCase("student")) {
+            Role studentRole = roleRepository.findByName(String.valueOf(ERole.STUDENT))
                     .orElseThrow(() -> new RuntimeException("Error: Role STUDENT is not found."));
             roles.add(studentRole);
             account.setStatus(EAccountStatus.ACTIVE);
+        } else {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageDTO("Error: Invalid role selected."));
         }
 
         account.setRoles(new ArrayList<>(roles));
 
-        accountRepository.save(account);
+        // Thiết lập các trường mặc định
+        account.setVerifiedEmail(false);
+        account.setAuthenticationType(AuthenticationType.LOCAL);
+        account.setVersion(1);
 
-        return ResponseEntity.ok(new MessageDTO("User registered successfully!"));
+        // Lưu tài khoản
+        Account savedAccount = accountRepository.save(account);
+
+        // Nếu là Instructor, tạo thông tin bổ sung với trạng thái PENDING
+        if (registerRequest.getRole().equalsIgnoreCase("instructor")) {
+            InstructorDTO instructorDTO = new InstructorDTO();
+            instructorDTO.setAccountId(savedAccount.getId());
+            // Các trường khác có thể được điền sau khi Admin duyệt hoặc để trống
+            instructorService.createInstructor(instructorDTO);
+        }
+
+        return ResponseEntity.ok(new MessageDTO("User registered successfully! Please wait for approval."));
     }
 
+    /**
+     * Xác thực người dùng và tạo JWT token.
+     *
+     * @param loginRequest Dữ liệu đăng nhập.
+     * @return JWT token hoặc lỗi xác thực.
+     */
     public ResponseEntity<?> authenticateUser(LoginDTO loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -125,8 +153,8 @@ public class AuthService {
 
             return ResponseEntity.ok(jwtDTO);
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageDTO("Error: Invalid username or password"));
+            return ResponseEntity.status(401)
+                    .body(new MessageDTO("Error: Invalid email or password"));
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.entities;
 
 import com.mytech.virtualcourse.enums.CourseLevel;
+import com.mytech.virtualcourse.enums.EStatusCourse;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -44,8 +45,9 @@ public class Course extends AbstractEntity {
     @Column(name = "base_price", nullable = false)
     private BigDecimal basePrice;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
+    private EStatusCourse status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
 
     @ManyToMany
     @JoinTable(
@@ -67,11 +69,14 @@ public class Course extends AbstractEntity {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoursePromotion> promotions; // Chương trình khuyến mãi
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "courses", cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private List<Payment> payments; // Thanh toán liên quan đến khóa học
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assignment> assignments; // Bài tập liên quan đến khóa học
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Question> questions; // Danh sách câu hỏi thuộc khóa học
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Test> tests; // Bài kiểm tra liên quan đến khóa học

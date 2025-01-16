@@ -16,75 +16,21 @@ public class FileStorageService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    /**
-     * Lưu file và trả về tên file đã lưu.
-     * @param file - File hình ảnh.
-     * @return Tên file đã lưu.
-     */
-    public String storeFile(MultipartFile file, String entity) {
+    public String storeFile(MultipartFile file) {
         try {
-            // Kiểm tra entity hợp lệ
-            if (!entity.equals("instructor") &&
-                    !entity.equals("course") &&
-                    !entity.equals("student") &&
-                    !entity.equals("category")) {
-                throw new RuntimeException("Invalid entity type for file upload.");
-            }
 
-            // Thay vì chỉ lấy uploadDir, ta cần nối thêm entity:
-            Path entityUploadPath = Paths.get(uploadDir, entity).toAbsolutePath().normalize();
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
 
-            // Tạo directory nếu chưa có
-            Files.createDirectories(entityUploadPath);
 
-            if (file.isEmpty()) {
-                throw new RuntimeException("Failed to store empty file.");
-            }
+            Files.createDirectories(uploadPath);
 
-            String originalFileName = Objects.requireNonNull(file.getOriginalFilename());
-            String newFileName = System.currentTimeMillis() + "_" + originalFileName;
-            // Lưu file vào đường dẫn `uploads/<entity>/<newFileName>`
-            Path filePath = entityUploadPath.resolve(newFileName);
 
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            Path filePath = uploadPath.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Files.copy(file.getInputStream(), filePath);
 
-            return newFileName; // Trả về tên file đã lưu
+            return "/uploads/" + file.getOriginalFilename();
         } catch (IOException e) {
-            throw new RuntimeException(
-                    "Could not store file " + file.getOriginalFilename() + ". Please try again!",
-                    e
-            );
+            throw new RuntimeException("Could not store file " + file.getOriginalFilename(), e);
         }
     }
-    /**
-     * Thêm phương thức xóa file cũ
-     * @param fileName Tên file cũ đang lưu trong DB (VD: "1691234567890_myphoto.png")
-     * @param entity  Thư mục con (category, instructor, ...)
-     */
-    public void deleteFile(String fileName, String entity) {
-        if (fileName == null || fileName.isEmpty()) {
-            return; // Không có gì để xóa
-        }
-
-        // Kiểm tra entity hợp lệ
-        if (!entity.equals("instructor") &&
-                !entity.equals("course") &&
-                !entity.equals("student") &&
-                !entity.equals("category")) {
-            return;
-        }
-
-        // Tạo đường dẫn tuyệt đối: uploads/<entity>/<fileName>
-        Path entityUploadPath = Paths.get(uploadDir, entity).toAbsolutePath().normalize();
-        Path filePath = entityUploadPath.resolve(fileName);
-
-        try {
-            // Xóa file nếu tồn tại
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            // Xử lý nếu cần, hoặc ghi log
-            throw new RuntimeException("Could not delete file " + fileName, e);
-        }
-    }
-
 }

@@ -1,8 +1,8 @@
 package com.mytech.virtualcourse.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.mytech.virtualcourse.enums.PaymentMethod;
 import com.mytech.virtualcourse.enums.PaymentStatus;
-import com.mytech.virtualcourse.enums.TransactionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,15 +30,24 @@ public class Payment extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private TransactionStatus status;
+    private PaymentStatus status;
+
+    @Column(name = "paypal_payment_id", nullable = true)
+    private String paypalPaymentId;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
-    @ManyToOne
-    @JoinColumn(name = "course_id", nullable = false)
-    private Course course;
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinTable(
+            name = "payment_course",
+            joinColumns = @JoinColumn(name = "payment_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    @JsonIgnoreProperties("payments")
+    private List<Course> courses;
+
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions;

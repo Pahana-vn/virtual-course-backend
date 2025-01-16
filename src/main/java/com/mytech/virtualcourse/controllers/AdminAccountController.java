@@ -1,12 +1,14 @@
-// src/main/java/com/mytech/virtualcourse/controllers/AccountController.java
+// src/main/java/com/mytech/virtualcourse/controllers/AdminAccountController.java
 package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.AccountDTO;
 import com.mytech.virtualcourse.dtos.InstructorDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.dtos.UpdateAccountDTO;
 import com.mytech.virtualcourse.enums.ERole;
 import com.mytech.virtualcourse.services.AccountService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,15 +16,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller quản lý các tài khoản từ phía Admin.
+ */
 @RestController
 @RequestMapping("/api/accounts")
 public class AdminAccountController {
 
-    private final AccountService accountService;
-
-    public AdminAccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
+    @Autowired
+    private AccountService accountService;
 
     /**
      * Lấy thông tin Account theo ID.
@@ -45,21 +47,11 @@ public class AdminAccountController {
     }
 
     /**
-     * Tạo một Account mới.
-     */
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')") // Chỉ ADMIN mới có quyền truy cập
-    public ResponseEntity<AccountDTO> createAccount(@RequestBody AccountDTO accountDTO) {
-        AccountDTO createdAccount = accountService.createAccount(accountDTO);
-        return new ResponseEntity<>(createdAccount, HttpStatus.CREATED);
-    }
-
-    /**
      * Thêm Instructor vào một Account đã tồn tại.
      */
     @PostMapping("/{accountId}/instructor")
     @PreAuthorize("hasRole('ADMIN')") // Chỉ ADMIN mới có quyền truy cập
-    public ResponseEntity<InstructorDTO> createInstructorForAccount(@PathVariable Long accountId, @RequestBody InstructorDTO instructorDTO) {
+    public ResponseEntity<InstructorDTO> createInstructorForAccount(@PathVariable Long accountId, @RequestBody @Valid InstructorDTO instructorDTO) {
         InstructorDTO createdInstructor = accountService.addInstructorToAccount(accountId, instructorDTO);
         return new ResponseEntity<>(createdInstructor, HttpStatus.CREATED);
     }
@@ -69,7 +61,7 @@ public class AdminAccountController {
      */
     @PostMapping("/{accountId}/student")
     @PreAuthorize("hasRole('ADMIN')") // Chỉ ADMIN mới có quyền truy cập
-    public ResponseEntity<StudentDTO> createStudentForAccount(@PathVariable Long accountId, @RequestBody StudentDTO studentDTO) {
+    public ResponseEntity<StudentDTO> createStudentForAccount(@PathVariable Long accountId, @RequestBody @Valid StudentDTO studentDTO) {
         StudentDTO createdStudent = accountService.addStudentToAccount(accountId, studentDTO);
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
@@ -127,16 +119,16 @@ public class AdminAccountController {
     /**
      * Chỉnh sửa một tài khoản dựa trên accountId.
      *
-     * @param accountId  ID của tài khoản cần chỉnh sửa.
-     * @param accountDTO Dữ liệu cập nhật của tài khoản.
+     * @param accountId ID của tài khoản cần chỉnh sửa.
+     * @param updateAccountDTO Dữ liệu cập nhật của tài khoản.
      * @return Phản hồi chứa dữ liệu tài khoản đã được cập nhật.
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AccountDTO> updateAccount(
             @PathVariable("id") Long accountId,
-            @Valid @RequestBody AccountDTO accountDTO) {
-        AccountDTO updatedAccount = accountService.updateAccount(accountId, accountDTO);
+            @Valid @RequestBody UpdateAccountDTO updateAccountDTO) {
+        AccountDTO updatedAccount = accountService.updateAccount(accountId, updateAccountDTO);
         return ResponseEntity.ok(updatedAccount);
     }
 }

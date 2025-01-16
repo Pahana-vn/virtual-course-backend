@@ -1,35 +1,39 @@
-// src/main/java/com/mytech/virtualcourse/controllers/FileController.java
-
 package com.mytech.virtualcourse.controllers;
 
-import com.mytech.virtualcourse.services.FileStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
 
-    @Autowired
-    private FileStorageService fileStorageService;
+    private static final String UPLOAD_DIR = "src/main/resources/uploads/category/";
 
-    /**
-     * Upload ảnh cho các thực thể (instructor, course, student).
-     * @param entity - Loại thực thể (instructor, course, student).
-     * @param file - File hình ảnh.
-     * @return Tên file đã lưu.
-     */
-    @PostMapping("/upload/{entity}")
-    public ResponseEntity<String> uploadPhoto(@PathVariable String entity,@RequestParam("file") MultipartFile file) {
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            String fileName = fileStorageService.storeFile(file, entity);
-            return new ResponseEntity<>(fileName, HttpStatus.OK);
-        } catch (Exception e) {
-            // Log lỗi chi tiết
-            return new ResponseEntity<>("Failed to upload file: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            File uploadDir = new File(UPLOAD_DIR);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            Files.copy(file.getInputStream(), filePath);
+
+            String fileUrl = "/uploads/category/" + fileName;
+            return ResponseEntity.ok(fileUrl);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error uploading file: " + e.getMessage());
         }
     }
 }

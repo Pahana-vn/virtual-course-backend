@@ -1,16 +1,15 @@
 package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.CourseDTO;
+import com.mytech.virtualcourse.dtos.CourseDetailDTO;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.services.CourseService;
 import com.mytech.virtualcourse.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -24,22 +23,9 @@ public class CourseController {
     @Autowired
     private StudentService studentService;
 
-    // API to disable a course
-    @PutMapping("/{courseId}/disable")
-    public ResponseEntity<String> disableCourse(@PathVariable Long courseId) {
-        courseService.disableCourse(courseId);
-        return ResponseEntity.ok("Course disabled successfully");
-    }
-
-    // API to enable a course
-    @PutMapping("/{courseId}/enable")
-    public ResponseEntity<String> enableCourse(@PathVariable Long courseId) {
-        courseService.enableCourse(courseId);
-        return ResponseEntity.ok("Course enabled successfully");
-    }
     @GetMapping
-    public ResponseEntity<List<CourseDTO>> getAllCourses(Pageable pageable) {
-        List<CourseDTO> courses = courseService.getAllCourses(pageable);
+    public ResponseEntity<List<CourseDTO>> getAllCourses() {
+        List<CourseDTO> courses = courseService.getAllCourses();
         return ResponseEntity.ok(courses);
     }
 
@@ -59,7 +45,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseDTO courseDTO, Principal principal) {
+    public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseDTO courseDTO) {
         CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
         return ResponseEntity.ok(updatedCourse);
     }
@@ -70,10 +56,23 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/student-courses/{accountId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
+    @GetMapping("/student-courses/{studentId}")
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
+        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/{id}/details")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
+        return ResponseEntity.ok(courseDetails);
+    }
+
+    @GetMapping("/{courseId}/details-for-student")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsForStudent(
+            @PathVariable Long courseId,
+            @RequestParam Long studentId) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId);
+        return ResponseEntity.ok(courseDetails);
+    }
 }

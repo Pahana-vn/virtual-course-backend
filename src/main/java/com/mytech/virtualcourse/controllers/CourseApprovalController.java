@@ -20,15 +20,8 @@ public class CourseApprovalController {
     public ResponseEntity<?> approveCourse(@PathVariable Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
-        if (!"PENDING_APPROVAL".equals(course.getStatus())) {
-            return ResponseEntity.badRequest().body("Course is not in PENDING_APPROVAL status.");
-        }
+        return ResponseEntity.badRequest().body("Course is not in PENDING_APPROVAL status.");
         // set status = APPROVED
-        course.setStatus("APPROVED");
-        courseRepository.save(course);
-
-        // => Optionally, gửi notification đến Instructor
-        return ResponseEntity.ok("Course approved successfully");
     }
 
     @PutMapping("/{courseId}/reject")
@@ -38,18 +31,7 @@ public class CourseApprovalController {
     ) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
-        if (!"PENDING_APPROVAL".equals(course.getStatus())) {
-            return ResponseEntity.badRequest().body("Course is not in PENDING_APPROVAL status.");
-        }
+        return ResponseEntity.badRequest().body("Course is not in PENDING_APPROVAL status.");
 
-        String reason = request.get("reason"); // Lý do reject
-        // Lưu reason vào 1 field, ví dụ course.setRejectReason(...)
-        // Hoặc tạo 1 bảng logs
-
-        course.setStatus("REJECTED");
-        courseRepository.save(course);
-
-        // => Optionally, gửi notification đến Instructor
-        return ResponseEntity.ok("Course rejected with reason: " + reason);
     }
 }

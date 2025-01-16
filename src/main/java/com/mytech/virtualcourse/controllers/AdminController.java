@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.dtos.InstructorDTO;
 import com.mytech.virtualcourse.dtos.MessageDTO;
 import com.mytech.virtualcourse.enums.EAccountStatus;
 import com.mytech.virtualcourse.services.AdminService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
