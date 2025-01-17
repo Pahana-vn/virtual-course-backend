@@ -17,5 +17,4 @@ public class WalletDTO {
     private BigDecimal maxLimit; // Giới hạn tối đa của ví
     private Timestamp lastUpdated; // Thời gian cập nhật cuối cùng
     private Long instructorId; // ID của Instructor (nếu ví thuộc về giảng viên)
-    private Long studentId; // ID của Student (nếu ví thuộc về học sinh)
 }

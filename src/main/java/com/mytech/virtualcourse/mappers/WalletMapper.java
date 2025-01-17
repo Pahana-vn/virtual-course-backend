@@ -17,10 +17,8 @@ public interface WalletMapper {
     WalletMapper INSTANCE = Mappers.getMapper(WalletMapper.class);
 
     @Mapping(source = "instructor.id", target = "instructorId")
-    @Mapping(source = "student.id", target = "studentId")
     WalletDTO walletToWalletDTO(Wallet wallet);
 
     @Mapping(target = "instructor", ignore = true) // Liên kết được xử lý trong service
-    @Mapping(target = "student", ignore = true)
     Wallet walletDTOToWallet(WalletDTO walletDTO);
 }
