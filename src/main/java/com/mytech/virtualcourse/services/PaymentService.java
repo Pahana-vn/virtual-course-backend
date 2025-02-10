@@ -12,10 +12,12 @@ import com.mytech.virtualcourse.repositories.LearningProgressRepository;
 import com.mytech.virtualcourse.repositories.PaymentRepository;
 import com.mytech.virtualcourse.repositories.StudentRepository;
 import com.mytech.virtualcourse.configs.VnPayConfig;
+import com.mytech.virtualcourse.security.JwtUtil;
 import com.paypal.api.payments.*;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -54,14 +56,17 @@ public class PaymentService {
     @Autowired
     private StudentService studentService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     // -------------------- PAYPAL -------------------------
-    public String initiatePaypalPayment(Long courseId) throws Exception {
-        Student student = studentRepository.findById(1L)
+    public String initiatePaypalPayment(Long courseId, HttpServletRequest request) throws Exception {
+        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
-        // Course được lấy từ DB => entity managed
 
         BigDecimal amount = course.getBasePrice();
         if (amount == null) {
@@ -76,11 +81,10 @@ public class PaymentService {
         dbPayment.setStudent(student);
 
         List<Course> singleCourseList = new ArrayList<>();
-        singleCourseList.add(course); // course là managed entity
+        singleCourseList.add(course);
         dbPayment.setCourses(singleCourseList);
 
         dbPayment = paymentRepository.save(dbPayment);
-        // Lúc này payment_course phải được insert
 
         String cancelUrl = "http://localhost:3000/cancel";
         String successUrl = "http://localhost:3000/success";
@@ -107,8 +111,9 @@ public class PaymentService {
     }
 
 
-    public String initiatePaypalPaymentForMultipleCourses(List<Long> courseIds) throws Exception {
-        Student student = studentRepository.findById(1L)
+    public String initiatePaypalPaymentForMultipleCourses(List<Long> courseIds, HttpServletRequest request) throws Exception {
+        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         List<Course> courses = courseRepository.findAllById(courseIds);
@@ -161,6 +166,23 @@ public class PaymentService {
         throw new RuntimeException("No approval URL returned by PayPal");
     }
 
+    private Long getStudentIdFromRequest(HttpServletRequest request) {
+        String jwt = parseJwt(request);
+        if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
+            return jwtUtil.getStudentIdFromJwtToken(jwt);  // Lấy studentId từ JWT
+        } else {
+            throw new RuntimeException("Student not authenticated");
+        }
+    }
+
+    private String parseJwt(HttpServletRequest request) {
+        String headerAuth = request.getHeader("Authorization");
+        if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);  // Lấy JWT token từ header
+        }
+        return null;
+    }
+
     public Payment completePaypalPayment(String paymentId, String payerId) throws PayPalRESTException {
         com.paypal.api.payments.Payment payment = new com.paypal.api.payments.Payment();
         payment.setId(paymentId);
@@ -174,12 +196,13 @@ public class PaymentService {
         Payment dbPayment = paymentRepository.findByPaypalPaymentId(paymentId)
                 .orElseThrow(() -> new RuntimeException("No matching Payment found for paypalPaymentId"));
 
+        Student student = dbPayment.getStudent(); // ✅ Lấy student từ Payment
+
         String state = executedPayment.getState();
         if ("approved".equalsIgnoreCase(state) || "completed".equalsIgnoreCase(state)) {
             dbPayment.setStatus(PaymentStatus.Completed);
             paymentRepository.save(dbPayment);
 
-            Student student = dbPayment.getStudent();
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
             }
@@ -192,13 +215,10 @@ public class PaymentService {
             }
             studentRepository.save(student);
 
-            // Gọi enrollStudentToCourse cho mỗi khóa học vừa mua
+            // ✅ Gọi enrollStudentToCourse sau khi cập nhật student
             for (Course c : purchasedCourses) {
-                // Giả sử bạn có @Autowired StudentService studentService;
                 studentService.enrollStudentToCourse(student.getId(), c.getId());
             }
-
-
         } else {
             dbPayment.setStatus(PaymentStatus.Failed);
             paymentRepository.save(dbPayment);
@@ -206,6 +226,7 @@ public class PaymentService {
 
         return dbPayment;
     }
+
 
     private com.paypal.api.payments.Payment createPayPalPayment(
             BigDecimal total, String currency, String method, String intent,
@@ -236,13 +257,13 @@ public class PaymentService {
     }
 
     // -------------------- VNPAY -------------------------
-    public String initiateVnPayPayment(Long courseId) throws Exception {
-        Student student = studentRepository.findById(1L)
+    public String initiateVnPayPayment(Long courseId, HttpServletRequest request) throws Exception {
+        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
-        // Course là managed entity
 
         BigDecimal amount = course.getBasePrice();
         if (amount == null) {
@@ -261,15 +282,15 @@ public class PaymentService {
         dbPayment.setCourses(singleCourseList);
 
         dbPayment = paymentRepository.save(dbPayment);
-        // Lúc này payment_course phải được insert
 
         String paymentUrl = createVnpayPaymentUrl(dbPayment);
         return paymentUrl;
     }
 
 
-    public String initiateVnPayPaymentForMultipleCourses(List<Long> courseIds) throws Exception {
-        Student student = studentRepository.findById(1L)
+    public String initiateVnPayPaymentForMultipleCourses(List<Long> courseIds, HttpServletRequest request) throws Exception {
+        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         List<Course> courses = courseRepository.findAllById(courseIds);

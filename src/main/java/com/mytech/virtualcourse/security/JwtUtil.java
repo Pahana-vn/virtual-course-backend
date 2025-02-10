@@ -18,8 +18,9 @@ public class JwtUtil {
 
     public String generateJwtToken(CustomUserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        Collection<?> roles = userDetails.getAuthorities();
-        claims.put("roles", roles);
+        claims.put("roles", userDetails.getAuthorities());
+        claims.put("accountId", userDetails.getAccountId());  // ✅ Thêm accountId
+        claims.put("studentId", userDetails.getStudentId());  // ✅ Thêm studentId
 
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
@@ -28,6 +29,26 @@ public class JwtUtil {
                 .setExpiration(new Date(new Date().getTime() + jwtExpirationMs))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
+    }
+
+    // Thêm phương thức để lấy accountId từ JWT
+    public Long getAccountIdFromJwtToken(String token) {
+        Object accountId = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("accountId");
+        return accountId != null ? Long.valueOf(accountId.toString()) : null;
+    }
+
+    // Thêm phương thức để lấy studentId từ JWT
+    public Long getStudentIdFromJwtToken(String token) {
+        Object studentId = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("studentId");
+        return studentId != null ? Long.valueOf(studentId.toString()) : null;
     }
 
     // Get username from JWT

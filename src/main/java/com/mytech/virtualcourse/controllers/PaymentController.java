@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.services.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin("*")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class PaymentController {
 
     @Autowired
@@ -22,8 +23,8 @@ public class PaymentController {
 
     // PayPal
     @PostMapping("/create-paypal-payment")
-    public String createPaypalPayment(@RequestParam Long courseId) throws Exception {
-        return paymentService.initiatePaypalPayment(courseId);
+    public String createPaypalPayment(@RequestParam Long courseId, HttpServletRequest request) throws Exception {
+        return paymentService.initiatePaypalPayment(courseId, request);  // Truyền request vào service
     }
 
     @PostMapping("/execute-paypal-payment")
@@ -32,19 +33,19 @@ public class PaymentController {
     }
 
     @PostMapping("/create-paypal-payment-multiple")
-    public String createPaypalPaymentMultiple(@RequestBody List<Long> courseIds) throws Exception {
-        return paymentService.initiatePaypalPaymentForMultipleCourses(courseIds);
+    public String createPaypalPaymentMultiple(@RequestBody List<Long> courseIds, HttpServletRequest request) throws Exception {
+        return paymentService.initiatePaypalPaymentForMultipleCourses(courseIds, request);  // Truyền request vào service
     }
 
     // VNPAY
     @PostMapping("/create-vnpay-payment")
-    public String createVnpayPayment(@RequestParam Long courseId) throws Exception {
-        return paymentService.initiateVnPayPayment(courseId);
+    public String createVnpayPayment(@RequestParam Long courseId, HttpServletRequest request) throws Exception {
+        return paymentService.initiateVnPayPayment(courseId, request);  // Truyền request vào service
     }
 
     @PostMapping("/create-vnpay-payment-multiple")
-    public String createVnpayPaymentMultiple(@RequestBody List<Long> courseIds) throws Exception {
-        return paymentService.initiateVnPayPaymentForMultipleCourses(courseIds);
+    public String createVnpayPaymentMultiple(@RequestBody List<Long> courseIds, HttpServletRequest request) throws Exception {
+        return paymentService.initiateVnPayPaymentForMultipleCourses(courseIds, request);  // Truyền request vào service
     }
 
     @GetMapping("/vnpay-return")
@@ -76,6 +77,7 @@ public class PaymentController {
     }
 
     // Hàm parse query string mà không decode
+
     private Map<String, String> parseQueryString(String queryString) {
         Map<String, String> params = new HashMap<>();
         if (queryString != null && !queryString.isEmpty()) {
@@ -94,3 +96,4 @@ public class PaymentController {
         return params;
     }
 }
+

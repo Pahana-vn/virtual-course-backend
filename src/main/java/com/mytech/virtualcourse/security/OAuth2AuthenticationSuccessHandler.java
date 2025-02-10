@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.security;
 
+import com.mytech.virtualcourse.utils.CookieUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -26,17 +27,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         String jwt = jwtUtil.generateJwtToken(userDetails);
 
-        // Determine the target URL (frontend URL to redirect with token)
-        String targetUrl = determineTargetUrl(request, response, jwt);
+        // Dùng CookieUtil để lưu cookie
+        CookieUtil.addTokenCookie(response, jwt);
 
-        if (response.isCommitted()) {
-            logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
-            return;
-        }
-
-        // Redirect to the target URL with the JWT token as a query parameter
+        String targetUrl = "/";
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
+
+
 
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, String token) {
         // Optionally, you can get the redirect URI from a request parameter

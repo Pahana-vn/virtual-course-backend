@@ -1,7 +1,6 @@
 package com.mytech.virtualcourse.security;
 
 import com.mytech.virtualcourse.entities.Account;
-import com.mytech.virtualcourse.entities.Role;
 import com.mytech.virtualcourse.enums.EAccountStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,22 +8,36 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
     private Account account;
+    private Long studentId; // ✅ Thêm studentId
+
+    public CustomUserDetails(Account account) {
+        this.account = account;
+        this.studentId = (account.getStudent() != null) ? account.getStudent().getId() : null;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public Long getAccountId() {
+        return account.getId();
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authorities = account.getRoles().stream()
-                .map(Role::getName)
-                .map(roleName -> "ROLE_" + roleName) // Thêm tiền tố ROLE_
-                .map(SimpleGrantedAuthority::new)
+        return account.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList());
-        return authorities;
     }
 
     @Override
@@ -57,10 +70,5 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return account.getStatus() == EAccountStatus.ACTIVE;
-    }
-
-    // Thêm getter cho Account nếu cần thiết
-    public Account getAccount() {
-        return account;
     }
 }

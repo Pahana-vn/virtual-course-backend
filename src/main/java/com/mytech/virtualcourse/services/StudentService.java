@@ -126,12 +126,10 @@ public class StudentService {
         studentRepository.deleteById(id);
     }
 
-    public DashboardDTO getStudentDashboardData(Long accountId) {
+    public DashboardDTO getStudentDashboardData(Long studentId) {
 
-        Student student = studentRepository.findByAccountId(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with account id: " + accountId));
-        Long studentId = student.getId();
-
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
         List<LearningProgress> learningProgresses = learningProgressRepository.findByStudentId(studentId);
         List<Course> enrolledCourses = learningProgresses.stream()
@@ -273,7 +271,7 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
-    public void addCourseToWishlist(Long studentId, CourseDTO courseDTO) {
+    public void addToWishlist(Long studentId, CourseDTO courseDTO) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
@@ -281,25 +279,51 @@ public class StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseDTO.getId()));
 
         if (wishlistRepository.existsByStudentAndCourse(student, course)) {
-            throw new IllegalArgumentException("Course is already in the wishlist");
+            throw new IllegalArgumentException("This course is already in the wishlist.");
         }
 
         FavoriteCourse wishlist = new FavoriteCourse();
         wishlist.setStudent(student);
         wishlist.setCourse(course);
-
         wishlistRepository.save(wishlist);
     }
 
-    public void addCourseToCart(Long studentId, CourseDTO courseDTO, Integer quantity) {
+
+    public List<CourseDTO> getWishlist(Long studentId) {
+        // Tìm sinh viên
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        // Lấy danh sách khóa học từ wishlist của sinh viên
+        List<FavoriteCourse> wishlistItems = favoriteCourseRepository.findByStudent(student);
+
+        // Chuyển đổi danh sách FavoriteCourse thành danh sách CourseDTO
+        return wishlistItems.stream()
+                .map(fav -> {
+                    Course course = fav.getCourse();
+                    CourseDTO courseDTO = courseMapper.courseToCourseDTO(course);
+                    if (course.getImageCover() != null) {
+                        courseDTO.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+                    }
+                    return courseDTO;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public void addToCart(Long studentId, CourseDTO courseDTO) {
+        System.out.println("Adding course to cart for student ID: " + studentId);
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        System.out.println("Student found: " + student.getFirstName());
 
         Course course = courseRepository.findById(courseDTO.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseDTO.getId()));
 
         Cart cart = student.getCart();
         if (cart == null) {
+            System.out.println("Creating new cart for student: " + studentId);
             cart = new Cart();
             cart.setStudent(student);
             cart = cartRepository.save(cart);
@@ -314,29 +338,37 @@ public class StudentService {
             cartItem.setCourse(course);
             cartItem.setQuantity(1);
             cartItemRepository.save(cartItem);
+            System.out.println("Course added to cart successfully for student ID: " + studentId);
         }
     }
 
+
+
+
     public List<CartItemDTO> getCartItemsForStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("❌ Student not found with id: " + studentId));
 
         Cart cart = student.getCart();
         if (cart == null) {
-            return Collections.emptyList(); // Nếu không có giỏ hàng, trả về danh sách rỗng
+            System.out.println("🛠 Tạo giỏ hàng mới cho studentId: " + studentId);
+            cart = new Cart();
+            cart.setStudent(student);
+            cart = cartRepository.save(cart);
         }
 
         List<CartItem> cartItems = cartItemRepository.findByCart(cart);
         return cartItems.stream()
-                .map(cartItem -> {
-                    CourseDTO courseDTO = courseMapper.courseToCourseDTO(cartItem.getCourse()); // Lấy CourseDTO
-                    return new CartItemDTO(cartItem.getId(), courseDTO, cartItem.getQuantity());
-                })
+                .map(cartItem -> new CartItemDTO(cartItem.getId(), courseMapper.courseToCourseDTO(cartItem.getCourse()), cartItem.getQuantity()))
                 .collect(Collectors.toList());
     }
 
 
-    public void removeCourseFromCart(Long studentId, Long cartItemId) throws ResourceNotFoundException {
+
+
+
+
+    public void removeFromCart(Long studentId, Long cartItemId) throws ResourceNotFoundException {
         // Kiểm tra xem sinh viên có tồn tại không
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
@@ -398,7 +430,7 @@ public class StudentService {
         }
     }
 
-    public void removeCourseFromWishlist(Long studentId, Long courseId) {
+    public void removeFromWishlist(Long studentId, Long courseId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
         Course course = courseRepository.findById(courseId)

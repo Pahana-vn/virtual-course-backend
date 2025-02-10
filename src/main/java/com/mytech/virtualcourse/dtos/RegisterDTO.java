@@ -2,6 +2,8 @@ package com.mytech.virtualcourse.dtos;
 
 import lombok.*;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @NoArgsConstructor

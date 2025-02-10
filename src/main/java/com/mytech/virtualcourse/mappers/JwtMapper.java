@@ -15,6 +15,8 @@ public interface JwtMapper {
     @Mapping(source = "username", target = "username")
     @Mapping(source = "authorities", target = "roles", qualifiedByName = "authoritiesToRoles")
     @Mapping(target = "type", constant = "Bearer")
+    @Mapping(source = "accountId", target = "accountId") // ✅ Thêm accountId
+    @Mapping(source = "studentId", target = "studentId") // ✅ Thêm studentId
     JwtDTO toJwtDTO(CustomUserDetails userDetails);
 
     @Named("authoritiesToRoles")
@@ -24,3 +26,4 @@ public interface JwtMapper {
                 .collect(Collectors.toList());
     }
 }
+

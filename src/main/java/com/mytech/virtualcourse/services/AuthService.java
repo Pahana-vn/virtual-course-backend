@@ -6,8 +6,10 @@ import com.mytech.virtualcourse.dtos.MessageDTO;
 import com.mytech.virtualcourse.dtos.JwtDTO;
 import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.entities.Role;
+import com.mytech.virtualcourse.entities.Student;
 import com.mytech.virtualcourse.enums.AuthenticationType;
 import com.mytech.virtualcourse.enums.EAccountStatus;
+import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.repositories.AccountRepository;
 import com.mytech.virtualcourse.repositories.RoleRepository;
 import com.mytech.virtualcourse.security.CustomUserDetails;
@@ -64,6 +66,7 @@ public class AuthService {
                     .body(new MessageDTO("Error: Email is already in use!"));
         }
 
+        // Create Account
         Account account = new Account();
         account.setUsername(registerRequest.getUsername());
         account.setEmail(registerRequest.getEmail());
@@ -74,6 +77,7 @@ public class AuthService {
 
         Set<Role> roles = new HashSet<>();
 
+        // Assign roles based on user selection (admin, instructor, or student)
         if (registerRequest.getRole().equalsIgnoreCase("admin")) {
             if (accountRepository.findAll().stream()
                     .anyMatch(a -> a.getRoles().stream()
@@ -93,14 +97,26 @@ public class AuthService {
             roles.add(instructorRole);
             account.setStatus(EAccountStatus.PENDING);
         } else {
+            // Register as a student
             Role studentRole = roleRepository.findByName("STUDENT")
                     .orElseThrow(() -> new RuntimeException("Error: Role STUDENT is not found."));
             roles.add(studentRole);
             account.setStatus(EAccountStatus.ACTIVE);
+
+            // Create Student and link to Account
+            Student student = new Student();
+            student.setFirstName("");  // Empty or default values
+            student.setLastName("");
+            student.setDob(null);  // No dob initially
+            student.setGender(null);  // Gender will be updated later
+            student.setStatusStudent("ACTIVE");
+            student.setAccount(account);  // Link Student to Account
+            account.setStudent(student);  // Link Account to Student
         }
 
         account.setRoles(new ArrayList<>(roles));
 
+        // Save Account (this will cascade and also save the Student if role is Student)
         accountRepository.save(account);
 
         return ResponseEntity.ok(new MessageDTO("User registered successfully!"));
@@ -116,12 +132,32 @@ public class AuthService {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtUtil.generateJwtToken((CustomUserDetails) authentication.getPrincipal());
-
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
+            // ✅ Lấy accountId và studentId
+            Account account = userDetails.getAccount();
+            Long accountId = (account != null) ? account.getId() : null;
+            Long studentId = (account != null && account.getStudent() != null) ? account.getStudent().getId() : null;
+
+            // ✅ Kiểm tra accountId có null không
+            if (accountId == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new MessageDTO("Error: Account ID is null!"));
+            }
+
+            // ✅ Log kiểm tra
+            System.out.println("✅ Logged in user: " + account.getUsername());
+            System.out.println("✅ Account ID: " + accountId);
+            System.out.println("✅ Student ID: " + (studentId != null ? studentId : "null"));
+
+            // ✅ Tạo JWT Token
+            String jwt = jwtUtil.generateJwtToken(userDetails);
+
+            // ✅ Set dữ liệu cho JwtDTO
             JwtDTO jwtDTO = jwtMapper.toJwtDTO(userDetails);
             jwtDTO.setToken(jwt);
+            jwtDTO.setAccountId(accountId);
+            jwtDTO.setStudentId(studentId);
 
             return ResponseEntity.ok(jwtDTO);
         } catch (BadCredentialsException e) {
@@ -129,4 +165,5 @@ public class AuthService {
                     .body(new MessageDTO("Error: Invalid username or password"));
         }
     }
+
 }

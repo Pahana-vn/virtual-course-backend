@@ -33,4 +33,5 @@ public class CourseDTO {
     private String instructorFirstName;
     private String instructorLastName;
     private Integer progress;
+    private Integer quantity;
 }

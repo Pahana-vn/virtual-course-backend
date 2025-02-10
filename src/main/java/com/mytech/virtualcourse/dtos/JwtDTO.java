@@ -9,6 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 public class JwtDTO {
     private String token;
+    private Long accountId;
+    private Long studentId;
     private String type = "Bearer";
     private String username;
     private List<String> roles;
