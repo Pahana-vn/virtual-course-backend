@@ -29,13 +29,13 @@ public class Assignment extends AbstractEntity {
 
     @ManyToOne
     @JoinColumn(name = "lecture_id")
-    private Lecture lecture; // Bài giảng liên quan đến bài tập (nếu cần liên kết cụ thể)
+    private Lecture lecture;
 
     @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudentAssignmentSubmission> submissions; // Danh sách bài nộp
+    private List<StudentAssignmentSubmission> submissions;
 
     @ManyToOne
     @JoinColumn(name = "section_id", nullable = false)
-    private Section section; // Liên kết với Section
+    private Section section;
 
 }

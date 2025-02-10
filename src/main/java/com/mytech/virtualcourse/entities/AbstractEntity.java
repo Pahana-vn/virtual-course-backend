@@ -18,6 +18,7 @@ import java.util.Date;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AbstractEntity implements Serializable {
 
+    // dùng chung
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;

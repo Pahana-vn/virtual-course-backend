@@ -17,6 +17,4 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     @Query("SELECT COUNT(c) FROM Student s JOIN s.courses c WHERE s.id = ?1")
     int countRegisteredCourses(Long studentId);
-
-
 }

@@ -1,29 +1,57 @@
 package com.mytech.virtualcourse.controllers;
 
+import com.mytech.virtualcourse.dtos.CartItemDTO;
+import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.DashboardDTO;
 import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.entities.Cart;
+import com.mytech.virtualcourse.entities.CartItem;
+import com.mytech.virtualcourse.entities.Student;
+import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
+import com.mytech.virtualcourse.mappers.CourseMapper;
+import com.mytech.virtualcourse.repositories.CartItemRepository;
+import com.mytech.virtualcourse.repositories.CartRepository;
+import com.mytech.virtualcourse.repositories.StudentRepository;
 import com.mytech.virtualcourse.services.StudentService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class StudentController {
 
     @Autowired
     private StudentService studentService;
 
+    @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private CourseMapper courseMapper;
+
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
         List<StudentDTO> students = studentService.getAllStudents();
         return ResponseEntity.ok(students);
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
         StudentDTO student = studentService.getStudentById(id);
@@ -31,35 +59,110 @@ public class StudentController {
     }
 
 
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/by-account/{accountId}")
     public ResponseEntity<StudentDTO> getStudentByAccountId(@PathVariable Long accountId) {
         StudentDTO student = studentService.getStudentByAccountId(accountId);
         return ResponseEntity.ok(student);
     }
 
-    @GetMapping("/dashboard/{accountId}")
-    public ResponseEntity<DashboardDTO> getStudentDashboard(@PathVariable Long accountId) {
-        DashboardDTO dashboard = studentService.getStudentDashboardData(accountId);
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/{studentId}/dashboard")
+    public ResponseEntity<DashboardDTO> getStudentDashboard(@PathVariable Long studentId) {
+        DashboardDTO dashboard = studentService.getStudentDashboardData(studentId);
         return ResponseEntity.ok(dashboard);
     }
 
-
-
+    @PreAuthorize("hasRole('STUDENT')")
     @PostMapping
     public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
         StudentDTO createdStudent = studentService.createStudent(studentDTO);
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
     @PutMapping("/{id}")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
         StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
         return ResponseEntity.ok(updatedStudent);
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
         return ResponseEntity.noContent().build();
     }
+
+    //wishlist
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/{studentId}/wishlist")
+    public ResponseEntity<String> addToWishlist(@PathVariable Long studentId, @RequestBody CourseDTO courseDTO) {
+        studentService.addToWishlist(studentId, courseDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Course added to wishlist successfully");
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/{studentId}/wishlist")
+    public ResponseEntity<List<CourseDTO>> getWishlist(@PathVariable Long studentId) {
+        List<CourseDTO> wishlist = studentService.getWishlist(studentId);
+        return ResponseEntity.ok(wishlist);
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @DeleteMapping("/{studentId}/wishlist/{courseId}")
+    public ResponseEntity<Void> removeFromWishlist(@PathVariable Long studentId, @PathVariable Long courseId) {
+        studentService.removeFromWishlist(studentId, courseId);
+        return ResponseEntity.noContent().build();
+    }
+
+    //cart
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/{studentId}/cart")
+    public ResponseEntity<String> addToCart(@PathVariable Long studentId, @Valid @RequestBody CourseDTO courseDTO) {
+        System.out.println("Received request to add course ID: " + courseDTO.getId() + " to cart for student ID: " + studentId);
+        studentService.addToCart(studentId, courseDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Course added to cart successfully");
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/{studentId}/cart-items")
+    public ResponseEntity<?> getCartItems(@PathVariable Long studentId) {
+        // 🛠 Kiểm tra nếu studentId = null hoặc <= 0
+        if (studentId == null || studentId <= 0) {
+            return ResponseEntity.badRequest().body("Invalid studentId");
+        }
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Cart cart = student.getCart();
+        if (cart == null) {
+            System.out.println("🛠 Tạo giỏ hàng mới cho studentId: " + studentId);
+            cart = new Cart();
+            cart.setStudent(student);
+            cartRepository.save(cart);
+        }
+
+        List<CartItem> cartItems = cartItemRepository.findByCart(cart);
+        return ResponseEntity.ok(cartItems.stream()
+                .map(cartItem -> new CartItemDTO(cartItem.getId(), courseMapper.courseToCourseDTO(cartItem.getCourse()), cartItem.getQuantity()))
+                .collect(Collectors.toList()));
+    }
+
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @DeleteMapping("/{studentId}/cart-items/{cartItemId}")
+    public ResponseEntity<String> removeFromCart(@PathVariable Long studentId, @PathVariable Long cartItemId) {
+        studentService.removeFromCart(studentId, cartItemId);
+        return ResponseEntity.status(HttpStatus.OK).body("Course removed from cart successfully");
+    }
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/student-courses-status/{studentId}")
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCoursesWithProgress(@PathVariable Long studentId) {
+        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId);
+        return ResponseEntity.ok(courses);
+    }
+
+
 }

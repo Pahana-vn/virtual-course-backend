@@ -1,0 +1,17 @@
+[33m284b66d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbranch-nhan[m[33m)[m HEAD@{0}: commit: Add cart and delete cart 2
+[33m7f7b0cc[m HEAD@{1}: checkout: moving from main to branch-nhan
+[33mfd88d06[m[33m ([m[1;32mmain[m[33m)[m HEAD@{2}: commit: Add cart and delete cart
+[33mfb77e2e[m HEAD@{3}: commit: Post wishlist
+[33m3cfb4be[m HEAD@{4}: commit: update2
+[33m83e969d[m[33m ([m[1;32mtest[m[33m)[m HEAD@{5}: checkout: moving from branch-nhan to main
+[33m7f7b0cc[m HEAD@{6}: commit: Update 1
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{7}: checkout: moving from test to branch-nhan
+[33m83e969d[m[33m ([m[1;32mtest[m[33m)[m HEAD@{8}: checkout: moving from main to test
+[33m83e969d[m[33m ([m[1;32mtest[m[33m)[m HEAD@{9}: pull origin main: Fast-forward
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{10}: checkout: moving from branch-nhan to main
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{11}: checkout: moving from branch-sang to branch-nhan
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{12}: checkout: moving from branch-tien to branch-sang
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{13}: checkout: moving from branch-chuong to branch-tien
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{14}: checkout: moving from main to branch-chuong
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{15}: Branch: renamed refs/heads/master to refs/heads/main
+[33m1651a8b[m[33m ([m[1;32mbranch-tien[m[33m, [m[1;32mbranch-sang[m[33m, [m[1;32mbranch-chuong[m[33m)[m HEAD@{17}: commit (initial): first commit

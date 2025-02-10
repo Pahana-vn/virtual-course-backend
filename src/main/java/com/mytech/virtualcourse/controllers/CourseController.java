@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.CourseDTO;
+import com.mytech.virtualcourse.dtos.CourseDetailDTO;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.services.CourseService;
 import com.mytech.virtualcourse.services.StudentService;
@@ -55,10 +56,23 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/student-courses/{accountId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
+    @GetMapping("/student-courses/{studentId}")
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
+        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/{id}/details")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
+        return ResponseEntity.ok(courseDetails);
+    }
+
+    @GetMapping("/{courseId}/details-for-student")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsForStudent(
+            @PathVariable Long courseId,
+            @RequestParam Long studentId) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId);
+        return ResponseEntity.ok(courseDetails);
+    }
 }

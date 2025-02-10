@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mytech.virtualcourse.enums.CourseLevel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,13 +48,9 @@ public class Course extends AbstractEntity {
     @Column(nullable = false)
     private String status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
 
-    @ManyToMany
-    @JoinTable(
-            name = "student_course_mapping",
-            joinColumns = @JoinColumn(name = "course_id"),
-            inverseJoinColumns = @JoinColumn(name = "student_id")
-    )
-    private List<Student> students; // Sinh viên đăng ký khóa học
+    @ManyToMany(mappedBy = "courses")
+    private List<Student> students;
+
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Section> sections; // Các phần học trong khóa học
@@ -67,8 +64,9 @@ public class Course extends AbstractEntity {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CoursePromotion> promotions; // Chương trình khuyến mãi
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Payment> payments; // Thanh toán liên quan đến khóa học
+    @ManyToMany(mappedBy = "courses")
+    @JsonIgnore
+    private List<Payment> payments;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assignment> assignments; // Bài tập liên quan đến khóa học

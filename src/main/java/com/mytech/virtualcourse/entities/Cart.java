@@ -15,8 +15,8 @@ public class Cart extends AbstractEntity {
 
     @OneToOne
     @JoinColumn(name = "student_id", nullable = false)
-    private Student student; // Giỏ hàng của một học viên cụ thể
+    private Student student;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CartItem> cartItems; // Danh sách các mục trong giỏ hàng
+    private List<CartItem> cartItems;
 }
