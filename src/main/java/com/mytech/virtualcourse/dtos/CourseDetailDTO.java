@@ -22,10 +22,12 @@ public class CourseDetailDTO {
     private Integer duration;
     private BigDecimal basePrice;
     private String status;
+    private String instructorId;
     private String instructorPhoto;
     private String instructorFirstName;
     private String instructorLastName;
-    private Integer progress;
+    private String instructorTitle;
+    private Integer progress; //Check lại
     private List<SectionDTO> sections;
 
     private Boolean allLecturesCompleted;

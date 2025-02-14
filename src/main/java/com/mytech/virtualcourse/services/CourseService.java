@@ -42,7 +42,13 @@ public class CourseService {
                 .map(course -> {
                     CourseDTO dto = courseMapper.courseToCourseDTO(course);
                     if (course.getImageCover() != null) {
+
                         dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+
+                        // Thêm URL đầy đủ cho instructor photo
+                        if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                            dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
+                        }
                     }
                     return dto;
                 })
@@ -52,49 +58,22 @@ public class CourseService {
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+        course.getSections().forEach(section -> {
+            section.getLectures().forEach(lecture -> {
+                lecture.getArticles().size();
+            });
+        });
+
         CourseDTO dto = courseMapper.courseToCourseDTO(course);
         if (course.getImageCover() != null) {
             dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+            if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
+            }
         }
         return dto;
     }
 
-    public CourseDTO createCourse(CourseDTO courseDTO) {
-        if (courseRepository.existsByTitleCourse(courseDTO.getTitleCourse())) {
-            throw new IllegalArgumentException("Course with title '" + courseDTO.getTitleCourse() + "' already exists");
-        }
-        Course course = courseMapper.courseDTOToCourse(courseDTO);
-        Course savedCourse = courseRepository.save(course);
-        return courseMapper.courseToCourseDTO(savedCourse);
-    }
-
-    public CourseDTO updateCourse(Long id, CourseDTO courseDTO) {
-        Course existingCourse = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
-
-        existingCourse.setTitleCourse(courseDTO.getTitleCourse());
-        existingCourse.setDescription(courseDTO.getDescription());
-        existingCourse.setBasePrice(courseDTO.getBasePrice());
-        existingCourse.setDuration(courseDTO.getDuration());
-        existingCourse.setImageCover(courseDTO.getImageCover());
-        existingCourse.setUrlVideo(courseDTO.getUrlVideo());
-        existingCourse.setStatus(courseDTO.getStatus());
-        existingCourse.setHashtag(courseDTO.getHashtag());
-
-        if (courseDTO.getLevel() != null) {
-            existingCourse.setLevel(com.mytech.virtualcourse.enums.CourseLevel.valueOf(courseDTO.getLevel().toUpperCase()));
-        }
-
-        Course updatedCourse = courseRepository.save(existingCourse);
-        return courseMapper.courseToCourseDTO(updatedCourse);
-    }
-
-    public void deleteCourse(Long id) {
-        if (!courseRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Course not found with id: " + id);
-        }
-        courseRepository.deleteById(id);
-    }
 
     public CourseDetailDTO getCourseDetailsById(Long id) {
         Course course = courseRepository.findById(id)
@@ -105,6 +84,7 @@ public class CourseService {
         }
         return dto;
     }
+
 
     public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId) {
         Course course = courseRepository.findById(courseId)

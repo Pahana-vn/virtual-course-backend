@@ -28,6 +28,10 @@ public class Question extends AbstractEntity {
     @JoinColumn(name = "test_id", nullable = false)
     private Test test;
 
+    @ManyToOne
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AnswerOption> answerOptions;
 

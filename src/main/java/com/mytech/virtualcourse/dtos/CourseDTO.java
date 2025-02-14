@@ -1,6 +1,8 @@
 package com.mytech.virtualcourse.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.mytech.virtualcourse.enums.ECourseLevel;
+import com.mytech.virtualcourse.enums.ECourseStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +10,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -20,18 +23,21 @@ public class CourseDTO {
     private Long id;
     private String titleCourse;
     private String description;
-    private String categoryName;
     private Long categoryId;
-    private String level;
+    private String categoryName;
+    private ECourseLevel level;
     private String imageCover;
     private String urlVideo;
     private String hashtag;
     private Integer duration;
     private BigDecimal basePrice;
-    private String status;
+    private ECourseStatus status;
+    private Integer progress;
     private String instructorPhoto;
     private String instructorFirstName;
     private String instructorLastName;
-    private Integer progress;
-    private Integer quantity;
+    private Long instructorId;
+    private InstructorInfo instructorInfo;
+    private List<SectionDTO> sections;
+    private List<QuestionDTO> questions;
 }
