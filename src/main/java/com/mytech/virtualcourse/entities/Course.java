@@ -1,7 +1,6 @@
 package com.mytech.virtualcourse.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mytech.virtualcourse.enums.CourseLevel;
 import com.mytech.virtualcourse.enums.ECourseLevel;
 import com.mytech.virtualcourse.enums.ECourseStatus;
 import jakarta.persistence.*;

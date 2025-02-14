@@ -61,4 +61,26 @@ public class Instructor extends AbstractEntity {
 
     @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Test> tests;
+
+    @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Education> education;
+
+    @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Experience> experiences;
+
+    @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Skill> skills;
+
+    @OneToOne(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Social social;
+
+    @Transient
+    private int totalCourses;
+
+    @Transient
+    private int totalStudents;
+
+    @Transient
+    private int totalReviews;
+
 }
