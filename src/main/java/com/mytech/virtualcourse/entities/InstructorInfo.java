@@ -1,4 +1,4 @@
-package com.mytech.virtualcourse.dtos;
+package com.mytech.virtualcourse.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,3 +13,4 @@ public class InstructorInfo {
     private String firstName;
     private String lastName;
     private String photo;
+}
