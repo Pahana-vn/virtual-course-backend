@@ -16,11 +16,11 @@ public class TestController {
     @Autowired
     private TestService testService;
 
-    @GetMapping("/{testId}/questions")
-    public ResponseEntity<List<QuestionDTO>> getQuestions(@PathVariable Long testId) {
-        List<QuestionDTO> questions = testService.getQuestionsForTest(testId);
-        return ResponseEntity.ok(questions);
-    }
+//    @GetMapping("/{testId}/questions")
+//    public ResponseEntity<List<QuestionDTO>> getQuestions(@PathVariable Long testId) {
+//        List<QuestionDTO> questions = testService.getQuestionsForTest(testId);
+//        return ResponseEntity.ok(questions);
+//    }
 
     @PostMapping("/submit")
     public ResponseEntity<TestResultDTO> submitTest(@RequestBody StudentTestSubmissionDTO submissionDTO) {

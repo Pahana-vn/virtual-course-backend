@@ -8,7 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
-    // Lấy lịch sử chat giữa hai account
     List<ChatMessage> findBySenderAccountIdAndReceiverAccountIdOrReceiverAccountIdAndSenderAccountId(
             Long senderAccId, Long receiverAccId, Long receiverAccId2, Long senderAccId2
     );

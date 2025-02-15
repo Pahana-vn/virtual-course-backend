@@ -38,31 +38,13 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-    @PostMapping
-    public ResponseEntity<CourseDTO> createCourse(@RequestBody CourseDTO courseDTO) {
-        CourseDTO createdCourse = courseService.createCourse(courseDTO);
-        return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseDTO courseDTO) {
-        CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
-        return ResponseEntity.ok(updatedCourse);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
-        courseService.deleteCourse(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/student-courses/{studentId}")
     public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
         Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
         return ResponseEntity.ok(courses);
     }
 
-    @GetMapping("/{id}/details")
+    @GetMapping("/{id}/course-details")
     public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
         CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
         return ResponseEntity.ok(courseDetails);

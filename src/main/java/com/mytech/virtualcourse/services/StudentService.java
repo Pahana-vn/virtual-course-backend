@@ -343,8 +343,6 @@ public class StudentService {
     }
 
 
-
-
     public List<CartItemDTO> getCartItemsForStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("❌ Student not found with id: " + studentId));
@@ -362,10 +360,6 @@ public class StudentService {
                 .map(cartItem -> new CartItemDTO(cartItem.getId(), courseMapper.courseToCourseDTO(cartItem.getCourse()), cartItem.getQuantity()))
                 .collect(Collectors.toList());
     }
-
-
-
-
 
 
     public void removeFromCart(Long studentId, Long cartItemId) throws ResourceNotFoundException {

@@ -3,6 +3,7 @@ package com.mytech.virtualcourse.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -24,5 +25,5 @@ public class AnswerOption extends AbstractEntity {
     private Question question;
 
     @OneToMany(mappedBy = "selectedOption", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudentAnswer> answers;
+    private List<StudentAnswer> answers = new ArrayList<>();
 }

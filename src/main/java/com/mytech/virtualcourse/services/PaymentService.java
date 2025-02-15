@@ -45,7 +45,7 @@ public class PaymentService {
     private CourseRepository courseRepository;
 
     @Autowired
-    private LearningProgressRepository learningProgressRepository; // Thêm repository này
+    private LearningProgressRepository learningProgressRepository;
 
     @Autowired
     private APIContext apiContext;

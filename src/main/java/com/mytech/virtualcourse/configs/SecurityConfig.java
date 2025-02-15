@@ -52,7 +52,12 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:3000",   // React frontend
+                            "http://127.0.0.1:8080",   // Flutter Web
+                            "http://10.0.2.2:8080",    // Flutter Emulator
+                            "http://192.168.1.100:8080" // Thiết bị thật (Cập nhật IP máy bạn)
+                    ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
@@ -73,6 +78,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/students/**").hasRole("STUDENT")
                         .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/api/transactions/**").permitAll()
+                        .requestMatchers("/swagger-ui/**","/swagger-resources/**","/v3/api-docs/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .oauth2Login(oauth2 -> oauth2

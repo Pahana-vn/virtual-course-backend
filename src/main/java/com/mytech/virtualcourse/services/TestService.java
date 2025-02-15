@@ -31,12 +31,6 @@ public class TestService {
     @Autowired
     private AnswerOptionRepository answerOptionRepository;
 
-    public List<QuestionDTO> getQuestionsForTest(Long testId) {
-        // Lấy danh sách câu hỏi từ DB
-        List<Question> questions = questionRepository.findByTest_Id(testId);
-        // Convert sang DTO
-        return questions.stream().map(this::mapToQuestionDTO).collect(Collectors.toList());
-    }
 
     public TestResultDTO submitTest(StudentTestSubmissionDTO submissionDTO) {
         // Lấy test
