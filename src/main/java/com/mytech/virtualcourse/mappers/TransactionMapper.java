@@ -14,10 +14,10 @@ public interface TransactionMapper {
     TransactionMapper INSTANCE = Mappers.getMapper(TransactionMapper.class);
     
     @Mapping(source = "wallet.id", target = "walletId")
-    @Mapping(source = "payment.id", target = "paymentId") // payment now is Payment entity
+    @Mapping(source = "payment.id", target = "paymentId")
     TransactionDTO toDTO(Transaction transaction);
     
-    @Mapping(target = "wallet", ignore = true) // Handle wallet in service
-    @Mapping(target = "payment", ignore = true) // Handle payment in service
+    @Mapping(target = "wallet", ignore = true)
+    @Mapping(target = "payment", ignore = true)
     Transaction toEntity(TransactionDTO dto);
 }

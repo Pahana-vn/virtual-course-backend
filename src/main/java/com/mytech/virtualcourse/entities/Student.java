@@ -23,15 +23,16 @@ public class Student extends AbstractEntity {
     @Temporal(TemporalType.DATE)
     private Date dob;
 
-
     private String address;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column
     private Gender gender;
 
+    @Column
     private String phone;
 
+    @Column
     private String avatar;
 
     @Column(name = "bio", columnDefinition = "TEXT")

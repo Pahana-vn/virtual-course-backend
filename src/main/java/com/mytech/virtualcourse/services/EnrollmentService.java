@@ -83,12 +83,6 @@ public class EnrollmentService {
         return enrollmentMapper.toDTO(updatedEnrollment);
     }
 
-    /**
-     * Get all enrollments for a student.
-     *
-     * @param studentId the ID of the student
-     * @return list of EnrollmentDTOs
-     */
     @Transactional(readOnly = true)
     public List<EnrollmentDTO> getEnrollmentsByStudent(Long studentId) {
         List<Enrollment> enrollments = enrollmentRepository.findAll()
@@ -101,12 +95,6 @@ public class EnrollmentService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get all enrollments for a course.
-     *
-     * @param courseId the ID of the course
-     * @return list of EnrollmentDTOs
-     */
     @Transactional(readOnly = true)
     public List<EnrollmentDTO> getEnrollmentsByCourse(Long courseId) {
         List<Enrollment> enrollments = enrollmentRepository.findAll()
@@ -119,11 +107,6 @@ public class EnrollmentService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Delete an enrollment by ID.
-     *
-     * @param enrollmentId the ID of the enrollment to delete
-     */
     public void deleteEnrollment(Long enrollmentId) {
         if (!enrollmentRepository.existsById(enrollmentId)) {
             throw new ResourceNotFoundException("Enrollment not found with id=" + enrollmentId);

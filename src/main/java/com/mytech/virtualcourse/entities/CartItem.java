@@ -21,5 +21,4 @@ public class CartItem extends AbstractEntity {
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
-
 }
