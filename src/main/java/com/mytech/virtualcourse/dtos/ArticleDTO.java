@@ -13,7 +13,9 @@ public class ArticleDTO {
     private Long id;
     private String content;
     private String fileUrl;
-
     private Long lectureId;
-
 }
+
+
+
+
