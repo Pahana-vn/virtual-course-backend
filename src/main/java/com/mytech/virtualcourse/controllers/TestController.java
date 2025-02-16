@@ -29,10 +29,9 @@ public class TestController {
         return ResponseEntity.ok(tests);
     }
 
-    @PostMapping("/course/{courseId}")
-    public ResponseEntity<TestDTO> createTest(@PathVariable Long courseId, @Valid @RequestBody TestDTO testDTO) {
-        Long loggedInInstructorId  = securityUtils.getLoggedInInstructorId();
-        TestDTO createdTest = testService.createTestForCourse(courseId, testDTO, loggedInInstructorId );
+    @PostMapping("/course/{courseId}/instructor/{instructorId}")
+    public ResponseEntity<TestDTO> createTest(@PathVariable Long courseId,@PathVariable Long instructorId, @Valid @RequestBody TestDTO testDTO) {
+        TestDTO createdTest = testService.createTestForCourse(courseId, testDTO, instructorId );
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTest);
     }
 
