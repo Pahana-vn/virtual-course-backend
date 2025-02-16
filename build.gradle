@@ -36,6 +36,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+	// https://mvnrepository.com/artifact/com.google.firebase/firebase-admin
+	implementation 'com.google.firebase:firebase-admin:9.4.1'
+
 	// OAuth2 Client (nếu đăng nhập Google/Facebook)
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
