@@ -1,19 +1,15 @@
 package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.configs.VnPayConfig;
-import com.mytech.virtualcourse.entities.Course;
-import com.mytech.virtualcourse.entities.LearningProgress;
+import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.entities.Payment;
-import com.mytech.virtualcourse.entities.Student;
 import com.mytech.virtualcourse.enums.PaymentMethod;
 import com.mytech.virtualcourse.enums.PaymentStatus;
-import com.mytech.virtualcourse.repositories.CourseRepository;
-import com.mytech.virtualcourse.repositories.LearningProgressRepository;
-import com.mytech.virtualcourse.repositories.PaymentRepository;
-import com.mytech.virtualcourse.repositories.StudentRepository;
+import com.mytech.virtualcourse.repositories.*;
 import com.mytech.virtualcourse.configs.VnPayConfig;
 import com.mytech.virtualcourse.security.JwtUtil;
 import com.paypal.api.payments.*;
+import com.paypal.api.payments.Transaction;
 import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 
@@ -55,6 +51,12 @@ public class PaymentService {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
+    @Autowired
+    private CartRepository cartRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -196,12 +198,18 @@ public class PaymentService {
         Payment dbPayment = paymentRepository.findByPaypalPaymentId(paymentId)
                 .orElseThrow(() -> new RuntimeException("No matching Payment found for paypalPaymentId"));
 
-        Student student = dbPayment.getStudent(); // ✅ Lấy student từ Payment
+        Student student = dbPayment.getStudent();
 
         String state = executedPayment.getState();
         if ("approved".equalsIgnoreCase(state) || "completed".equalsIgnoreCase(state)) {
             dbPayment.setStatus(PaymentStatus.Completed);
             paymentRepository.save(dbPayment);
+
+            Cart cart = cartRepository.findByStudent(student).orElse(null);
+            if (cart != null) {
+                cartItemRepository.deleteByCart(cart);
+            }
+
 
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
@@ -457,6 +465,20 @@ public class PaymentService {
             paymentRepository.save(payment);
 
             Student student = payment.getStudent();
+            if (student == null) {
+                throw new RuntimeException("❌ Student not found for this payment");
+            }
+
+            Optional<Cart> optionalCart = cartRepository.findByStudent(student);
+            if (optionalCart.isPresent()) {
+                Cart cart = optionalCart.get();
+                System.out.println("Delete all cart items for student: " + student.getId());
+                cartItemRepository.deleteByCart(cart);
+            } else {
+                System.out.println("Student has no shopping cart");
+            }
+
+            // ✅ Thêm khóa học vào danh sách đã mua của student
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
             }
@@ -469,7 +491,7 @@ public class PaymentService {
             }
             studentRepository.save(student);
 
-            // Gọi enrollStudentToCourse
+            // ✅ Gọi enrollStudentToCourse để cập nhật tiến trình học tập
             for (Course c : purchasedCourses) {
                 studentService.enrollStudentToCourse(student.getId(), c.getId());
             }

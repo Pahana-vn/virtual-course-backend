@@ -26,7 +26,7 @@ public class Payment extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
-    private PaymentMethod paymentMethod; // Enum quản lý phương thức thanh toán
+    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

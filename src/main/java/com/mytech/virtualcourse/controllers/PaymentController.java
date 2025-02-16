@@ -24,7 +24,7 @@ public class PaymentController {
     // PayPal
     @PostMapping("/create-paypal-payment")
     public String createPaypalPayment(@RequestParam Long courseId, HttpServletRequest request) throws Exception {
-        return paymentService.initiatePaypalPayment(courseId, request);  // Truyền request vào service
+        return paymentService.initiatePaypalPayment(courseId, request);
     }
 
     @PostMapping("/execute-paypal-payment")
@@ -34,23 +34,23 @@ public class PaymentController {
 
     @PostMapping("/create-paypal-payment-multiple")
     public String createPaypalPaymentMultiple(@RequestBody List<Long> courseIds, HttpServletRequest request) throws Exception {
-        return paymentService.initiatePaypalPaymentForMultipleCourses(courseIds, request);  // Truyền request vào service
+        return paymentService.initiatePaypalPaymentForMultipleCourses(courseIds, request);
     }
 
     // VNPAY
     @PostMapping("/create-vnpay-payment")
     public String createVnpayPayment(@RequestParam Long courseId, HttpServletRequest request) throws Exception {
-        return paymentService.initiateVnPayPayment(courseId, request);  // Truyền request vào service
+        return paymentService.initiateVnPayPayment(courseId, request);
     }
 
     @PostMapping("/create-vnpay-payment-multiple")
     public String createVnpayPaymentMultiple(@RequestBody List<Long> courseIds, HttpServletRequest request) throws Exception {
-        return paymentService.initiateVnPayPaymentForMultipleCourses(courseIds, request);  // Truyền request vào service
+        return paymentService.initiateVnPayPaymentForMultipleCourses(courseIds, request);
     }
 
     @GetMapping("/vnpay-return")
     public void handleVnpayReturnGet(HttpServletRequest request, HttpServletResponse response) {
-        String queryString = request.getQueryString(); // lấy toàn bộ query chưa decode
+        String queryString = request.getQueryString();
         Map<String, String> params = parseQueryString(queryString);
         try {
             paymentService.handleVnpayReturn(params);
@@ -58,7 +58,6 @@ public class PaymentController {
             String transactionStatus = params.get("vnp_TransactionStatus");
             String txnRef = params.get("vnp_TxnRef");
 
-            // Chuyển hướng về frontend (trang thành công hoặc thất bại)
             if ("00".equals(transactionStatus)) {
                 String successUrl = "http://localhost:3000/success-vnpay?vnp_TxnRef=" + txnRef + "&vnp_TransactionStatus=" + transactionStatus;
                 response.sendRedirect(successUrl);
