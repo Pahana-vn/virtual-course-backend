@@ -632,7 +632,7 @@ public class CourseService {
                 lectureDTO.setLectureResource(lecture.getLectureResource());
                 lectureDTO.setLectureOrder(lecture.getLectureOrder());
                 lectureDTO.setArticles(lecture.getArticles().stream()
-                        .map(article -> new ArticleDTO(article.getId(), article.getContent(), article.getFileUrl()))
+                        .map(article -> new ArticleDTO(article.getId(), article.getContent(), article.getFileUrl(), lecture.getId()))
                         .collect(Collectors.toList()));
                 lectureDTO.setCompleted(completedLectureIds.contains(lecture.getId()));
                 return lectureDTO;

@@ -19,4 +19,5 @@ public class LectureDTO {
     private Integer lectureOrder;
     private boolean completed;
     private List<ArticleDTO> articles;
+    private String sectionId;
 }
