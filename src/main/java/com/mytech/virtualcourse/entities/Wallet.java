@@ -20,13 +20,13 @@ public class Wallet extends AbstractEntity {
     private BigDecimal balance;
 
     @Column(name = "status", nullable = false)
-    private StatusWallet statusWallet; // e.g., ACTIVE, SUSPENDED, CLOSED
+    private StatusWallet statusWallet;
 
     @Column(name = "max_limit")
-    private BigDecimal maxLimit; // số dư max trong ví
+    private BigDecimal maxLimit;
 
     @Column(name = "last_updated", nullable = false)
-    private Timestamp lastUpdated; // Thời gian cuối cùng cập nhật ví
+    private Timestamp lastUpdated;
 
     @OneToOne
     @JoinColumn(name = "instructor_id", nullable = false)

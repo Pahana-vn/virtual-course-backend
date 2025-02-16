@@ -11,10 +11,10 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class AnswerOptionDTO {
-//    private Long id; // ID của đáp án
+    private Long id; // ID của đáp án
     private String content; // Nội dung đáp án
     private Boolean isCorrect; // Đáp án đúng hay sai
 
-//    private Long questionId;
+    private Long questionId;
 
 }

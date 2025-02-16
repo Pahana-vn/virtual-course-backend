@@ -19,6 +19,7 @@ public class InstructorDTO {
     private String firstName;
     private String lastName;
     private String gender;
+    private String status;
     private String address;
     private String phone;
     private Boolean verifiedPhone;
@@ -27,4 +28,5 @@ public class InstructorDTO {
     private String photo;
     private String workplace;
     private String accountUsername;
+    private String accountEmail;
 }

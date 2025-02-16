@@ -36,6 +36,22 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+	// OAuth2 Client (nếu đăng nhập Google/Facebook)
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// Email
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// Starter WebSocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	//JSON support
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+	// https://mvnrepository.com/artifact/com.paypal.sdk/rest-api-sdk
+	implementation group: 'com.paypal.sdk', name: 'rest-api-sdk', version: '1.14.0'
+
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 
@@ -66,9 +82,9 @@ dependencies {
 	testImplementation 'org.testcontainers:mysql'
 
 	// JWT
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
 	// Configuration Processor
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'

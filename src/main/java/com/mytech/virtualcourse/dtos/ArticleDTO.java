@@ -11,10 +11,10 @@ import lombok.*;
 @ToString
 public class ArticleDTO {
 
-//    private Long id;
+    private Long id;
     private String content;
     private String fileUrl;
 
-//    private Long lectureId;
+    private Long lectureId;
 
 }

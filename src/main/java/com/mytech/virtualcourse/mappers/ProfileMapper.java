@@ -14,6 +14,7 @@ public interface ProfileMapper {
             @Mapping(source = "account.username", target = "username"),
             @Mapping(source = "account.email", target = "email"),
             @Mapping(source = "account.verifiedEmail", target = "verifiedEmail"),
+            @Mapping(source = "instructor.id", target = "id"),
             @Mapping(source = "instructor.firstName", target = "firstName"),
             @Mapping(source = "instructor.lastName", target = "lastName"),
             @Mapping(source = "instructor.gender", target = "gender"),

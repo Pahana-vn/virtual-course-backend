@@ -1,11 +1,13 @@
 package com.mytech.virtualcourse.entities;
 
-import com.mytech.virtualcourse.enums.CourseLevel;
-import com.mytech.virtualcourse.enums.EStatusCourse;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.mytech.virtualcourse.enums.ECourseLevel;
+import com.mytech.virtualcourse.enums.ECourseStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -28,7 +30,7 @@ public class Course extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CourseLevel level; // Mức độ khóa học (BEGINNER, INTERMEDIATE, ADVANCED)
+    private ECourseLevel level; // Mức độ khóa học (BEGINNER, INTERMEDIATE, ADVANCED)
 
     private String imageCover;
 
@@ -47,45 +49,42 @@ public class Course extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EStatusCourse status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
+    private ECourseStatus status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
 
-    @ManyToMany
-    @JoinTable(
-            name = "student_course_mapping",
-            joinColumns = @JoinColumn(name = "course_id"),
-            inverseJoinColumns = @JoinColumn(name = "student_id")
-    )
+    @ManyToMany(mappedBy = "courses")
     private List<Student> students; // Sinh viên đăng ký khóa học
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Section> sections; // Các phần học trong khóa học
+    private List<Section> sections = new ArrayList<>(); // Các phần học trong khóa học
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Review> reviews; // Đánh giá khóa học
+    private List<Review> reviews;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FavoriteCourse> favoriteCourses; // Danh sách yêu thích
+    private List<FavoriteCourse> favoriteCourses;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CoursePromotion> promotions; // Chương trình khuyến mãi
+    private List<CoursePromotion> promotions;
+
+    @ManyToMany(mappedBy = "courses")
+    @JsonIgnore
+    private List<Payment> payments;
+
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Payment> payments; // Thanh toán liên quan đến khóa học
+    private List<Assignment> assignments;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assignment> assignments; // Bài tập liên quan đến khóa học
+    private List<Question> questions = new ArrayList<>();
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Question> questions; // Danh sách câu hỏi thuộc khóa học
+    private List<Test> tests;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Test> tests; // Bài kiểm tra liên quan đến khóa học
+    private List<LearningProgress> learningProgresses;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LearningProgress> learningProgresses; // Tiến độ học của sinh viên
-
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Certification> certifications; // Chứng chỉ cấp cho sinh viên
+    private List<Certification> certifications;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LearningSchedule> learningSchedules;

@@ -1,6 +1,6 @@
 package com.mytech.virtualcourse.entities;
 
-import com.mytech.virtualcourse.enums.ERole;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,13 +14,13 @@ import java.util.List;
 @Table(name = "role")
 public class Role extends AbstractEntity {
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    public ERole name;
+    private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private List<Account> accounts;
 }

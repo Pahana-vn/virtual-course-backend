@@ -3,6 +3,7 @@ package com.mytech.virtualcourse.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -23,15 +24,13 @@ public class Lecture extends AbstractEntity {
     private String lectureResource;
 
     @Column(name = "lecture_order", nullable = false)
-    private Integer lectureOrder; // Thứ tự bài giảng
+    private Integer lectureOrder;
 
     @ManyToOne
     @JoinColumn(name = "section_id", nullable = false)
     private Section section;
 
     @OneToMany(mappedBy = "lecture", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Article> articles;
+    private List<Article> articles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "lecture", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assignment> assignments;
 }

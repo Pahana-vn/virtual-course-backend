@@ -1,9 +1,6 @@
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.CourseDTO;
-import com.mytech.virtualcourse.dtos.InstructorDTO;
-import com.mytech.virtualcourse.dtos.InstructorStatisticsDTO;
-import com.mytech.virtualcourse.entities.Course;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
@@ -11,6 +8,10 @@ import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.InstructorMapper;
 import com.mytech.virtualcourse.repositories.CourseRepository;
 import com.mytech.virtualcourse.repositories.InstructorRepository;
+import com.mytech.virtualcourse.repositories.PaymentRepository;
+import com.mytech.virtualcourse.repositories.SectionRepository;
+import com.mytech.virtualcourse.security.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,10 +32,19 @@ public class InstructorService {
     private CourseRepository courseRepository;
 
     @Autowired
+    private SectionRepository sectionRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
     private InstructorMapper instructorMapper;
 
     @Autowired
     private CourseMapper courseMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public List<InstructorDTO> getAllInstructors() {
         List<Instructor> instructors = instructorRepository.findAll();
@@ -101,50 +111,81 @@ public class InstructorService {
         instructorRepository.deleteById(id);
     }
 
-    // Phương thức lấy các khóa học mà Instructor tạo
-    public List<CourseDTO> getCoursesByInstructor(Long instructorId) {
-        // Lấy Instructor theo id
+    public InstructorDetailsDTO getInstructorDetails(Long instructorId) {
         Instructor instructor = instructorRepository.findById(instructorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Instructor not found"));
 
-        // Lấy danh sách khóa học của Instructor
-        List<Course> courses = courseRepository.findByInstructor(instructor);
-        return(courses.stream().map(course -> {
-            // Chuyển đổi từ List<Course> sang List<CourseDTO>
-            CourseDTO dto = courseMapper.courseToCourseDTO(course);
-            if (course.getImageCover() != null) {
-                dto.setImageCover("http://localhost:8080/uploads/courses/" + course.getImageCover());
-                if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
-                    dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
-                }
-            }
-            return dto;
-        })).collect(Collectors.toList());
+        int totalCourses = courseRepository.countByInstructorId(instructorId);
+        int totalSections = sectionRepository.countByInstructorId(instructorId);
+        int totalStudents = paymentRepository.countDistinctStudentsByInstructorId(instructorId);
+        double averageRating = instructorRepository.calculateAverageRatingByInstructorId(instructorId);
+
+        return InstructorMapper.MAPPER.instructorToInstructorDetailsDTO(
+                instructor, totalCourses, totalSections, totalStudents, averageRating
+        );
     }
 
-    public InstructorStatisticsDTO getInstructorStatistics(Long instructorId) {
+    public InstructorProfileDTO getProfileByInstructorId(Long instructorId) {
         Instructor instructor = instructorRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with ID: " + instructorId));
+
+        return instructorMapper.instructorToInstructorProfileDTO(instructor);
+    }
+
+
+    public InstructorStatisticsDTO getInstructorStatistics(Long id) {
+        Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
-        Long totalCourses = instructorRepository.countCoursesByInstructorId(instructorId);
-        Long totalStudents = instructorRepository.countStudentsInInstructorCourses(instructorId);
+        Long totalCourses = instructorRepository.countCoursesByInstructorId(id);
+        Long totalPublishedCourses = instructorRepository.countPublishedCoursesByInstructorId(id);
+        Long totalPendingCourses = instructorRepository.countPendingCoursesByInstructorId(id);
+        Long totalStudents = instructorRepository.countStudentsInInstructorCourses(id);
         BigDecimal balance = instructor.getWallet() != null
                 ? instructor.getWallet().getBalance()
                 : BigDecimal.ZERO;
 
-        return instructorMapper.toInstructorStatisticsDTO(instructor, totalCourses, totalStudents, balance);
+        return instructorMapper.toInstructorStatisticsDTO(instructor, totalCourses, totalPublishedCourses, totalPendingCourses, totalStudents, balance);
     }
-    public String getInstructorAvatar(Long id) {
 
-        if (!instructorRepository.existsInstructorByAccountId(id)) {
-            throw new ResourceNotFoundException("Instructor not found with account id: " + id);
-        }
+    public InstructorProfileDTO getProfileByLoggedInInstructor(HttpServletRequest request) {
+        Long instructorId = getInstructorIdFromRequest(request);
+        Instructor instructor = instructorRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with Instructor ID: " + instructorId));
 
-        Optional<Instructor> optionalInstructor = instructorRepository.findByAccountId(id);
-
-        if (optionalInstructor.isPresent()) {
-            return optionalInstructor.get().getPhoto();
-        } else {
-            throw new ResourceNotFoundException("Instructor not found with account id: " + id);
-        }
+        return instructorMapper.instructorToInstructorProfileDTO(instructor);
     }
+
+
+    public InstructorProfileDTO updateProfileByLoggedInInstructor(HttpServletRequest request, InstructorProfileDTO profileDTO) {
+        Long instructorId = getInstructorIdFromRequest(request);
+        Instructor instructor = instructorRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with instructor ID: " + instructorId));
+
+        instructor.setFirstName(profileDTO.getFirstName());
+        instructor.setLastName(profileDTO.getLastName());
+        instructor.setGender(profileDTO.getGender() != null
+                ? Gender.valueOf(profileDTO.getGender().toUpperCase())
+                : instructor.getGender());
+        instructor.setAddress(profileDTO.getAddress());
+        instructor.setPhone(profileDTO.getPhone());
+        instructor.setBio(profileDTO.getBio());
+        instructor.setTitle(profileDTO.getTitle());
+        instructor.setWorkplace(profileDTO.getWorkplace());
+        instructor.setPhoto(profileDTO.getPhoto());
+        instructor.setVerifiedPhone(profileDTO.getVerifiedPhone());
+
+        Instructor updatedInstructor = instructorRepository.save(instructor);
+
+        return instructorMapper.instructorToInstructorProfileDTO(updatedInstructor);
+    }
+
+    private Long getInstructorIdFromRequest(HttpServletRequest request) {
+        String jwt = getJwtFromCookies(request);
+        return jwtUtil.getInstructorIdFromJwtToken(jwt);
+    }
+
+    private String getJwtFromCookies(HttpServletRequest request) {
+        return jwtUtil.getCookieValueByName(request, "token");
+    }
+
 }

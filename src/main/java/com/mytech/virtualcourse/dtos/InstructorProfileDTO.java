@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class InstructorProfileDTO {
+    private Long id;
     private String username;
     private String email;
     private Boolean verifiedEmail;
@@ -22,4 +23,5 @@ public class InstructorProfileDTO {
     private String title;
     private String workplace;
     private String photo;
+    private Boolean verifiedPhone;
 }

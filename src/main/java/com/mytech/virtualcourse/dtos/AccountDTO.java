@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.mytech.virtualcourse.enums.EAccountStatus;
 import lombok.*;
 
 import java.util.List;
@@ -12,12 +13,15 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class AccountDTO {
+    private int id;
     private String username;
     private String email;
-    private Boolean enable;
-    private Boolean verifiedEmail;
-    private Integer version;
-    private String authenticationType;
-    private List<NotificationDTO> notifications; // DTO cho Notification
-    private List<RoleDTO> roles; // DTO cho Role
+//    private Boolean enable;
+//    private Boolean verifiedEmail;
+//    private String password;
+//    private String type;
+    private EAccountStatus status;
+//    private Integer version;
+//    private String authenticationType;
+//    private List<RoleDTO> roles;
 }

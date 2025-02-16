@@ -4,6 +4,7 @@ import com.mytech.virtualcourse.enums.StatusTest;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -43,9 +44,14 @@ public class Test extends AbstractEntity {
     @JoinColumn(name = "instructor_id", nullable = false)
     private Instructor instructor; // Giảng viên tạo bài kiểm tra
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Question> questions; // Danh sách câu hỏi thuộc bài kiểm tra
+    @ManyToMany
+    @JoinTable(
+            name = "test_question_mapping",
+            joinColumns = @JoinColumn(name = "test_id"),
+            inverseJoinColumns = @JoinColumn(name = "question_id")
+    )
+    private List<Question> questions;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
     private List<StudentTestSubmission> submissions; // Danh sách bài nộp của học viên
 }

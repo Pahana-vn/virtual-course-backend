@@ -12,11 +12,9 @@ public interface ArticleMapper {
 
     ArticleMapper INSTANCE = Mappers.getMapper(ArticleMapper.class);
 
-    // Map từ Entity sang DTO
-//    @Mapping(source = "lecture.id", target = "lectureId")
+    @Mapping(source = "lecture.id", target = "lectureId")
     ArticleDTO articleToArticleDTO(Article article);
 
-    // Map từ DTO sang Entity
-//    @Mapping(source = "lectureId", target = "lecture.id")
+    @Mapping(source = "lectureId", target = "lecture.id")
     Article articleDTOToArticle(ArticleDTO articleDTO);
 }

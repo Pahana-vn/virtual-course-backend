@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@NamedEntityGraph(name = "Article.lecture", attributeNodes = @NamedAttributeNode("lecture"))
 @Table(name = "article")
 public class Article extends AbstractEntity {
 

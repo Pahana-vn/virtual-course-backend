@@ -7,13 +7,13 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AnswerOptionMapper {
     AnswerOptionMapper INSTANCE = Mappers.getMapper(AnswerOptionMapper.class);
 
-//    @Mapping(source = "question.id", target = "questionId")
+    @Mapping(source = "question.id", target = "questionId")
     AnswerOptionDTO answerOptionToAnswerOptionDTO(AnswerOption answerOption);
 
-//    @Mapping(source = "questionId", target = "question.id")
+    @Mapping(source = "questionId", target = "question.id")
     AnswerOption answerOptionDTOToAnswerOption(AnswerOptionDTO answerOptionDTO);
 }

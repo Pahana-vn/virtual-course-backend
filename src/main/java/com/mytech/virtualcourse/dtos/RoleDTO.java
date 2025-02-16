@@ -1,7 +1,6 @@
 package com.mytech.virtualcourse.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.mytech.virtualcourse.enums.ERole;
 import lombok.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,6 +11,6 @@ import lombok.*;
 @ToString
 public class RoleDTO {
 
-    private ERole name;
+    private String name;
     private String description;
 }

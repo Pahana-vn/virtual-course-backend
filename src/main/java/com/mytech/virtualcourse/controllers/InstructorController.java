@@ -1,12 +1,13 @@
 package com.mytech.virtualcourse.controllers;
 
-import com.mytech.virtualcourse.dtos.CourseDTO;
-import com.mytech.virtualcourse.dtos.InstructorDTO;
-import com.mytech.virtualcourse.dtos.InstructorStatisticsDTO;
+import com.mytech.virtualcourse.dtos.*;
+import com.mytech.virtualcourse.security.SecurityUtils;
 import com.mytech.virtualcourse.services.InstructorService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -20,6 +21,9 @@ public class InstructorController {
 
     @Autowired
     private InstructorService instructorService;
+
+    @Autowired
+    private SecurityUtils securityUtils;
 
     @GetMapping
     public ResponseEntity<List<InstructorDTO>> getAllInstructors() {
@@ -40,44 +44,41 @@ public class InstructorController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<InstructorDTO> updateInstructor(@PathVariable Long id, @RequestBody InstructorDTO instructorDTO) {
         InstructorDTO updatedInstructor = instructorService.updateInstructor(id, instructorDTO);
         return ResponseEntity.ok(updatedInstructor);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Void> deleteInstructor(@PathVariable Long id) {
         instructorService.deleteInstructor(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/courses")
-    public ResponseEntity<List<CourseDTO>> getCoursesByInstructor(@PathVariable Long id) {
-        // Lấy danh sách các khóa học của instructor
-        List<CourseDTO> courseDTOs = instructorService.getCoursesByInstructor(id);
-        return ResponseEntity.ok(courseDTOs);
+    @GetMapping("/{id}/instructor-details")
+    public ResponseEntity<InstructorDetailsDTO> getInstructorDetails(@PathVariable Long id) {
+        InstructorDetailsDTO instructorDetails = instructorService.getInstructorDetails(id);
+        return ResponseEntity.ok(instructorDetails);
     }
 
-    @GetMapping("/{id}/statistics")
+    @GetMapping("/{id}/instructor-statistics")
     public ResponseEntity<InstructorStatisticsDTO> getInstructorStatistics(@PathVariable Long id) {
         return ResponseEntity.ok(instructorService.getInstructorStatistics(id));
     }
 
-    @GetMapping("/{id}/avatar")
-    public ResponseEntity<Map<String, String>> getInstructorAvatar(@PathVariable Long id) {
-        String avatarFileName = instructorService.getInstructorAvatar(id);
+    @GetMapping("/{id}/instructor-profile")
+    public ResponseEntity<InstructorProfileDTO> getInstructorProfile(@PathVariable Long id) {
+        InstructorProfileDTO profileDTO = instructorService.getProfileByInstructorId(id);
+        return ResponseEntity.ok(profileDTO);
+    }
 
-        if (avatarFileName == null || avatarFileName.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Avatar not found"));
-        }
-
-        String avatarUrl = "http://localhost:8080/uploads/instructor/" + avatarFileName;
-
-        // Trả về đối tượng JSON chứa URL
-        Map<String, String> response = new HashMap<>();
-        response.put("url", avatarUrl);
-
-        return ResponseEntity.ok(response);
+    // Cập nhật thông tin hồ sơ của giảng viên đã đăng nhập
+    @PutMapping("/instructor-profile")
+    public ResponseEntity<InstructorProfileDTO> updateLoggedInInstructorProfile(HttpServletRequest request, @RequestBody InstructorProfileDTO profileDTO) {
+        Long accountId = securityUtils.getLoggedInAccountId();
+        InstructorProfileDTO updatedProfile = instructorService.updateProfileByLoggedInInstructor(request, profileDTO);
+        return ResponseEntity.ok(updatedProfile);
     }
 }

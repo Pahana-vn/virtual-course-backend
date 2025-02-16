@@ -1,205 +1,106 @@
 package com.mytech.virtualcourse.controllers;
 
-import com.mytech.virtualcourse.configs.security.jwt.JwtUtils;
-import com.mytech.virtualcourse.entities.Account;
-import com.mytech.virtualcourse.entities.Student;
-import com.mytech.virtualcourse.entities.Instructor;
-import com.mytech.virtualcourse.entities.RefreshToken;
-import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
-import com.mytech.virtualcourse.exceptions.TokenRefreshException;
-import com.mytech.virtualcourse.payload.request.LoginRequest;
-import com.mytech.virtualcourse.payload.response.JwtResponse;
-import com.mytech.virtualcourse.payload.response.MessageResponse;
-import com.mytech.virtualcourse.repositories.AccountRepository;
-import com.mytech.virtualcourse.repositories.InstructorRepository;
-import com.mytech.virtualcourse.repositories.StudentRepository;
-import com.mytech.virtualcourse.services.RefreshTokenService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
+import com.mytech.virtualcourse.dtos.JwtDTO;
+import com.mytech.virtualcourse.dtos.LoginDTO;
+import com.mytech.virtualcourse.dtos.MessageDTO;
+import com.mytech.virtualcourse.dtos.RegisterDTO;
+import com.mytech.virtualcourse.mappers.JwtMapper;
+import com.mytech.virtualcourse.security.CustomUserDetails;
+import com.mytech.virtualcourse.security.JwtUtil;
+import com.mytech.virtualcourse.services.AuthService;
+import com.mytech.virtualcourse.utils.CookieUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import com.mytech.virtualcourse.configs.security.services.UserDetailsImpl;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-@Tag(name = "Auth")
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthService authService;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private JwtMapper jwtMapper;
 
     @Autowired
-    AccountRepository accountRepository;
+    private JwtUtil jwtUtil;
 
     @Autowired
-    InstructorRepository instructorRepository;
+    private AuthenticationManager authenticationManager;
 
-    @Autowired
-    StudentRepository studentRepository;
 
-    @Autowired
-    RefreshTokenService refreshTokenService;
-
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        System.out.println("LoginRequest: " + loginRequest);
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String jwt = jwtUtils.generateJwtToken(userDetails);
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        Optional<Account> accountOptional = accountRepository.findById(userDetails.getId());
-        if (accountOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User account not found.");
-        }
-        Account account = accountOptional.get();
-
-        if (!account.getEnable()) return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Your account has been banned. Please contact the provider.");
-
-        account.setEnable(true);
-        accountRepository.save(account);
-
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
-
-        ResponseCookie jwtRefreshCookie = jwtUtils.generateRefreshJwtCookie(refreshToken.getToken());
-
-        JwtResponse jwtResponse = JwtResponse.builder()
-                        .id(userDetails.getId())
-                        .token(jwt)
-                        .username(account.getUsername())
-                        .firstName(jwt)
-                        .email(userDetails.getEmail())
-                        .type("Bearer")
-                        .roles(roles)
-                        .createdAt(account.getCreatedAt())
-                        .build();
-
-        if (userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_INSTRUCTOR"))) {
-            Optional<Instructor> optionalInstructor = instructorRepository.findByAccountId(account.getId());
-
-            if (optionalInstructor.isPresent()) {
-                Instructor instructor = optionalInstructor.get();
-                jwtResponse.setDataFromInstructor(instructor); // Gán thông tin từ Instructor
-            } else {
-                throw new ResourceNotFoundException("Instructor not found with accountId: " + account.getId());
-            }
-        } else if (userDetails.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_STUDENT"))) {
-            Optional<Student> optionalStudent = studentRepository.findByAccountId(account.getId());
-
-            if (optionalStudent.isPresent()) {
-                Student student = optionalStudent.get();
-                jwtResponse.setDataFromStudent(student); // Gán thông tin từ Student
-            } else {
-                throw new ResourceNotFoundException("Student not found with accountId: " + account.getId());
-            }
-        }
-
-        if (jwtResponse.getFirstName() != null && jwtResponse.getLastName() != null) {
-            jwtResponse.setFullname(jwtResponse.getFirstName() + " " + jwtResponse.getLastName());
-        }
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, jwtRefreshCookie.toString())
-                .body(jwtResponse);
-
-    }
-    @PostMapping("/signout")
-    public ResponseEntity<?> logoutUser() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = userDetails.getId();
-        refreshTokenService.deleteByUserId(userId);
-
-        return ResponseEntity.ok(new MessageResponse("You've been signed out!"));
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerRequest) {
+        return authService.registerUser(registerRequest);
     }
 
-    @GetMapping("/refresh")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
-        String refreshToken = jwtUtils.getJwtRefreshFromCookies(request);
-        if ((refreshToken != null) && (!refreshToken.isEmpty())) {
-            return refreshTokenService.findByToken(refreshToken)
-                    .map(refreshTokenService::verifyExpiration)
-                    .map(RefreshToken::getUser)
-                    .map(user -> {
-                        String token = jwtUtils.generateTokenFromEmail(user.getEmail());
-                        return ResponseEntity.ok(JwtResponse.builder()
-                                .id(user.getId())
-                                .fullname(getFullName(user))
-                                .username(user.getUsername())
-                                .email(user.getEmail())
-                                .image(getImage(user))
-                                .createdAt(getCreatedAt(user))
-                                .token(token)
-                                .type("Bearer")
-                                .roles(user.getRoles().stream().map(role -> role.getName().name()).toList())
-                                .build());
-                    })
-                    .orElseThrow(() -> new TokenRefreshException(refreshToken,
-                            "Refresh token is not in database!"));
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginRequest, HttpServletResponse response) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtil.generateJwtToken((CustomUserDetails) authentication.getPrincipal());
+
+            // Dùng CookieUtil để lưu cookie
+            CookieUtil.addTokenCookie(response, jwt);
+
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            JwtDTO jwtDTO = jwtMapper.toJwtDTO(userDetails);
+            jwtDTO.setToken(jwt);
+
+            return ResponseEntity.ok(jwtDTO);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MessageDTO("Error: Invalid username or password"));
         }
-        return ResponseEntity.badRequest().body(new MessageResponse("Refresh Token is empty!"));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
-    public Map<String, String> validationError(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return errors;
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(HttpServletResponse response) {
+        // Dùng CookieUtil để xóa cookie
+        CookieUtil.clearTokenCookie(response);
+
+        // Xóa session authentication
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity.ok(new MessageDTO("User logged out successfully!"));
     }
 
-    private String getFullName(Object user) {
-        if (user instanceof Student student) {
-            return student.getFirstName() + " " + student.getLastName();
-        } else if (user instanceof Instructor instructor) {
-            return instructor.getFirstName() + " " + instructor.getLastName();
+    @GetMapping("/{accountId}/instructor-avatar")
+    public ResponseEntity<Map<String, String>> getInstructorAvatar(@PathVariable Long accountId) {
+        String avatarFileName = authService.getInstructorAvatar(accountId);
+
+        if (avatarFileName == null || avatarFileName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Avatar not found"));
         }
-        return null;
+
+        String avatarUrl = "http://localhost:8080/uploads/instructor/" + avatarFileName;
+
+        // Trả về đối tượng JSON chứa URL
+        Map<String, String> response = new HashMap<>();
+        response.put("url", avatarUrl);
+
+        return ResponseEntity.ok(response);
     }
 
-    private String getImage(Object user) {
-        if (user instanceof Student student) {
-            return student.getAvatar() != null ? student.getAvatar() : "default-avatar.png";
-        } else if (user instanceof Instructor instructor) {
-            return instructor.getPhoto() != null ? instructor.getPhoto() : "default-photo.png";
-        }
-        return "default-image.png";
-    }
 
-    private LocalDateTime getCreatedAt(Object user) {
-        if (user instanceof Student student) {
-            return student.getCreatedAt();
-        } else if (user instanceof Instructor instructor) {
-            return instructor.getCreatedAt();
-        }
-        return null;
-    }
 }

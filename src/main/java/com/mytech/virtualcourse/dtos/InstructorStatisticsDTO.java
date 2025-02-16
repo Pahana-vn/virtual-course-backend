@@ -13,6 +13,8 @@ public class InstructorStatisticsDTO {
     private Long instructorId;
     private String instructorName;
     private Long totalCourses;
+    private Long totalPublishedCourses;
+    private Long totalPendingCourses;
     private Long totalStudents;
     private BigDecimal balance;
     private String avatarImage;

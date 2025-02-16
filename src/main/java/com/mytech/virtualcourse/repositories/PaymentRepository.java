@@ -14,4 +14,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.student.id = :studentId AND p.status = 'COMPLETED'")
     BigDecimal getTotalPaidByStudentId(@Param("studentId") Long studentId);
+
+    @Query("SELECT COUNT(DISTINCT e.student.id) FROM Payment e JOIN e.courses c WHERE c.instructor.id = :instructorId")
+    int countDistinctStudentsByInstructorId(@Param("instructorId") Long instructorId);
 }

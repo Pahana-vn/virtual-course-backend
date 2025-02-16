@@ -14,14 +14,14 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class QuestionDTO {
-//    private Long id; // ID của câu hỏi
-    private String content; // Nội dung câu hỏi
-    private QuestionType type; // SINGLE hoặc MULTIPLE
-    private Integer marks; // Điểm số cho câu hỏi
+    private Long id;
+    private String content;
+    private QuestionType type;
+    private Integer marks;
 
-//    private Long courseId;
+    private Long courseId;
 
 //    private Long testId;
 
-    private List<AnswerOptionDTO> answerOptions; // Danh sách đáp án
+    private List<AnswerOptionDTO> answerOptions;
 }

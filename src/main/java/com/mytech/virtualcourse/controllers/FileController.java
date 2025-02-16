@@ -46,4 +46,19 @@ public class FileController {
                     .body("Error uploading file: " + e.getMessage());
         }
     }
+
+    @GetMapping("/exists/{type}/{filename}")
+    public ResponseEntity<Boolean> checkFileExists(
+            @PathVariable String type,
+            @PathVariable String filename) {
+        String filePath = BASE_UPLOAD_DIR + type + "/" + filename;
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.ok(false);
+        }
+    }
+
 }

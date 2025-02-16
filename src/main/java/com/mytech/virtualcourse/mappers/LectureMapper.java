@@ -7,15 +7,17 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-@Mapper( unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring") // Sử dụng QuestionMapper
+@Mapper(
+        componentModel = "spring",
+        uses = {ArticleMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface LectureMapper {
     LectureMapper INSTANCE = Mappers.getMapper(LectureMapper.class);
 
-//    @Mapping(target = "sectionId", source = "section.id")
-    @Mapping(target = "articles", source = "articles")
+    @Mapping(target = "sectionId", source = "section.id")
     LectureDTO lectureToLectureDTO(Lecture lecture);
 
-//    @Mapping(target = "section.id", source = "sectionId")
-    @Mapping(target = "articles", source = "articles")
+    @Mapping(target = "section.id", source = "sectionId")
     Lecture lectureDTOToLecture(LectureDTO lectureDTO);
 }

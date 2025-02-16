@@ -4,6 +4,7 @@ import com.mytech.virtualcourse.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -28,12 +29,11 @@ public class Question extends AbstractEntity {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course; // Khóa học chứa câu hỏi
 
-    @ManyToOne
-    @JoinColumn(name = "test_id", nullable = true)
-    private Test test;
+    @ManyToMany(mappedBy = "questions")
+    private List<Test> tests;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnswerOption> answerOptions;
+    private List<AnswerOption> answerOptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentAnswer> studentAnswers;

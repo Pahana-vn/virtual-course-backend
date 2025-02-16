@@ -7,15 +7,17 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(uses = {LectureMapper.class},unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring") // Sử dụng LectureMapper
+@Mapper(
+        componentModel = "spring",
+        uses = {LectureMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface SectionMapper {
     SectionMapper INSTANCE = Mappers.getMapper(SectionMapper.class);
 
-//    @Mapping(target = "courseId", source = "course.id") // Map lectures từ Section sang LectureDTO
-    @Mapping(target = "lectures", source = "lectures") // Map lectures từ Section sang LectureDTO
+    @Mapping(target = "courseId", source = "course.id")
     SectionDTO sectionToSectionDTO(Section section);
 
-//    @Mapping(target = "course.id", source = "courseId") // Map lectures từ Section sang LectureDTO
-    @Mapping(target = "lectures", source = "lectures")
+    @Mapping(target = "course.id", source = "courseId")
     Section sectionDTOToSection(SectionDTO sectionDTO);
 }
