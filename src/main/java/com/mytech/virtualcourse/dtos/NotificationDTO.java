@@ -13,13 +13,12 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @ToString
 public class NotificationDTO {
-
-    private Long id; // ID của thông báo
-    private String content; // Nội dung thông báo
-    private Timestamp sentAt; // Thời gian gửi thông báo
-    private NotificationType type; // Loại thông báo
-    private Boolean isRead; // Trạng thái đã đọc
-    private Long userId; // ID của người nhận thông báo
-    private Long courseId; // ID của khóa học (nếu có)
-    private Long paymentId; // ID của thanh toán (nếu có)
+    private Long id;
+    private String content;
+    private Timestamp sentAt;
+    private NotificationType type;
+    private Boolean isRead;
+    private Long userId;
+    private Long courseId;
+    private Long paymentId;
 }

@@ -22,27 +22,29 @@ public class Test extends AbstractEntity {
     private String description;
 
     @Column(name = "total_marks", nullable = false)
-    private Integer totalMarks; // Tổng điểm của bài kiểm tra
+    private Integer totalMarks;
 
     @Column(name = "pass_percentage", nullable = false)
-    private Integer passPercentage = 60; // Tỷ lệ điểm cần đạt để pass, mặc định là 60%
+    private Integer passPercentage = 60;
 
     @Column(name = "duration", nullable = false)
     private Integer duration; // Thời lượng làm bài (phút)
 
     @Column(name = "is_final_test", nullable = false)
-    private Boolean isFinalTest = false; // Đánh dấu đây là bài kiểm tra cuối khóa
+    private Boolean isFinalTest = false;
 
     @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
     private StatusTest statusTest;
+
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
-    private Course course; // Bài kiểm tra thuộc khóa học nào
+    private Course course;
 
     @ManyToOne
     @JoinColumn(name = "instructor_id", nullable = false)
-    private Instructor instructor; // Giảng viên tạo bài kiểm tra
+    private Instructor instructor;
 
     @ManyToMany
     @JoinTable(
@@ -52,6 +54,6 @@ public class Test extends AbstractEntity {
     )
     private List<Question> questions;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
-    private List<StudentTestSubmission> submissions; // Danh sách bài nộp của học viên
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentTestSubmission> submissions;
 }

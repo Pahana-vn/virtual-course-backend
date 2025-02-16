@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,4 +21,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
 
     boolean existsStudentByAccountId(Long accountId);
+
+    long countByCreatedAtBetween(Date start, Date end);
 }

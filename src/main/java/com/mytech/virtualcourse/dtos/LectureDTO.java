@@ -12,12 +12,11 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class LectureDTO {
-    private Long id; // ID của bài giảng
-    private String titleLecture; // Tiêu đề bài giảng // Tài nguyên đính kèm
-    private Integer lectureOrder; // Thứ tự của bài giảng
+    private Long id;
+    private String titleLecture;
     private String lectureVideo;
-
-    private Long sectionId;
-
-    private List<ArticleDTO> articles; // Danh sách câu hỏi
+    private String lectureResource;
+    private Integer lectureOrder;
+    private boolean completed;
+    private List<ArticleDTO> articles;
 }

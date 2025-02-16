@@ -13,15 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class AccountDTO {
-    private int id;
+    private Long id;
     private String username;
     private String email;
-//    private Boolean enable;
-//    private Boolean verifiedEmail;
-//    private String password;
-//    private String type;
     private EAccountStatus status;
-//    private Integer version;
-//    private String authenticationType;
-//    private List<RoleDTO> roles;
 }

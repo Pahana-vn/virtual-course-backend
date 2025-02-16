@@ -45,7 +45,7 @@ public class Account extends AbstractEntity {
 
     @Column(name = "authentication_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private AuthenticationType authenticationType; // Kiểu xác thực: local, google, facebook, etc.
+    private AuthenticationType authenticationType;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;

@@ -18,10 +18,6 @@ public class QuestionDTO {
     private String content;
     private QuestionType type;
     private Integer marks;
-
     private Long courseId;
-
-//    private Long testId;
-
     private List<AnswerOptionDTO> answerOptions;
 }

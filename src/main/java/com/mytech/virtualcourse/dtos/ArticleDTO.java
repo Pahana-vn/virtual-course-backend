@@ -10,7 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class ArticleDTO {
-
     private Long id;
     private String content;
     private String fileUrl;

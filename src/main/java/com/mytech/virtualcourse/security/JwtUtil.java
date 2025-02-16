@@ -59,7 +59,6 @@ public class JwtUtil {
         return studentId != null ? Long.valueOf(studentId.toString()) : null;
     }
 
-
     // Get username from JWT
     public String getUsernameFromJwtToken(String token) {
         return Jwts.parser()

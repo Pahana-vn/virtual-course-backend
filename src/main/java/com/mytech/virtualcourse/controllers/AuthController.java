@@ -1,9 +1,6 @@
 package com.mytech.virtualcourse.controllers;
 
-import com.mytech.virtualcourse.dtos.JwtDTO;
-import com.mytech.virtualcourse.dtos.LoginDTO;
-import com.mytech.virtualcourse.dtos.MessageDTO;
-import com.mytech.virtualcourse.dtos.RegisterDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.mappers.JwtMapper;
 import com.mytech.virtualcourse.security.CustomUserDetails;
 import com.mytech.virtualcourse.security.JwtUtil;

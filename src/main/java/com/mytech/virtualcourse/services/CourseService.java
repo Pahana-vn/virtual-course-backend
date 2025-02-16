@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,12 @@ public class CourseService {
 
     @Autowired
     private AnswerOptionRepository answerOptionRepository;
+
+    @Autowired
+    private StudentLectureProgressRepository studentLectureProgressRepository;
+
+    @Autowired
+    private TestRepository testRepository;
 
     @Autowired
     private CourseMapper courseMapper;
@@ -598,16 +605,58 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    public List<CourseDTO> mapCoursesWithFullImageUrl(List<Course> courses) {
-        return courses.stream()
-                .map(course -> {
-                    CourseDTO dto = courseMapper.courseToCourseDTO(course);
-                    if (course.getImageCover() != null) {
-                        dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
-                    }
-                    return dto;
-                })
+    public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+        CourseDetailDTO dto = courseMapper.courseToCourseDetailDTO(course);
+
+        // Lấy tất cả bài giảng trong khóa học
+        List<Lecture> allLectures = course.getSections().stream()
+                .flatMap(section -> section.getLectures().stream())
                 .collect(Collectors.toList());
+        int totalLectures = allLectures.size();
+
+        // Lấy danh sách các ID bài giảng đã hoàn thành
+        List<Long> completedLectureIds = studentLectureProgressRepository.findCompletedLectureIdsByStudentAndCourse(studentId, courseId);
+
+        // Map sections và bài giảng, đặt trạng thái 'completed'
+        List<SectionDTO> sectionsDTO = course.getSections().stream().map(section -> {
+            SectionDTO sectionDTO = new SectionDTO();
+            sectionDTO.setId(section.getId());
+            sectionDTO.setTitleSection(section.getTitleSection());
+            sectionDTO.setLectures(section.getLectures().stream().map(lecture -> {
+                LectureDTO lectureDTO = new LectureDTO();
+                lectureDTO.setId(lecture.getId());
+                lectureDTO.setTitleLecture(lecture.getTitleLecture());
+                lectureDTO.setLectureVideo(lecture.getLectureVideo());
+                lectureDTO.setLectureResource(lecture.getLectureResource());
+                lectureDTO.setLectureOrder(lecture.getLectureOrder());
+                lectureDTO.setArticles(lecture.getArticles().stream()
+                        .map(article -> new ArticleDTO(article.getId(), article.getContent(), article.getFileUrl()))
+                        .collect(Collectors.toList()));
+                lectureDTO.setCompleted(completedLectureIds.contains(lecture.getId()));
+                return lectureDTO;
+            }).collect(Collectors.toList()));
+            return sectionDTO;
+        }).collect(Collectors.toList());
+
+        dto.setSections(sectionsDTO);
+
+        // Kiểm tra xem tất cả bài giảng đã hoàn thành chưa
+        boolean allCompleted = completedLectureIds.size() == totalLectures && totalLectures > 0;
+        dto.setAllLecturesCompleted(allCompleted);
+
+        // Kiểm tra test cuối khóa
+        Optional<Test> finalTestOpt = testRepository.findFinalTestByCourseId(courseId);
+        if (finalTestOpt.isPresent()) {
+            dto.setFinalTestId(finalTestOpt.get().getId());
+            dto.setFinalTestTitle(finalTestOpt.get().getTitle());
+        }
+
+        if (course.getImageCover() != null) {
+            dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+        }
+        return dto;
     }
 
     private Long getInstructorIdFromRequest(HttpServletRequest request) {

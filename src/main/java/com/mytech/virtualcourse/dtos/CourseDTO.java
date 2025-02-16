@@ -32,14 +32,12 @@ public class CourseDTO {
     private Integer duration;
     private BigDecimal basePrice;
     private ECourseStatus status;
+    private Integer progress;
     private String instructorPhoto;
     private String instructorFirstName;
     private String instructorLastName;
-
     private Long instructorId;
     private InstructorInfo instructorInfo;
-
     private List<SectionDTO> sections;
-
     private List<QuestionDTO> questions;
 }

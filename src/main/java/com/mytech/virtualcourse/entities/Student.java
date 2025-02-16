@@ -61,6 +61,7 @@ public class Student extends AbstractEntity {
     )
     private List<Course> courses;
 
+
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LearningProgress> learningProgresses;
 

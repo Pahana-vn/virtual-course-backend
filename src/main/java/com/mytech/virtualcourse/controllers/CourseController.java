@@ -68,12 +68,6 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/course-details")
-    public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
-        CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
-        return ResponseEntity.ok(courseDetails);
-    }
-
     @GetMapping("/instructors-courses/{instructorId}")
     public ResponseEntity<List<CourseDTO>> getInstructorCourses(
             @PathVariable Long instructorId,
@@ -93,4 +87,17 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/{id}/course-details")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
+        return ResponseEntity.ok(courseDetails);
+    }
+
+    @GetMapping("/{courseId}/details-for-student")
+    public ResponseEntity<CourseDetailDTO> getCourseDetailsForStudent(
+            @PathVariable Long courseId,
+            @RequestParam Long studentId) {
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId);
+        return ResponseEntity.ok(courseDetails);
+    }
 }

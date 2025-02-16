@@ -30,7 +30,7 @@ public class Course extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ECourseLevel level; // Mức độ khóa học (BEGINNER, INTERMEDIATE, ADVANCED)
+    private ECourseLevel level;
 
     private String imageCover;
 
@@ -42,20 +42,20 @@ public class Course extends AbstractEntity {
 
     private String hashtag;
 
-    private Integer duration; // Tổng thời lượng khóa học (phút)
+    private Integer duration;
 
     @Column(name = "base_price", nullable = false)
     private BigDecimal basePrice;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ECourseStatus status; // Trạng thái khóa học (e.g., ACTIVE, INACTIVE)
+    private ECourseStatus status;
 
     @ManyToMany(mappedBy = "courses")
-    private List<Student> students; // Sinh viên đăng ký khóa học
+    private List<Student> students;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Section> sections = new ArrayList<>(); // Các phần học trong khóa học
+    private List<Section> sections = new ArrayList<>();
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews;
@@ -69,10 +69,6 @@ public class Course extends AbstractEntity {
     @ManyToMany(mappedBy = "courses")
     @JsonIgnore
     private List<Payment> payments;
-
-
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assignment> assignments;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
@@ -91,5 +87,4 @@ public class Course extends AbstractEntity {
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudySession> studySessions;
-
 }

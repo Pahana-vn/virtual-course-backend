@@ -1,22 +1,26 @@
 package com.mytech.virtualcourse.controllers;
 
+import com.mytech.virtualcourse.dtos.StudentTestSubmissionDTO;
 import com.mytech.virtualcourse.dtos.TestDTO;
+import com.mytech.virtualcourse.dtos.TestResultDTO;
 import com.mytech.virtualcourse.security.SecurityUtils;
 import com.mytech.virtualcourse.services.TestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/tests")
 @RequiredArgsConstructor
 public class TestController {
-    private final TestService testService;
+    @Autowired
+    private TestService testService;
+
     private final SecurityUtils securityUtils;
 
     @GetMapping("/course/{courseId}")
@@ -46,4 +50,9 @@ public class TestController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/submit")
+    public ResponseEntity<TestResultDTO> submitTest(@RequestBody StudentTestSubmissionDTO submissionDTO) {
+        TestResultDTO result = testService.submitTest(submissionDTO);
+        return ResponseEntity.ok(result);
+    }
 }

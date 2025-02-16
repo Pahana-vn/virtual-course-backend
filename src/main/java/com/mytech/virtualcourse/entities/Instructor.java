@@ -62,23 +62,18 @@ public class Instructor extends AbstractEntity {
     @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Test> tests;
 
-    // Mối quan hệ với quá trình học vấn
     @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Education> education;
 
-    // Mối quan hệ với kinh nghiệm làm việc
     @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Experience> experiences;
 
-    // Mối quan hệ với kỹ năng
     @OneToMany(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Skill> skills;
 
-    // Mối quan hệ với thông tin liên hệ
     @OneToOne(mappedBy = "instructor", cascade = CascadeType.ALL, orphanRemoval = true)
     private Social social;
 
-    // Thông tin tính toán: Tổng số học viên và khóa học
     @Transient
     private int totalCourses;
 
@@ -87,4 +82,5 @@ public class Instructor extends AbstractEntity {
 
     @Transient
     private int totalReviews;
+
 }

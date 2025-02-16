@@ -20,13 +20,13 @@ public class Section extends AbstractEntity {
     @Column(name = "num_of_lectures", nullable = false)
     private Integer numOfLectures;
 
-    @Column(name = "num_of_quiz", nullable = false)
+    @Column(name = "num_of_quiz")
     private Integer numOfQuiz;
 
-    @Column(name = "num_of_test", nullable = false)
+    @Column(name = "num_of_test")
     private Integer numOfTest;
 
-    @Column(name = "session_duration")
+    @Column(name = "session_duration", nullable = false)
     private Integer sessionDuration;
 
     @Column(name = "pass_score")
