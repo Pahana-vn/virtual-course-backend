@@ -26,8 +26,8 @@ public class JwtUtil {
     public String generateJwtToken(CustomUserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities());
-        claims.put("accountId", userDetails.getAccountId());  // ✅ Thêm accountId
-        claims.put("studentId", userDetails.getStudentId());  // ✅ Thêm studentId
+        claims.put("accountId", userDetails.getAccountId());
+        claims.put("studentId", userDetails.getStudentId());
         claims.put("instructorId", userDetails.getInstructorId());
 
         return Jwts.builder()

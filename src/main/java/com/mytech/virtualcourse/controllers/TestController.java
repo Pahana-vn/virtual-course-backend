@@ -52,7 +52,24 @@ public class TestController {
 
     @PostMapping("/submit")
     public ResponseEntity<TestResultDTO> submitTest(@RequestBody StudentTestSubmissionDTO submissionDTO) {
+        System.out.println("Received submission: " + submissionDTO);
         TestResultDTO result = testService.submitTest(submissionDTO);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/result/{testId}/student/{studentId}")
+    public ResponseEntity<TestResultDTO> getTestResult(
+            @PathVariable Long testId,
+            @PathVariable Long studentId) {
+        try {
+            TestResultDTO result = testService.getTestResult(testId, studentId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();  // In ra lỗi trong logs
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+
 }
