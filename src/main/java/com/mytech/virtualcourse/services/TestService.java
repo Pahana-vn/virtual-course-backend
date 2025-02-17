@@ -58,6 +58,7 @@ public class TestService {
 
     @Autowired
     private AnswerOptionRepository answerOptionRepository;
+
         public List<TestDTO> getTestsByCourse(Long courseId) {
                 Course course = courseRepository.findById(courseId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
