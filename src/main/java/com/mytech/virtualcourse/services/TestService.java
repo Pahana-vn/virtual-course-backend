@@ -73,11 +73,13 @@ public class TestService {
                         .collect(Collectors.toList());
         }
 
-        public TestDTO createTestForCourse(Long courseId, TestDTO testDTO, Long loggedInInstructorId) {
+        public TestDTO createTestForCourse(Long courseId, TestDTO testDTO, Long InstructorId) {
+                // Lấy khóa học
                 Course course = courseRepository.findById(courseId)
                         .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
 
-                if (!course.getInstructor().getId().equals(loggedInInstructorId)) {
+                // Xác thực giảng viên có quyền
+                if (!course.getInstructor().getId().equals(InstructorId)) {
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to manage this course.");
                 }
 
