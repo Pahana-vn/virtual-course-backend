@@ -1,13 +1,11 @@
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.CartItemDTO;
-import com.mytech.virtualcourse.dtos.CourseDTO;
-import com.mytech.virtualcourse.dtos.DashboardDTO;
-import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.StudentMapper;
+import com.mytech.virtualcourse.mappers.StudentQuizMapper;
 import com.mytech.virtualcourse.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +27,9 @@ public class StudentService {
     private StudentMapper studentMapper;
 
     @Autowired
+    private StudentQuizMapper studentQuizMapper;
+
+    @Autowired
     private CourseMapper courseMapper;
 
     @Autowired
@@ -36,6 +37,12 @@ public class StudentService {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private StudentTestSubmissionRepository submissionRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
 
     @Autowired
     private LearningProgressRepository learningProgressRepository;
@@ -445,5 +452,26 @@ public class StudentService {
         } else {
             throw new ResourceNotFoundException("Student not found with account id: " + id);
         }
+    }
+
+    public List<StudentQuizResultDTO> getStudentQuizResults(Long studentId) {
+        studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
+
+        List<StudentTestSubmission> submissions = submissionRepository.findByStudentId(studentId);
+
+        // Dùng MapStruct để convert danh sách submission sang DTO
+        return studentQuizMapper.toQuizResultDTOList(submissions);
+    }
+
+    // Lấy chi tiết bài kiểm tra của sinh viên
+    public StudentQuizDetailDTO getQuizDetails(Long quizId) {
+        StudentTestSubmission submission = submissionRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
+
+        List<Question> questions = questionRepository.findByTestId(submission.getTest().getId());
+
+        // Dùng MapStruct để convert sang DTO
+        return studentQuizMapper.toQuizDetailDTO(submission, studentQuizMapper.toQuestionDTOList(questions));
     }
 }

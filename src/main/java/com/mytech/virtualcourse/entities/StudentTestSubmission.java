@@ -17,18 +17,18 @@ public class StudentTestSubmission extends AbstractEntity {
     @Column(name = "submitted_at", nullable = false)
     private Timestamp submittedAt;
 
-    @Column(name = "marks_obtained")
-    private Integer marksObtained; // Điểm đạt được
+    @Column(name = "marks_obtained", nullable = false)
+    private Integer marksObtained;
 
     @Column(name = "passed", nullable = false)
-    private Boolean passed; // Học viên có vượt qua bài kiểm tra không
+    private Boolean passed;
 
     @Column(name = "duration", nullable = false)
-    private Integer durationTest; // Thời gian làm bài (phút)
+    private Integer durationTest;
 
     @ManyToOne
     @JoinColumn(name = "test_id", nullable = false)
-    private Test test; // Bài kiểm tra mà học viên đã nộp
+    private Test test;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
@@ -39,4 +39,14 @@ public class StudentTestSubmission extends AbstractEntity {
 
     @OneToOne(mappedBy = "finalTestSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
     private LearningProgress learningProgress;
+
+    public String getTestTitle() {
+        return test.getTitle();
+    }
+
+    // ✅ Getter để lấy số câu hỏi từ Test
+    public int getTotalQuestions() {
+        return test.getQuestions().size();
+    }
 }
+

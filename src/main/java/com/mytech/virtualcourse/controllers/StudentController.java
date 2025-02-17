@@ -1,9 +1,6 @@
 package com.mytech.virtualcourse.controllers;
 
-import com.mytech.virtualcourse.dtos.CartItemDTO;
-import com.mytech.virtualcourse.dtos.CourseDTO;
-import com.mytech.virtualcourse.dtos.DashboardDTO;
-import com.mytech.virtualcourse.dtos.StudentDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Cart;
 import com.mytech.virtualcourse.entities.CartItem;
 import com.mytech.virtualcourse.entities.Student;
@@ -182,5 +179,15 @@ public class StudentController {
         response.put("url", avatarUrl);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{studentId}/quiz-results")
+    public List<StudentQuizResultDTO> getStudentQuizResults(@PathVariable Long studentId) {
+        return studentService.getStudentQuizResults(studentId);
+    }
+
+    @GetMapping("/quiz-details/{quizId}")
+    public StudentQuizDetailDTO getQuizDetails(@PathVariable Long quizId) {
+        return studentService.getQuizDetails(quizId);
     }
 }
