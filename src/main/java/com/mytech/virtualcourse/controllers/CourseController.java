@@ -20,6 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/courses")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class CourseController {
 
     @Autowired
@@ -27,9 +28,6 @@ public class CourseController {
 
     @Autowired
     private StudentService studentService;
-
-    @Autowired
-    private SecurityUtils securityUtils;
 
     @GetMapping
     public ResponseEntity<List<CourseDTO>> getAllCourses() {
@@ -45,30 +43,29 @@ public class CourseController {
         }
         return ResponseEntity.ok(course);
     }
-
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     @PostMapping
-    @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<CourseDTO> createCourse(@RequestBody CourseDTO courseDTO) {
         CourseDTO createdCourse = courseService.createCourse(courseDTO);
         return new ResponseEntity<>(createdCourse, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseDTO courseDTO) {
 //        System.out.println("Received CourseDTO for update: " + courseDTO);
         CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
         return ResponseEntity.ok(updatedCourse);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/instructors-courses/{instructorId}")
+    @GetMapping("/{instructorId}/instructor-courses")
     public ResponseEntity<List<CourseDTO>> getInstructorCourses(
             @PathVariable Long instructorId,
             @RequestParam(required = false) String status) {

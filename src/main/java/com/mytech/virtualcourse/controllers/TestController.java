@@ -29,22 +29,23 @@ public class TestController {
         return ResponseEntity.ok(tests);
     }
 
-    @PostMapping("/course/{courseId}/instructor/{instructorId}")
-    public ResponseEntity<TestDTO> createTest(@PathVariable Long courseId,@PathVariable Long instructorId, @Valid @RequestBody TestDTO testDTO) {
-        TestDTO createdTest = testService.createTestForCourse(courseId, testDTO, instructorId );
+    @PostMapping("/course/{courseId}")
+    public ResponseEntity<TestDTO> createTest(@PathVariable Long courseId, @Valid @RequestBody TestDTO testDTO) {
+        Long loggedInInstructorId = SecurityUtils.getLoggedInInstructorId();
+        TestDTO createdTest = testService.createTestForCourse(courseId, testDTO, loggedInInstructorId );
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTest);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TestDTO> updateTest(@PathVariable Long id, @Valid @RequestBody TestDTO testDTO) {
-        Long loggedInInstructorId = securityUtils.getLoggedInInstructorId();
+        Long loggedInInstructorId = SecurityUtils.getLoggedInInstructorId();
         TestDTO updatedTest = testService.updateTest(id, testDTO, loggedInInstructorId);
         return ResponseEntity.ok(updatedTest);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTest(@PathVariable Long id) {
-        Long loggedInInstructorId = securityUtils.getLoggedInInstructorId();
+        Long loggedInInstructorId = SecurityUtils.getLoggedInInstructorId();
         testService.deleteTest(id, loggedInInstructorId);
         return ResponseEntity.noContent().build();
     }

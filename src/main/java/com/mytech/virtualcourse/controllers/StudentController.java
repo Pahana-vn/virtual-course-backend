@@ -46,14 +46,14 @@ public class StudentController {
     @Autowired
     private CourseMapper courseMapper;
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
         List<StudentDTO> students = studentService.getAllStudents();
         return ResponseEntity.ok(students);
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
         StudentDTO student = studentService.getStudentById(id);
@@ -61,35 +61,35 @@ public class StudentController {
     }
 
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/by-account/{accountId}")
     public ResponseEntity<StudentDTO> getStudentByAccountId(@PathVariable Long accountId) {
         StudentDTO student = studentService.getStudentByAccountId(accountId);
         return ResponseEntity.ok(student);
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/dashboard")
     public ResponseEntity<DashboardDTO> getStudentDashboard(@PathVariable Long studentId) {
         DashboardDTO dashboard = studentService.getStudentDashboardData(studentId);
         return ResponseEntity.ok(dashboard);
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @PostMapping
     public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
         StudentDTO createdStudent = studentService.createStudent(studentDTO);
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @PutMapping("/{id}")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
         StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
         return ResponseEntity.ok(updatedStudent);
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
@@ -97,21 +97,21 @@ public class StudentController {
     }
 
     //wishlist
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @PostMapping("/{studentId}/wishlist")
     public ResponseEntity<String> addToWishlist(@PathVariable Long studentId, @RequestBody CourseDTO courseDTO) {
         studentService.addToWishlist(studentId, courseDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Course added to wishlist successfully");
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/wishlist")
     public ResponseEntity<List<CourseDTO>> getWishlist(@PathVariable Long studentId) {
         List<CourseDTO> wishlist = studentService.getWishlist(studentId);
         return ResponseEntity.ok(wishlist);
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{studentId}/wishlist/{courseId}")
     public ResponseEntity<Void> removeFromWishlist(@PathVariable Long studentId, @PathVariable Long courseId) {
         studentService.removeFromWishlist(studentId, courseId);
@@ -119,7 +119,7 @@ public class StudentController {
     }
 
     //cart
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @PostMapping("/{studentId}/cart")
     public ResponseEntity<String> addToCart(@PathVariable Long studentId, @Valid @RequestBody CourseDTO courseDTO) {
         System.out.println("Received request to add course ID: " + courseDTO.getId() + " to cart for student ID: " + studentId);
@@ -127,7 +127,7 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Course added to cart successfully");
     }
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/cart-items")
     public ResponseEntity<?> getCartItems(@PathVariable Long studentId) {
         // 🛠 Kiểm tra nếu studentId = null hoặc <= 0
@@ -153,13 +153,13 @@ public class StudentController {
     }
 
 
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{studentId}/cart-items/{cartItemId}")
     public ResponseEntity<String> removeFromCart(@PathVariable Long studentId, @PathVariable Long cartItemId) {
         studentService.removeFromCart(studentId, cartItemId);
         return ResponseEntity.status(HttpStatus.OK).body("Course removed from cart successfully");
     }
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/student-courses-status/{studentId}")
     public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCoursesWithProgress(@PathVariable Long studentId) {
         Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId);

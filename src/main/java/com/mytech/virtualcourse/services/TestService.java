@@ -50,18 +50,16 @@ public class TestService {
 
     @Autowired
     private AnswerOptionRepository answerOptionRepository;
+
         public List<TestDTO> getTestsByCourse(Long courseId) {
-                // Kiểm tra xem khóa học có tồn tại không
                 Course course = courseRepository.findById(courseId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found with ID: " + courseId));
 
-                // Kiểm tra quyền sở hữu khóa học
                 Long loggedInInstructorId = getLoggedInInstructorId();
                 if (!course.getInstructor().getId().equals(loggedInInstructorId)) {
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to view tests for this course.");
                 }
 
-                // Trả về danh sách bài kiểm tra
                 List<Test> tests = testRepository.findByCourseId(courseId);
                 return tests.stream()
                         .map(testMapper::testToTestDTO)
