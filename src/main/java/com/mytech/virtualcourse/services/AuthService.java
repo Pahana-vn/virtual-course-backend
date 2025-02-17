@@ -136,9 +136,9 @@ public class AuthService {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
             // ✅ Lấy accountId và studentId
-            Account account = userDetails.getAccount();
-            Long accountId = (account != null) ? account.getId() : null;
-            Long studentId = (account != null && account.getStudent() != null) ? account.getStudent().getId() : null;
+            Long accountId = userDetails.getAccountId();
+            Long studentId = userDetails.getStudentId();
+            Long instructorId = userDetails.getInstructorId();
 
             // ✅ Kiểm tra accountId có null không
             if (accountId == null) {
@@ -147,7 +147,7 @@ public class AuthService {
             }
 
             // ✅ Log kiểm tra
-            System.out.println("✅ Logged in user: " + account.getUsername());
+            System.out.println("✅ Logged in user: " + userDetails.getUsername());
             System.out.println("✅ Account ID: " + accountId);
             System.out.println("✅ Student ID: " + (studentId != null ? studentId : "null"));
 

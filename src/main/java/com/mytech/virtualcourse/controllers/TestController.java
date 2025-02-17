@@ -29,29 +29,47 @@ public class TestController {
         return ResponseEntity.ok(tests);
     }
 
-    @PostMapping("/course/{courseId}/instructor/{instructorId}")
-    public ResponseEntity<TestDTO> createTest(@PathVariable Long courseId,@PathVariable Long instructorId, @Valid @RequestBody TestDTO testDTO) {
-        TestDTO createdTest = testService.createTestForCourse(courseId, testDTO, instructorId );
+    @PostMapping("/course/{courseId}")
+    public ResponseEntity<TestDTO> createTest(@PathVariable Long courseId, @Valid @RequestBody TestDTO testDTO) {
+        Long loggedInInstructorId = SecurityUtils.getLoggedInInstructorId();
+        TestDTO createdTest = testService.createTestForCourse(courseId, testDTO, loggedInInstructorId );
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTest);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TestDTO> updateTest(@PathVariable Long id, @Valid @RequestBody TestDTO testDTO) {
-        Long loggedInInstructorId = securityUtils.getLoggedInInstructorId();
+        Long loggedInInstructorId = SecurityUtils.getLoggedInInstructorId();
         TestDTO updatedTest = testService.updateTest(id, testDTO, loggedInInstructorId);
         return ResponseEntity.ok(updatedTest);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTest(@PathVariable Long id) {
-        Long loggedInInstructorId = securityUtils.getLoggedInInstructorId();
+        Long loggedInInstructorId = SecurityUtils.getLoggedInInstructorId();
         testService.deleteTest(id, loggedInInstructorId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/submit")
     public ResponseEntity<TestResultDTO> submitTest(@RequestBody StudentTestSubmissionDTO submissionDTO) {
+        System.out.println("Received submission: " + submissionDTO);
         TestResultDTO result = testService.submitTest(submissionDTO);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/result/{testId}/student/{studentId}")
+    public ResponseEntity<TestResultDTO> getTestResult(
+            @PathVariable Long testId,
+            @PathVariable Long studentId) {
+        try {
+            TestResultDTO result = testService.getTestResult(testId, studentId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();  // In ra lỗi trong logs
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+
 }

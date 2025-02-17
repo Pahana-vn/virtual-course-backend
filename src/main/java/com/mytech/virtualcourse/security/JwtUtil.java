@@ -11,7 +11,9 @@ import org.springframework.web.util.WebUtils;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 
 @Component
@@ -26,8 +28,8 @@ public class JwtUtil {
     public String generateJwtToken(CustomUserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities());
-        claims.put("accountId", userDetails.getAccountId());  // ✅ Thêm accountId
-        claims.put("studentId", userDetails.getStudentId());  // ✅ Thêm studentId
+        claims.put("accountId", userDetails.getAccountId());
+        claims.put("studentId", userDetails.getStudentId());
         claims.put("instructorId", userDetails.getInstructorId());
 
         return Jwts.builder()
@@ -59,6 +61,30 @@ public class JwtUtil {
         return studentId != null ? Long.valueOf(studentId.toString()) : null;
     }
 
+    public Long getInstructorIdFromJwtToken(String token) {
+        Object instructorId = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("instructorId");
+        return instructorId != null ? Long.valueOf(instructorId.toString()) : null;
+    }
+
+    public List<String> getRolesFromJwtToken(String token) {
+        Object roles = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("roles");
+
+        if (roles instanceof List<?>) {
+            return ((List<?>) roles).stream()
+                    .map(role -> ((Map<String, String>) role).get("authority")) // Lấy `authority`
+                    .collect(Collectors.toList());
+        }
+        return List.of();
+    }
+
     // Get username from JWT
     public String getUsernameFromJwtToken(String token) {
         return Jwts.parser()
@@ -86,17 +112,6 @@ public class JwtUtil {
         }
 
         return false;
-    }
-    private SecretKey key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
-    }
-
-    public Long getInstructorIdFromJwtToken(String token) {
-        JwtParser parser = Jwts.parserBuilder()
-                .setSigningKey(key())
-                .build();
-        Claims claims = parser.parseClaimsJws(token).getBody();
-        return claims.get("instructorId", Long.class);
     }
 
     public String getCookieValueByName(HttpServletRequest request, String name) {

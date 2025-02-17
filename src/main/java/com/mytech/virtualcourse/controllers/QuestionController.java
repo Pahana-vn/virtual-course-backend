@@ -21,8 +21,13 @@ public class QuestionController {
 
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<QuestionDTO>> getQuestionsByCourse(@PathVariable Long courseId) {
-        // Gọi service và trả về danh sách DTO
         List<QuestionDTO> questionDTOs = questionService.getQuestionsByCourse(courseId);
+        return ResponseEntity.ok(questionDTOs);
+    }
+
+    @GetMapping("/test/{testId}")
+    public ResponseEntity<List<QuestionDTO>> getQuestionsByTest(@PathVariable Long testId) {
+        List<QuestionDTO> questionDTOs = questionService.getQuestionsByTest(testId);
         return ResponseEntity.ok(questionDTOs);
     }
 }
