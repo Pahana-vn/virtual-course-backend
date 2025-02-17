@@ -15,25 +15,50 @@ import java.nio.file.Paths;
 @RequestMapping("/api/files")
 public class FileController {
 
-    private static final String UPLOAD_DIR = "src/main/resources/uploads/category/";
+    private static final String BASE_UPLOAD_DIR = "src/main/resources/uploads/";
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("type") String type)  {
         try {
-            File uploadDir = new File(UPLOAD_DIR);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+            // Xác định thư mục upload dựa trên type
+            String uploadDir = BASE_UPLOAD_DIR + type + "/";
+            File dir = new File(uploadDir);
+
+            if (!dir.exists()) {
+                boolean created = dir.mkdirs();  // Tạo thư mục nếu chưa có
+                if (!created) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Error creating directory: " + uploadDir);
+                }
             }
 
             String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            Path filePath = Paths.get(uploadDir + fileName);
             Files.copy(file.getInputStream(), filePath);
 
-            String fileUrl = "/uploads/category/" + fileName;
+            // Trả về đường dẫn URL
+            String fileUrl = "http://localhost:8080/uploads/" + type + "/" + fileName;  // Đường dẫn tương đối
             return ResponseEntity.ok(fileUrl);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error uploading file: " + e.getMessage());
         }
     }
+
+    @GetMapping("/exists/{type}/{filename}")
+    public ResponseEntity<Boolean> checkFileExists(
+            @PathVariable String type,
+            @PathVariable String filename) {
+        String filePath = BASE_UPLOAD_DIR + type + "/" + filename;
+        File file = new File(filePath);
+
+        if (file.exists()) {
+            return ResponseEntity.ok(true);
+        } else {
+            return ResponseEntity.ok(false);
+        }
+    }
+
 }

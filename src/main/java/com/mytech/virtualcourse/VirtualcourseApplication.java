@@ -10,6 +10,7 @@ public class VirtualcourseApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(VirtualcourseApplication.class, args);
+		System.out.println("Welcome to Virtual Course");
 	}
 
 }

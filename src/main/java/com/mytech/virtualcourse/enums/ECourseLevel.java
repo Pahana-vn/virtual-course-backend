@@ -1,6 +1,6 @@
 package com.mytech.virtualcourse.enums;
 
-public enum CourseLevel {
+public enum ECourseLevel {
     BEGINNER,
     INTERMEDIATE,
     ADVANCED

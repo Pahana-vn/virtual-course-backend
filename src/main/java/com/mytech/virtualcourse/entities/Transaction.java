@@ -21,13 +21,13 @@ public class Transaction extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false)
-    private TransactionType transactionType; // e.g., DEPOSIT, WITHDRAWAL
+    private TransactionType transactionType;
 
     @Column(name = "status", nullable = false)
     private StatusTransaction statusTransaction;
 
     @Column(name = "processed_at")
-    private Timestamp processedAt; // Optional: Thời gian xử lý thành công
+    private Timestamp processedAt;
 
     @ManyToOne
     @JoinColumn(name = "wallet_id", nullable = false)

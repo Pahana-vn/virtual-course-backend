@@ -3,6 +3,7 @@ package com.mytech.virtualcourse.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -32,18 +33,15 @@ public class Section extends AbstractEntity {
     private Integer passScore;
 
     @Column(name = "sequence_number", nullable = false)
-    private Integer sequenceNumber; // Số thứ tự của phần học trong khóa học
+    private Integer sequenceNumber;
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Lecture> lectures;
+    private List<Lecture> lectures = new ArrayList<>();
 
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Assignment> assignments; // Bài tập thuộc phần học
-
-    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LearningProgress> progress; // Tiến trình học từng phần
+    private List<LearningProgress> progress;
 }

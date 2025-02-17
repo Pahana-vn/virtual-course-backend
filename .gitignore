@@ -5,6 +5,14 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Ignore environment files
+.env
+application-dev.properties
+application-prod.properties
+
+# Ignore uploads folder
+src/main/resources/uploads/
+
 ### STS ###
 .apt_generated
 .classpath
@@ -35,3 +43,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Ignore JVM crash logs
+hs_err_pid*.log
+replay_pid*.log

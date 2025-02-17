@@ -4,6 +4,7 @@ import com.mytech.virtualcourse.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -19,17 +20,20 @@ public class Question extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private QuestionType type; // SINGLE or MULTIPLE
+    private QuestionType type;
 
     @Column(name = "marks", nullable = false, columnDefinition = "INTEGER CHECK (marks >= 0)")
     private Integer marks;
 
+    @ManyToMany(mappedBy = "questions")
+    private List<Test> tests;
+
     @ManyToOne
-    @JoinColumn(name = "test_id", nullable = false)
-    private Test test;
+    @JoinColumn(name = "course_id", nullable = false)
+    private Course course;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AnswerOption> answerOptions;
+    private List<AnswerOption> answerOptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentAnswer> studentAnswers;
