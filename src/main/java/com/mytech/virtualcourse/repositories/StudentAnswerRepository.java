@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StudentAnswerRepository extends JpaRepository<StudentAnswer, Long>{
+    void deleteBySubmissionId(Long submissionId);
 }
 

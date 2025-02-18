@@ -18,5 +18,7 @@ public class StudentQuizDetailDTO {
     private String testTitle;
     private int totalMarks;
     private int earnedMarks;
-    private List<QuestionDTO> questions;
+    private double percentage;
+    private boolean passed;
+    private List<StudentQuestionDTO> questions;
 }
