@@ -4,7 +4,6 @@ import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
-import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.InstructorMapper;
 import com.mytech.virtualcourse.repositories.CourseRepository;
 import com.mytech.virtualcourse.repositories.InstructorRepository;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,9 +37,6 @@ public class InstructorService {
 
     @Autowired
     private InstructorMapper instructorMapper;
-
-    @Autowired
-    private CourseMapper courseMapper;
 
     @Autowired
     private JwtUtil jwtUtil;

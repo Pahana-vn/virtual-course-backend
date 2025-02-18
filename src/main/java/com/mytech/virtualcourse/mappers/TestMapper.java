@@ -12,15 +12,15 @@ public interface TestMapper {
     TestMapper INSTANCE = Mappers.getMapper(TestMapper.class);
 
     // Chuyển từ Test sang TestDTO
-//    @Mapping(source = "course.id", target = "courseId")
-//    @Mapping(source = "instructor.id", target = "instructorId")
+    @Mapping(source = "course.id", target = "courseId")
+    @Mapping(source = "instructor.id", target = "instructorId")
     @Mapping(target = "questions", source = "questions")
     TestDTO testToTestDTO(Test test);
 
     // Chuyển từ TestDTO sang Test
-//    @Mapping(target = "course", ignore = true) // Set ở Service
-//    @Mapping(target = "instructor", ignore = true) // Set ở Service
-    @Mapping(target = "questions", ignore = true)  // Sử dụng QuestionMapper ở service
+    @Mapping(target = "course", ignore = true)
+    @Mapping(target = "instructor", ignore = true)
+    @Mapping(target = "questions", ignore = true)
     Test testDTOToTest(TestDTO testDTO);
 
     default Test testDTOToTestWithInstructor(TestDTO testDTO, Instructor instructor) {
