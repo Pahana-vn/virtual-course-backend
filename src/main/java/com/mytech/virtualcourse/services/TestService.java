@@ -72,6 +72,14 @@ public class TestService {
                         .collect(Collectors.toList());
         }
 
+        public List<TestDTO> getTestsByInstructorIdAndCourseId(Long instructorId, Long courseId) {
+            List<Test> tests = testRepository.findByInstructorIdAndCourseId(instructorId, courseId);
+
+            return tests.stream()
+                    .map(testMapper::testToTestDTO)
+                    .collect(Collectors.toList());
+        }
+
         public TestDTO createTestForCourse(Long courseId, TestDTO testDTO, Long InstructorId) {
                 // Lấy khóa học
                 Course course = courseRepository.findById(courseId)

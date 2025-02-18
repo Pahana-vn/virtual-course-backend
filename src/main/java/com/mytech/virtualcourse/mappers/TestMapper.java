@@ -11,10 +11,23 @@ import org.mapstruct.factory.Mappers;
 public interface TestMapper {
     TestMapper INSTANCE = Mappers.getMapper(TestMapper.class);
 
+
+    //@Mapping(target = "questions", source = "questions")
+    //TestDTO testToTestDTO(Test test);
+
+    //@Mapping(target = "questions", ignore = true)  // Sử dụng QuestionMapper ở service
+
+    // Chuyển từ Test sang TestDTO
+    @Mapping(source = "course.id", target = "courseId")
+    @Mapping(source = "instructor.id", target = "instructorId")
     @Mapping(target = "questions", source = "questions")
     TestDTO testToTestDTO(Test test);
 
-    @Mapping(target = "questions", ignore = true)  // Sử dụng QuestionMapper ở service
+    // Chuyển từ TestDTO sang Test
+    @Mapping(target = "course", ignore = true)
+    @Mapping(target = "instructor", ignore = true)
+    @Mapping(target = "questions", ignore = true)
+
     Test testDTOToTest(TestDTO testDTO);
 
     default Test testDTOToTestWithInstructor(TestDTO testDTO, Instructor instructor) {
