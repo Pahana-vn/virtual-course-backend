@@ -3,6 +3,8 @@ package com.mytech.virtualcourse.controllers;
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.security.SecurityUtils;
 import com.mytech.virtualcourse.services.InstructorService;
+import com.mytech.virtualcourse.services.QuestionService;
+import com.mytech.virtualcourse.services.TestService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,12 @@ public class InstructorController {
 
     @Autowired
     private InstructorService instructorService;
+
+    @Autowired
+    private TestService testService;
+
+    @Autowired
+    private QuestionService questionService;
 
     @Autowired
     private SecurityUtils securityUtils;
@@ -55,6 +63,12 @@ public class InstructorController {
     public ResponseEntity<Void> deleteInstructor(@PathVariable Long id) {
         instructorService.deleteInstructor(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/courses/{courseId}/tests")
+    public ResponseEntity<List<TestDTO>> getCourseTestsById(@PathVariable Long id, @PathVariable Long courseId) {
+        List<TestDTO> tests = testService.getTestsByInstructorIdAndCourseId(id, courseId);
+        return ResponseEntity.ok(tests);
     }
 
     @GetMapping("/{id}/instructor-details")

@@ -38,8 +38,8 @@ public class TestDTO {
 
     private StatusTest statusTest;
 
-//    private Long courseId;
-//
+    private Long courseId;
+
     private Long instructorId;
 
     private List<QuestionDTO> questions;
