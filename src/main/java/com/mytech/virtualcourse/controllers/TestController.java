@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tests")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class TestController {
     @Autowired
     private TestService testService;
@@ -65,11 +66,9 @@ public class TestController {
             TestResultDTO result = testService.getTestResult(testId, studentId);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            e.printStackTrace();  // In ra lỗi trong logs
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
     }
-
-
 }

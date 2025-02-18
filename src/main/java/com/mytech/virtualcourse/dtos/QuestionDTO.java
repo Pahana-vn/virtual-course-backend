@@ -20,4 +20,7 @@ public class QuestionDTO {
     private Integer marks;
     private Long courseId;
     private List<AnswerOptionDTO> answerOptions;
+    private String givenAnswer;
+    private String correctAnswer;
+    private Boolean isCorrect;
 }

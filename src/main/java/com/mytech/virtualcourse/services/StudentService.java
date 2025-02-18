@@ -2,6 +2,7 @@ package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.*;
+import com.mytech.virtualcourse.enums.QuestionType;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.StudentMapper;
@@ -34,6 +35,9 @@ public class StudentService {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private AnswerOptionRepository answerOptionRepository;
 
     @Autowired
     private PaymentRepository paymentRepository;
@@ -466,12 +470,76 @@ public class StudentService {
 
     // Lấy chi tiết bài kiểm tra của sinh viên
     public StudentQuizDetailDTO getQuizDetails(Long quizId) {
+        // 🔹 Lấy bài nộp từ database
         StudentTestSubmission submission = submissionRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
         List<Question> questions = questionRepository.findByTestId(submission.getTest().getId());
 
-        // Dùng MapStruct để convert sang DTO
-        return studentQuizMapper.toQuizDetailDTO(submission, studentQuizMapper.toQuestionDTOList(questions));
+        // 🔥 Danh sách câu hỏi có câu trả lời của sinh viên
+        List<StudentQuestionDTO> questionDTOs = questions.stream().map(question -> {
+            StudentQuestionDTO studentQuestion = new StudentQuestionDTO();
+            studentQuestion.setId(question.getId());
+            studentQuestion.setContent(question.getContent());
+            studentQuestion.setType(question.getType());
+            studentQuestion.setMarks(question.getMarks());
+
+            // 🔹 Lấy câu trả lời sinh viên đã chọn
+            List<StudentAnswer> studentAnswers = submission.getAnswers().stream()
+                    .filter(a -> a.getQuestion().getId().equals(question.getId()))
+                    .toList();
+
+            List<Long> selectedOptionIds = studentAnswers.stream()
+                    .map(a -> a.getSelectedOption().getId())
+                    .distinct()
+                    .toList();
+
+            // 🔹 Lấy danh sách câu trả lời đúng
+            List<AnswerOption> correctOptions = question.getAnswerOptions().stream()
+                    .filter(AnswerOption::getIsCorrect)
+                    .toList();
+            List<Long> correctOptionIds = correctOptions.stream()
+                    .map(AnswerOption::getId)
+                    .toList();
+
+            // 🔥 Kiểm tra nếu sinh viên chọn đúng tất cả đáp án đúng và không chọn sai
+            boolean isCorrect;
+            if (question.getType() == QuestionType.MULTIPLE) {
+                isCorrect = selectedOptionIds.size() == correctOptionIds.size()
+                        && selectedOptionIds.containsAll(correctOptionIds);
+            } else {
+                isCorrect = selectedOptionIds.equals(correctOptionIds);
+            }
+
+            // ✅ Gán danh sách câu trả lời sinh viên đã chọn
+            studentQuestion.setGivenAnswers(selectedOptionIds.stream()
+                    .map(id -> {
+                        AnswerOption opt = answerOptionRepository.findById(id).orElse(null);
+                        return opt != null ? new AnswerOptionDTO(opt.getId(), opt.getContent(), opt.getIsCorrect(), question.getId()) : null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList()));
+
+            // ✅ Gán danh sách đáp án đúng
+            studentQuestion.setCorrectAnswers(correctOptions.stream()
+                    .map(opt -> new AnswerOptionDTO(opt.getId(), opt.getContent(), opt.getIsCorrect(), question.getId()))
+                    .collect(Collectors.toList()));
+
+            // ✅ Gán trạng thái đúng/sai
+            studentQuestion.setCorrect(isCorrect);
+
+            return studentQuestion;
+        }).collect(Collectors.toList());
+
+        // 🔹 Trả về kết quả bài kiểm tra chi tiết
+        return new StudentQuizDetailDTO(
+                submission.getId(),
+                submission.getTest().getTitle(),
+                submission.getTest().getTotalMarks(),
+                submission.getMarksObtained(),
+                (submission.getMarksObtained() * 100.0) / submission.getTest().getTotalMarks(),
+                submission.getPassed(),
+                questionDTOs
+        );
     }
 }

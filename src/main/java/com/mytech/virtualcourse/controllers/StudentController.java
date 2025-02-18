@@ -57,7 +57,6 @@ public class StudentController {
         return ResponseEntity.ok(student);
     }
 
-
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/by-account/{accountId}")
     public ResponseEntity<StudentDTO> getStudentByAccountId(@PathVariable Long accountId) {
@@ -127,7 +126,6 @@ public class StudentController {
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/cart-items")
     public ResponseEntity<?> getCartItems(@PathVariable Long studentId) {
-        // 🛠 Kiểm tra nếu studentId = null hoặc <= 0
         if (studentId == null || studentId <= 0) {
             return ResponseEntity.badRequest().body("Invalid studentId");
         }
@@ -149,7 +147,6 @@ public class StudentController {
                 .collect(Collectors.toList()));
     }
 
-
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{studentId}/cart-items/{cartItemId}")
     public ResponseEntity<String> removeFromCart(@PathVariable Long studentId, @PathVariable Long cartItemId) {
@@ -163,6 +160,7 @@ public class StudentController {
         return ResponseEntity.ok(courses);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{id}/avatar")
     public ResponseEntity<Map<String, String>> getStudentAvatar(@PathVariable Long id) {
         String avatarFileName = studentService.getStudentAvatar(id);
@@ -174,18 +172,19 @@ public class StudentController {
 
         String avatarUrl = "http://localhost:8080/uploads/student/" + avatarFileName;
 
-        // Trả về đối tượng JSON chứa URL
         Map<String, String> response = new HashMap<>();
         response.put("url", avatarUrl);
 
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/quiz-results")
     public List<StudentQuizResultDTO> getStudentQuizResults(@PathVariable Long studentId) {
         return studentService.getStudentQuizResults(studentId);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/quiz-details/{quizId}")
     public StudentQuizDetailDTO getQuizDetails(@PathVariable Long quizId) {
         return studentService.getQuizDetails(quizId);
