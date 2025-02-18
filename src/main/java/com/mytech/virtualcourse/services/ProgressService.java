@@ -78,4 +78,15 @@ public class ProgressService {
 
         learningProgressRepository.save(lp);
     }
+//    public LearningProgressDTO getProgress(Long studentId, Long courseId) {
+//        LearningProgress lp = learningProgressRepository.findByStudentIdAndCourseId(studentId, courseId)
+//                .orElseThrow(() -> new ResourceNotFoundException("LearningProgress not found for studentId: "
+//                        + studentId + " and courseId: " + courseId));
+//
+//        LearningProgressDTO dto = new LearningProgressDTO();
+//        dto.setCompleted(lp.isCompleted());
+//        dto.setProgressPercentage(lp.getProgressPercentage());
+//        return dto;
+//    }
+
 }
