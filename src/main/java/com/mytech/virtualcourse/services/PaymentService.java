@@ -63,7 +63,7 @@ public class PaymentService {
 
     // -------------------- PAYPAL -------------------------
     public String initiatePaypalPayment(Long courseId, HttpServletRequest request) throws Exception {
-        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Long studentId = getStudentIdFromRequest(request);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
@@ -294,7 +294,6 @@ public class PaymentService {
         String paymentUrl = createVnpayPaymentUrl(dbPayment);
         return paymentUrl;
     }
-
 
     public String initiateVnPayPaymentForMultipleCourses(List<Long> courseIds, HttpServletRequest request) throws Exception {
         Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT

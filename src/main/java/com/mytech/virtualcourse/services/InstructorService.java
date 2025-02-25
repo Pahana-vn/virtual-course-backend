@@ -4,13 +4,10 @@ import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
-import com.mytech.virtualcourse.mappers.CourseMapper;
 import com.mytech.virtualcourse.mappers.InstructorMapper;
-import com.mytech.virtualcourse.repositories.CourseRepository;
-import com.mytech.virtualcourse.repositories.InstructorRepository;
-import com.mytech.virtualcourse.repositories.PaymentRepository;
-import com.mytech.virtualcourse.repositories.SectionRepository;
+import com.mytech.virtualcourse.repositories.*;
 import com.mytech.virtualcourse.security.JwtUtil;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,19 +37,26 @@ public class InstructorService {
     private InstructorMapper instructorMapper;
 
     @Autowired
-    private CourseMapper courseMapper;
-
-    @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private StudentRepository studentRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
-    public List<InstructorDTO> getAllInstructors() {
+    public List<InstructorDTO> getAllInstructors(String platform) {
         List<Instructor> instructors = instructorRepository.findAll();
+
+        // Nếu có tham số platform=flutter, dùng 10.0.2.2 (Android Emulator)
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         return instructors.stream()
                 .map(instructor -> {
                     InstructorDTO dto = instructorMapper.instructorToInstructorDTO(instructor);
                     // Cập nhật đường dẫn ảnh
                     if (instructor.getPhoto() != null) {
-                        dto.setPhoto("http://localhost:8080/uploads/instructor/" + instructor.getPhoto());
+                        dto.setPhoto(baseUrl + "/uploads/instructor/" + instructor.getPhoto());
                     }
                     return dto;
                 })
@@ -132,19 +135,46 @@ public class InstructorService {
         return instructorMapper.instructorToInstructorProfileDTO(instructor);
     }
 
+    public InstructorProfileDTO updateProfileByInstructorId(Long id, InstructorProfileDTO profileDTO) {
+
+        Instructor instructor = instructorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Instructor not found"));
+
+        instructor.setFirstName(profileDTO.getFirstName());
+        instructor.setLastName(profileDTO.getLastName());
+        instructor.setGender(Gender.valueOf(profileDTO.getGender().toUpperCase()));
+        instructor.setAddress(profileDTO.getAddress());
+        instructor.setPhone(profileDTO.getPhone());
+        instructor.setBio(profileDTO.getBio());
+        instructor.setTitle(profileDTO.getTitle());
+        instructor.setWorkplace(profileDTO.getWorkplace());
+
+        if (profileDTO.getPhoto() != null) {
+            instructor.setPhoto(profileDTO.getPhoto());
+        }
+
+        instructor = instructorRepository.save(instructor);
+
+        // Map the updated instructor entity to the InstructorProfileDTO
+        return InstructorMapper.MAPPER.instructorToInstructorProfileDTO(instructor);
+    }
 
     public InstructorStatisticsDTO getInstructorStatistics(Long id) {
         Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
-        Long totalCourses = instructorRepository.countCoursesByInstructorId(id);
-        Long totalPublishedCourses = instructorRepository.countPublishedCoursesByInstructorId(id);
-        Long totalPendingCourses = instructorRepository.countPendingCoursesByInstructorId(id);
-        Long totalStudents = instructorRepository.countStudentsInInstructorCourses(id);
+        int totalCourses = instructorRepository.countCoursesByInstructorId(id);
+        int totalPublishedCourses = instructorRepository.countPublishedCoursesByInstructorId(id);
+        int totalPendingCourses = instructorRepository.countPendingCoursesByInstructorId(id);
+        int totalStudents = instructorRepository.countStudentsInInstructorCourses(id);
+        int totalPurchasedCourses = studentRepository.countPurchasedCoursesByInstructorId(id);
+        int totalTransactions = transactionRepository.countTransactionsByInstructorId(id);
+        int totalDeposits = transactionRepository.countDepositsInTransactionsByInstructorId(id);
+        int totalWithdrawals = transactionRepository.countWithdrawalsInTransactionsByInstructorId(id);
+
         BigDecimal balance = instructor.getWallet() != null
                 ? instructor.getWallet().getBalance()
                 : BigDecimal.ZERO;
 
-        return instructorMapper.toInstructorStatisticsDTO(instructor, totalCourses, totalPublishedCourses, totalPendingCourses, totalStudents, balance);
+        return instructorMapper.toInstructorStatisticsDTO(instructor, totalCourses, totalPublishedCourses, totalPendingCourses, totalStudents,totalPurchasedCourses,totalTransactions,totalDeposits,totalWithdrawals, balance);
     }
 
     public InstructorProfileDTO getProfileByLoggedInInstructor(HttpServletRequest request) {

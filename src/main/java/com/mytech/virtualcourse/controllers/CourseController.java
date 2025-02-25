@@ -2,6 +2,7 @@ package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.CourseDetailDTO;
+import com.mytech.virtualcourse.entities.Course;
 import com.mytech.virtualcourse.enums.ECourseStatus;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.security.SecurityUtils;
@@ -10,6 +11,10 @@ import com.mytech.virtualcourse.services.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -30,8 +36,9 @@ public class CourseController {
     private StudentService studentService;
 
     @GetMapping
-    public ResponseEntity<List<CourseDTO>> getAllCourses() {
-        List<CourseDTO> courses = courseService.getAllCourses();
+    public ResponseEntity<List<CourseDTO>> getAllCourses(
+            @RequestParam(required = false) String platform) {
+        List<CourseDTO> courses = courseService.getAllCourses(platform);
         return ResponseEntity.ok(courses);
     }
 
@@ -53,7 +60,6 @@ public class CourseController {
     @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     @PutMapping("/{id}")
     public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseDTO courseDTO) {
-//        System.out.println("Received CourseDTO for update: " + courseDTO);
         CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
         return ResponseEntity.ok(updatedCourse);
     }
@@ -78,9 +84,15 @@ public class CourseController {
         return ResponseEntity.ok(courseDTOs);
     }
 
-    @GetMapping("/student-courses/{accountId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
+//    @GetMapping("/student-courses/{accountId}")
+//    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
+//        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
+//        return ResponseEntity.ok(courses);
+//    }
+
+    @GetMapping("/student-courses/{studentId}")
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
+        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
         return ResponseEntity.ok(courses);
     }
 
@@ -90,11 +102,44 @@ public class CourseController {
         return ResponseEntity.ok(courseDetails);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{courseId}/details-for-student")
     public ResponseEntity<CourseDetailDTO> getCourseDetailsForStudent(
             @PathVariable Long courseId,
-            @RequestParam Long studentId) {
-        CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId);
+            @RequestParam Long studentId,
+            @RequestParam(required = false) String platform) {
+
+        CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId, platform);
         return ResponseEntity.ok(courseDetails);
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<CourseDTO>> getCourses(
+            @RequestParam(required = false) List<Long> categoryId,
+            @RequestParam(required = false) List<Long> instructorId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 9) Pageable pageable) {
+
+        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, pageable);
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/by-category")
+    public ResponseEntity<List<CourseDTO>> getCoursesByCategoryId(
+            @RequestParam Long categoryId,
+            @RequestParam(required = false) String platform) {
+        System.out.println("Received request for categoryId: " + categoryId + ", platform: " + platform);
+        List<CourseDTO> courses = courseService.getCoursesByCategoryId(categoryId, platform);
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/search-flutter")
+    public ResponseEntity<List<CourseDTO>> searchCoursesFlutter(
+            @RequestParam String keyword,
+            @RequestParam(required = false) String platform) {
+        List<CourseDTO> courses = courseService.searchCoursesFlutter(keyword, platform);
+        return ResponseEntity.ok(courses);
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -34,9 +35,6 @@ public class TestService {
 
     @Autowired
     private TestMapper testMapper;
-
-    @Autowired
-    private QuestionMapper questionMapper;
 
     @Autowired
     private SecurityUtils securityUtils;
@@ -72,6 +70,14 @@ public class TestService {
                 return tests.stream()
                         .map(testMapper::testToTestDTO)
                         .collect(Collectors.toList());
+        }
+
+        public List<TestDTO> getTestsByInstructorIdAndCourseId(Long instructorId, Long courseId) {
+            List<Test> tests = testRepository.findByInstructorIdAndCourseId(instructorId, courseId);
+
+            return tests.stream()
+                    .map(testMapper::testToTestDTO)
+                    .collect(Collectors.toList());
         }
 
         public TestDTO createTestForCourse(Long courseId, TestDTO testDTO, Long InstructorId) {
@@ -165,6 +171,8 @@ public class TestService {
                         .orElseThrow(() -> new IllegalArgumentException("Instructor not found for account ID: " + accountId));
                 return instructor.getId();
         }
+
+    @Transactional
     public TestResultDTO submitTest(StudentTestSubmissionDTO submissionDTO) {
         Test test = testRepository.findById(submissionDTO.getTestId())
                 .orElseThrow(() -> new ResourceNotFoundException("Test not found"));
@@ -172,89 +180,69 @@ public class TestService {
         Student student = studentRepository.findById(submissionDTO.getStudentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
-        // Kiểm tra xem học viên đã từng làm bài chưa
-        Optional<StudentTestSubmission> existingSubmission = submissionRepository.findTopByTestIdAndStudentIdOrderByMarksObtainedDesc(submissionDTO.getTestId(), submissionDTO.getStudentId());
+        Optional<StudentTestSubmission> existingSubmission = submissionRepository
+                .findTopByTestIdAndStudentIdOrderByMarksObtainedDesc(submissionDTO.getTestId(), submissionDTO.getStudentId());
 
-        StudentTestSubmission sts;
-        if (existingSubmission.isPresent()) {
-            // Nếu đã có bài làm, cập nhật điểm nếu tốt hơn
-            sts = existingSubmission.get();
-        } else {
-            // Nếu chưa có bài làm, tạo mới
-            sts = new StudentTestSubmission();
-            sts.setStudent(student);
-            sts.setTest(test);
-            sts.setSubmittedAt(new Timestamp(System.currentTimeMillis()));
-        }
+        StudentTestSubmission submission = existingSubmission.orElse(new StudentTestSubmission());
+        submission.setStudent(student);
+        submission.setTest(test);
+        submission.setSubmittedAt(new Timestamp(System.currentTimeMillis()));
+        submission.setMarksObtained(0);
+        submission.setPassed(false);
+        submission.setDuration(test.getDuration());
+
+        submission = submissionRepository.save(submission);
+
+        studentAnswerRepository.deleteBySubmissionId(submission.getId());
 
         int obtainedMarks = 0;
         int totalMarks = test.getTotalMarks();
+        List<StudentAnswer> studentAnswers = new ArrayList<>();
 
         for (QuestionAnswerDTO qa : submissionDTO.getAnswers()) {
             Question question = questionRepository.findById(qa.getQuestionId())
                     .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
 
-            boolean isCorrect = checkAnswer(question, qa.getSelectedOptionIds());
+            List<AnswerOption> correctOptions = question.getAnswerOptions().stream()
+                    .filter(AnswerOption::getIsCorrect)
+                    .toList();
+            List<Long> correctOptionIds = correctOptions.stream().map(AnswerOption::getId).toList();
+
+            List<AnswerOption> selectedOptions = answerOptionRepository.findAllById(qa.getSelectedOptionIds());
+
+            boolean isCorrect = correctOptionIds.size() == qa.getSelectedOptionIds().size()
+                    && correctOptionIds.containsAll(qa.getSelectedOptionIds());
+
             if (isCorrect) {
                 obtainedMarks += question.getMarks();
             }
+
+            for (AnswerOption selectedOption : selectedOptions) {
+                StudentAnswer studentAnswer = new StudentAnswer();
+                studentAnswer.setSubmission(submission);
+                studentAnswer.setQuestion(question);
+                studentAnswer.setSelectedOption(selectedOption);
+                studentAnswers.add(studentAnswer);
+            }
         }
 
-        double percentage = (obtainedMarks * 100.0) / totalMarks;
-        boolean passed = percentage >= test.getPassPercentage();
+        studentAnswerRepository.saveAll(studentAnswers);
 
-        // Cập nhật điểm nếu điểm mới cao hơn điểm cũ
-        if (obtainedMarks > sts.getMarksObtained()) {
-            sts.setMarksObtained(obtainedMarks);
-            sts.setPassed(passed);
-            submissionRepository.save(sts);
-        }
+        submission.setMarksObtained(obtainedMarks);
+        submission.setPassed(obtainedMarks >= (test.getPassPercentage() * totalMarks) / 100);
+        submissionRepository.save(submission);
 
-        // Trả về kết quả
-        TestResultDTO result = new TestResultDTO();
-        result.setTestId(test.getId());
-        result.setStudentId(student.getId());
-        result.setMarksObtained(sts.getMarksObtained());
-        result.setPercentage((sts.getMarksObtained() * 100.0) / test.getTotalMarks());
-        result.setPassed(sts.getPassed());
-
-        return result;
-    }
-
-
-    private boolean checkAnswer(Question q, List<Long> selectedOptionIds) {
-        List<AnswerOption> correctOptions = q.getAnswerOptions().stream()
-                .filter(AnswerOption::getIsCorrect)
-                .collect(Collectors.toList());
-        List<Long> correctOptionIds = correctOptions.stream().map(AnswerOption::getId).collect(Collectors.toList());
-        return correctOptionIds.size() == selectedOptionIds.size() && correctOptionIds.containsAll(selectedOptionIds);
-    }
-
-
-    private QuestionDTO mapToQuestionDTO(Question q) {
-        QuestionDTO dto = new QuestionDTO();
-        dto.setId(q.getId());
-        dto.setContent(q.getContent());
-        dto.setType(QuestionType.valueOf(q.getType().toString()));
-        dto.setAnswerOptions(q.getAnswerOptions().stream().map(opt -> {
-            AnswerOptionDTO aodto = new AnswerOptionDTO();
-            aodto.setId(opt.getId());
-            aodto.setContent(opt.getContent());
-            return aodto;
-        }).collect(Collectors.toList()));
-        return dto;
+        return getTestResult(test.getId(), student.getId());
     }
 
     public TestResultDTO getTestResult(Long testId, Long studentId) {
-        // Kiểm tra xem bài kiểm tra có tồn tại không
+
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
 
-        // Kiểm tra xem học viên có tồn tại không
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
 
-        // Kiểm tra xem có bài nộp không
         Optional<StudentTestSubmission> submissionOpt =
                 submissionRepository.findByTestIdAndStudentId(testId, studentId);
 
@@ -263,19 +251,67 @@ public class TestService {
         }
 
         StudentTestSubmission submission = submissionOpt.get();
+        int marksObtained = (submission.getMarksObtained() != null) ? submission.getMarksObtained() : 0;
+        boolean passed = (submission.getPassed() != null) ? submission.getPassed() : false;
 
-        if (submission.getMarksObtained() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Marks not calculated yet");
-        }
-
-        // Tạo DTO để trả về kết quả
         TestResultDTO result = new TestResultDTO();
         result.setTestId(test.getId());
         result.setStudentId(student.getId());
-        result.setMarksObtained(submission.getMarksObtained());
-        result.setPercentage((submission.getMarksObtained() * 100.0) / test.getTotalMarks());
-        result.setPassed(submission.getPassed());
+        result.setMarksObtained(marksObtained);
+        result.setPercentage((marksObtained * 100.0) / test.getTotalMarks());
+        result.setPassed(passed);
 
+        List<StudentQuestionDTO> answeredQuestions = new ArrayList<>();
+
+        for (Question question : test.getQuestions()) {
+            StudentQuestionDTO studentQuestion = new StudentQuestionDTO();
+            studentQuestion.setId(question.getId());
+            studentQuestion.setContent(question.getContent());
+            studentQuestion.setType(question.getType());
+            studentQuestion.setMarks(question.getMarks());
+
+            List<StudentAnswer> studentAnswers = submission.getAnswers().stream()
+                    .filter(a -> a.getQuestion().getId().equals(question.getId()))
+                    .toList();
+
+            List<Long> selectedOptionIds = studentAnswers.stream()
+                    .map(a -> a.getSelectedOption().getId())
+                    .distinct()
+                    .toList();
+
+            List<AnswerOption> correctOptions = question.getAnswerOptions().stream()
+                    .filter(AnswerOption::getIsCorrect)
+                    .toList();
+            List<Long> correctOptionIds = correctOptions.stream()
+                    .map(AnswerOption::getId)
+                    .toList();
+
+            boolean isCorrect;
+            if (question.getType() == QuestionType.MULTIPLE) {
+                isCorrect = selectedOptionIds.size() == correctOptionIds.size()
+                        && selectedOptionIds.containsAll(correctOptionIds);
+            } else {
+                isCorrect = selectedOptionIds.equals(correctOptionIds);
+            }
+
+            studentQuestion.setGivenAnswers(selectedOptionIds.stream()
+                    .map(id -> {
+                        AnswerOption opt = answerOptionRepository.findById(id).orElse(null);
+                        return opt != null ? new AnswerOptionDTO(opt.getId(), opt.getContent(), opt.getIsCorrect(), question.getId()) : null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList()));
+
+            studentQuestion.setCorrectAnswers(correctOptions.stream()
+                    .map(opt -> new AnswerOptionDTO(opt.getId(), opt.getContent(), opt.getIsCorrect(), question.getId()))
+                    .collect(Collectors.toList()));
+
+            studentQuestion.setCorrect(isCorrect);
+
+            answeredQuestions.add(studentQuestion);
+        }
+
+        result.setQuestions(answeredQuestions);
         return result;
     }
 }

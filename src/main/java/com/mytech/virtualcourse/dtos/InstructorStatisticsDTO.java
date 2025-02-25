@@ -12,10 +12,15 @@ import java.math.BigDecimal;
 public class InstructorStatisticsDTO {
     private Long instructorId;
     private String instructorName;
-    private Long totalCourses;
-    private Long totalPublishedCourses;
-    private Long totalPendingCourses;
-    private Long totalStudents;
+    private int totalCourses;
+    private int totalPublishedCourses;
+    private int totalPendingCourses;
+    private int totalStudents;
+    private int totalPurchasedCourses;
+    private int totalTransactions;
+    private int totalDeposits;
+    private int totalWithdrawals;
+//    private int totalReviews;
     private BigDecimal balance;
     private String avatarImage;
 }

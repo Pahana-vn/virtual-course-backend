@@ -18,14 +18,8 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<CategoryDTO>> getAllCategories() {
-        List<CategoryDTO> categories = categoryService.getAllCategories();
-
-        categories.forEach(category -> {
-            if (category.getImage() != null) {
-                category.setImage("/uploads/category/" + category.getImage());
-            }
-        });
+    public ResponseEntity<List<CategoryDTO>> getAllCategories(@RequestParam(required = false) String platform) {
+        List<CategoryDTO> categories = categoryService.getAllCategories(platform);
         return ResponseEntity.ok(categories);
     }
 

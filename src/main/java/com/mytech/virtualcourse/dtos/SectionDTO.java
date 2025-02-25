@@ -12,13 +12,13 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class SectionDTO {
-    private Long id; // ID của phần học
-    private String titleSection; // Tên phần học
-    private Integer numOfLectures; // Số lượng bài giảng
-    private Integer sessionDuration; // Tổng thời lượng của phần học
-    private Integer sequenceNumber; // Thứ tự của phần học trong khóa học
+    private Long id;
+    private String titleSection;
+    private Integer numOfLectures;
+    private Integer sessionDuration;
+    private Integer sequenceNumber;
 
     private Long courseId;
 
-    private List<LectureDTO> lectures; // Danh sách bài giảng thuộc phần học
+    private List<LectureDTO> lectures;
 }

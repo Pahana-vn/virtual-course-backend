@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -24,7 +25,7 @@ public class StudentTestSubmission extends AbstractEntity {
     private Boolean passed;
 
     @Column(name = "duration", nullable = false)
-    private Integer durationTest;
+    private Integer duration;
 
     @ManyToOne
     @JoinColumn(name = "test_id", nullable = false)
@@ -32,21 +33,12 @@ public class StudentTestSubmission extends AbstractEntity {
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
-    private Student student; // Học viên đã nộp bài kiểm tra
+    private Student student;
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudentAnswer> answers; // Câu trả lời của học viên
+    private List<StudentAnswer> answers = new ArrayList<>();
 
     @OneToOne(mappedBy = "finalTestSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
     private LearningProgress learningProgress;
-
-    public String getTestTitle() {
-        return test.getTitle();
-    }
-
-    // ✅ Getter để lấy số câu hỏi từ Test
-    public int getTotalQuestions() {
-        return test.getQuestions().size();
-    }
 }
 

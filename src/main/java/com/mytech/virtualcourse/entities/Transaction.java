@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.entities;
 
+import com.mytech.virtualcourse.enums.PaymentMethod;
 import com.mytech.virtualcourse.enums.StatusTransaction;
 import com.mytech.virtualcourse.enums.TransactionType;
 import jakarta.persistence.*;
@@ -19,12 +20,23 @@ public class Transaction extends AbstractEntity {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "title", nullable = false)
+    private String title;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false)
     private TransactionType transactionType;
 
-    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_transaction", nullable = false)
     private StatusTransaction statusTransaction;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
+
+    @Column(name = "paypal_payout_id")
+    private String paypalPayoutId;
 
     @Column(name = "processed_at")
     private Timestamp processedAt;
@@ -37,7 +49,6 @@ public class Transaction extends AbstractEntity {
     @JoinColumn(name = "bank_account_id")
     private BankAccount bankAccount;
 
-    @ManyToOne
-    @JoinColumn(name = "payment_id")
-    private Payment payment;
+    @Column(name = "walletBalance", nullable = false)
+    private BigDecimal walletBalance;
 }
