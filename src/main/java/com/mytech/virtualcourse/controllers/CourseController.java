@@ -117,6 +117,8 @@ public class CourseController {
             @PageableDefault(size = 9) Pageable pageable) {
 
         Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, pageable);
+        return ResponseEntity.ok(courses);
+    }
 
     @GetMapping("/by-category")
     public ResponseEntity<List<CourseDTO>> getCoursesByCategoryId(
