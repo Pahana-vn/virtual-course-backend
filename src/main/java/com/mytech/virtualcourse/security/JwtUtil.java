@@ -27,6 +27,7 @@ public class JwtUtil {
 
     public String generateJwtToken(CustomUserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("email", userDetails.getEmail());
         claims.put("roles", userDetails.getAuthorities());
         claims.put("accountId", userDetails.getAccountId());
         claims.put("studentId", userDetails.getStudentId());
@@ -85,13 +86,21 @@ public class JwtUtil {
         return List.of();
     }
 
-    // Get username from JWT
-    public String getUsernameFromJwtToken(String token) {
-        return Jwts.parser()
+    public String getEmailFromJwtToken(String token) {
+        Claims claims = Jwts.parser()
                 .setSigningKey(jwtSecret)
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
+        return (String) claims.get("email"); // Lấy email từ claims
+    }
+
+    // Get username from JWT
+    public String getUsernameFromJwtToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
     }
 
     public boolean validateJwtToken(String authToken) {

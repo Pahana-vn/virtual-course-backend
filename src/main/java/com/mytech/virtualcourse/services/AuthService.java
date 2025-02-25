@@ -146,11 +146,6 @@ public class AuthService {
                         .body(new MessageDTO("Error: Account ID is null!"));
             }
 
-            // ✅ Log kiểm tra
-            System.out.println("✅ Logged in user: " + userDetails.getUsername());
-            System.out.println("✅ Account ID: " + accountId);
-            System.out.println("✅ Student ID: " + (studentId != null ? studentId : "null"));
-
             // ✅ Tạo JWT Token
             String jwt = jwtUtil.generateJwtToken(userDetails);
 
@@ -180,5 +175,9 @@ public class AuthService {
         } else {
             throw new ResourceNotFoundException("Instructor not found with account id: " + accountId);
         }
+    }
+
+    public Account findByEmail(String email) {
+        return accountRepository.findByEmail(email).orElse(null);
     }
 }

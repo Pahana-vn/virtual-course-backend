@@ -11,6 +11,10 @@ import com.mytech.virtualcourse.services.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,7 +60,6 @@ public class CourseController {
     @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     @PutMapping("/{id}")
     public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseDTO courseDTO) {
-//        System.out.println("Received CourseDTO for update: " + courseDTO);
         CourseDTO updatedCourse = courseService.updateCourse(id, courseDTO);
         return ResponseEntity.ok(updatedCourse);
     }
@@ -103,6 +106,17 @@ public class CourseController {
         CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId, platform);
         return ResponseEntity.ok(courseDetails);
     }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<CourseDTO>> getCourses(
+            @RequestParam(required = false) List<Long> categoryId,
+            @RequestParam(required = false) List<Long> instructorId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 9) Pageable pageable) {
+
+        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, pageable);
 
     @GetMapping("/by-category")
     public ResponseEntity<List<CourseDTO>> getCoursesByCategoryId(

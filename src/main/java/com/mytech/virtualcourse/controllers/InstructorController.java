@@ -88,6 +88,12 @@ public class InstructorController {
         return ResponseEntity.ok(profileDTO);
     }
 
+    @PutMapping("/{id}/instructor-profile")
+    public ResponseEntity<InstructorProfileDTO> updateInstructorProfile(@PathVariable Long id, @RequestBody InstructorProfileDTO profileDTO) {
+        InstructorProfileDTO updatedProfile = instructorService.updateProfileByInstructorId(id, profileDTO);
+        return ResponseEntity.ok(updatedProfile);
+    }
+
     // Cập nhật thông tin hồ sơ của giảng viên đã đăng nhập
     @PutMapping("/instructor-profile")
     public ResponseEntity<InstructorProfileDTO> updateLoggedInInstructorProfile(HttpServletRequest request, @RequestBody InstructorProfileDTO profileDTO) {

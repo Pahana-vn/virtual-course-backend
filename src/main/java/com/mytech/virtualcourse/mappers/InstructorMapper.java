@@ -29,9 +29,14 @@ public interface InstructorMapper {
     @Mapping(target = "totalPublishedCourses", source = "totalPublishedCourses")
     @Mapping(target = "totalPendingCourses", source = "totalPendingCourses")
     @Mapping(target = "totalStudents", source = "totalStudents")
-    @Mapping(target = "avatarImage", source = "instructor.photo")
+    @Mapping(target = "totalPurchasedCourses", source = "totalPurchasedCourses")
+    @Mapping(target = "totalTransactions", source = "totalTransactions")
+    @Mapping(target = "totalDeposits", source = "totalDeposits")
+    @Mapping(target = "totalWithdrawals", source = "totalWithdrawals")
+//    @Mapping(target = "totalReviews", source = "totalReviews")
+    @Mapping(target = "avatarImage", expression = "java(instructor.getPhoto() != null ? \"http://localhost:8080/uploads/instructor/\" + instructor.getPhoto() : null)")
     @Mapping(target = "balance", source = "instructor.wallet.balance")
-    InstructorStatisticsDTO toInstructorStatisticsDTO(Instructor instructor, Long totalCourses, Long totalPublishedCourses, Long totalPendingCourses, Long totalStudents, BigDecimal balance);
+    InstructorStatisticsDTO toInstructorStatisticsDTO(Instructor instructor, int totalCourses, int totalPublishedCourses, int totalPendingCourses, int totalStudents, int totalPurchasedCourses, int totalTransactions, int totalDeposits, int totalWithdrawals, BigDecimal balance);
 
     @Mapping(target = "firstName", source = "firstName")
     @Mapping(target = "lastName", source = "lastName")
