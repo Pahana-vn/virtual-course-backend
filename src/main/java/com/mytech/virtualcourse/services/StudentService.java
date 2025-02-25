@@ -191,14 +191,12 @@ public class StudentService {
         return dashboard;
     }
 
-    public Map<String, List<CourseDTO>> getStudentCourses(Long studentId) {
+    public Map<String, List<CourseDTO>> getStudentCourses(Long studentId, String platform) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
 
-        // Lấy tất cả LearningProgress cho student
         List<LearningProgress> learningProgresses = learningProgressRepository.findByStudentId(student.getId());
 
-        // Tách ra các nhóm khóa học (enrolled, active, completed) dựa vào LearningProgress
         List<Course> enrolledCourses = learningProgresses.stream()
                 .map(LearningProgress::getCourse)
                 .distinct()
@@ -216,35 +214,37 @@ public class StudentService {
                 .distinct()
                 .collect(Collectors.toList());
 
+        // Định nghĩa baseUrl dựa trên platform (Flutter hay Web)
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         // Hàm tiện ích để map Course -> CourseDTO kèm progress
-        // Hàm này sẽ tìm LearningProgress tương ứng (studentId, courseId) để lấy progress.
-        // Nếu không có thì progress = 0.
         Function<Course, CourseDTO> toCourseDTOWithProgress = (course) -> {
             CourseDTO dto = courseMapper.courseToCourseDTO(course);
             Optional<LearningProgress> lpOpt = learningProgressRepository.findByStudentIdAndCourseId(studentId, course.getId());
             int progress = lpOpt.map(LearningProgress::getProgressPercentage).orElse(0);
             dto.setProgress(progress);
 
-            // Nếu cần set lại imageCover đầy đủ URL (do mapper đã set sẵn nhưng có thể cần override)
+            // Cập nhật đường dẫn ảnh cho course
             if (course.getImageCover() != null) {
-                dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+                dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
+            }
+            if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                dto.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
             }
 
             return dto;
         };
 
-        // Map enrolledCourses sang DTO kèm theo progress
         List<CourseDTO> enrolledDTO = enrolledCourses.stream()
                 .map(toCourseDTOWithProgress)
                 .collect(Collectors.toList());
 
-        // Map activeCourses sang DTO kèm theo progress
         List<CourseDTO> activeDTO = activeCourses.stream()
                 .map(toCourseDTOWithProgress)
                 .collect(Collectors.toList());
 
-        // Map completedCourses sang DTO kèm theo progress
-        // Đối với completed, nếu lp không tìm thấy, đặt mặc định 100%
         List<CourseDTO> completedDTO = completedCourses.stream()
                 .map(course -> {
                     CourseDTO dto = courseMapper.courseToCourseDTO(course);
@@ -253,13 +253,15 @@ public class StudentService {
                     dto.setProgress(progress);
 
                     if (course.getImageCover() != null) {
-                        dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+                        dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
+                    }
+                    if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                        dto.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
                     }
                     return dto;
                 })
                 .collect(Collectors.toList());
 
-        // Cuối cùng tạo Map chứa 3 danh sách
         Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
         categorizedCourses.put("enrolled", enrolledDTO);
         categorizedCourses.put("active", activeDTO);
@@ -298,7 +300,7 @@ public class StudentService {
     }
 
 
-    public List<CourseDTO> getWishlist(Long studentId) {
+    public List<CourseDTO> getWishlist(Long studentId, String platform) {
         // Tìm sinh viên
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
@@ -306,19 +308,31 @@ public class StudentService {
         // Lấy danh sách khóa học từ wishlist của sinh viên
         List<FavoriteCourse> wishlistItems = favoriteCourseRepository.findByStudent(student);
 
+        // Xác định đường dẫn ảnh phù hợp với nền tảng
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         // Chuyển đổi danh sách FavoriteCourse thành danh sách CourseDTO
         return wishlistItems.stream()
                 .map(fav -> {
                     Course course = fav.getCourse();
                     CourseDTO courseDTO = courseMapper.courseToCourseDTO(course);
+
+                    // ✅ Cập nhật ảnh khóa học
                     if (course.getImageCover() != null) {
-                        courseDTO.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+                        courseDTO.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
                     }
+
+                    // ✅ Cập nhật ảnh giảng viên
+                    if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                        courseDTO.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
+                    }
+
                     return courseDTO;
                 })
                 .collect(Collectors.toList());
     }
-
 
     public void addToCart(Long studentId, CourseDTO courseDTO) {
         System.out.println("Adding course to cart for student ID: " + studentId);

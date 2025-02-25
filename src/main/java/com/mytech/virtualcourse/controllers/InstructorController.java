@@ -34,8 +34,8 @@ public class InstructorController {
     private SecurityUtils securityUtils;
 
     @GetMapping
-    public ResponseEntity<List<InstructorDTO>> getAllInstructors() {
-        List<InstructorDTO> instructors = instructorService.getAllInstructors();
+    public ResponseEntity<List<InstructorDTO>> getAllInstructors(@RequestParam(required = false) String platform) {
+        List<InstructorDTO> instructors = instructorService.getAllInstructors(platform);
         return ResponseEntity.ok(instructors);
     }
 
