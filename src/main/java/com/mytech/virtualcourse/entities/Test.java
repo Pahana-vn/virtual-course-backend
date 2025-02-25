@@ -33,10 +33,9 @@ public class Test extends AbstractEntity {
     @Column(name = "is_final_test", nullable = false)
     private Boolean isFinalTest = false;
 
-    @Column(name = "status", nullable = false)
+    @Column(name = "status_test", nullable = false)
     @Enumerated(EnumType.STRING)
     private StatusTest statusTest;
-
 
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)

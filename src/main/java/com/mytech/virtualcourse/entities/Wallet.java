@@ -19,11 +19,12 @@ public class Wallet extends AbstractEntity {
     @Column(name = "balance", nullable = false)
     private BigDecimal balance;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StatusWallet statusWallet;
 
-    @Column(name = "max_limit")
-    private BigDecimal maxLimit;
+    @Column(name = "min_limit")
+    private BigDecimal minLimit;
 
     @Column(name = "last_updated", nullable = false)
     private Timestamp lastUpdated;

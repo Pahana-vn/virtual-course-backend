@@ -21,6 +21,8 @@ public class CustomUserDetails implements UserDetails {
     private Long studentId;
     @Getter
     private Long instructorId;
+    @Getter
+    private String email;
     private List<GrantedAuthority> authorities;
     private String username;
     private String password;
@@ -32,6 +34,7 @@ public class CustomUserDetails implements UserDetails {
 
     public CustomUserDetails(Account account) {
         this.accountId = account.getId();
+        this.email = account.getEmail();
         this.studentId = (account.getStudent() != null) ? account.getStudent().getId() : null;
         this.instructorId = (account.getInstructor() != null) ? account.getInstructor().getId() : null;
         this.authorities = account.getRoles().stream()

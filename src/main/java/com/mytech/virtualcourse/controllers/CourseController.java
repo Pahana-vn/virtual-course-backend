@@ -10,6 +10,10 @@ import com.mytech.virtualcourse.services.StudentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -96,5 +100,27 @@ public class CourseController {
             @RequestParam Long studentId) {
         CourseDetailDTO courseDetails = courseService.getCourseDetailsForStudent(courseId, studentId);
         return ResponseEntity.ok(courseDetails);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<CourseDTO>> getCoursesByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        List<CourseDTO> courses = courseService.getCoursesByCategory(categoryId, limit);
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<CourseDTO>> getCourses(
+            @RequestParam(required = false) List<Long> categoryId,
+            @RequestParam(required = false) List<Long> instructorId,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 9) Pageable pageable) {
+
+        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, pageable);
+        return ResponseEntity.ok(courses);
     }
 }

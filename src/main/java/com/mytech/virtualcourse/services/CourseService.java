@@ -11,6 +11,9 @@ import com.mytech.virtualcourse.security.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -673,4 +676,29 @@ public class CourseService {
     private String getJwtFromCookies(HttpServletRequest request) {
         return jwtUtil.getCookieValueByName(request, "token");
     }
+
+    public List<CourseDTO> getCoursesByCategory(Long categoryId, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Course> courses = courseRepository.findByCategoryId(categoryId, pageable);
+        return courses.stream().map(courseMapper::courseToCourseDTO).collect(Collectors.toList());
+    }
+
+    public Page<CourseDTO> getFilteredCourses(List<Long> categoryIds, List<Long> instructorIds, Double minPrice, Double maxPrice, String search, Pageable pageable) {
+        Page<Course> courses = courseRepository.findFilteredCourses(categoryIds, instructorIds, minPrice, maxPrice, search, pageable);
+
+        return courses.map(course -> {
+            CourseDTO dto = courseMapper.courseToCourseDTO(course);
+
+            if (course.getImageCover() != null) {
+                dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+            }
+
+            if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
+            }
+
+            return dto;
+        });
+    }
+
 }

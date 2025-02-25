@@ -5,11 +5,9 @@ import com.mytech.virtualcourse.entities.Instructor;
 import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.InstructorMapper;
-import com.mytech.virtualcourse.repositories.CourseRepository;
-import com.mytech.virtualcourse.repositories.InstructorRepository;
-import com.mytech.virtualcourse.repositories.PaymentRepository;
-import com.mytech.virtualcourse.repositories.SectionRepository;
+import com.mytech.virtualcourse.repositories.*;
 import com.mytech.virtualcourse.security.JwtUtil;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +38,10 @@ public class InstructorService {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private StudentRepository studentRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     public List<InstructorDTO> getAllInstructors() {
         List<Instructor> instructors = instructorRepository.findAll();
@@ -127,19 +129,46 @@ public class InstructorService {
         return instructorMapper.instructorToInstructorProfileDTO(instructor);
     }
 
+    public InstructorProfileDTO updateProfileByInstructorId(Long id, InstructorProfileDTO profileDTO) {
+
+        Instructor instructor = instructorRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Instructor not found"));
+
+        instructor.setFirstName(profileDTO.getFirstName());
+        instructor.setLastName(profileDTO.getLastName());
+        instructor.setGender(Gender.valueOf(profileDTO.getGender().toUpperCase()));
+        instructor.setAddress(profileDTO.getAddress());
+        instructor.setPhone(profileDTO.getPhone());
+        instructor.setBio(profileDTO.getBio());
+        instructor.setTitle(profileDTO.getTitle());
+        instructor.setWorkplace(profileDTO.getWorkplace());
+
+        if (profileDTO.getPhoto() != null) {
+            instructor.setPhoto(profileDTO.getPhoto());
+        }
+
+        instructor = instructorRepository.save(instructor);
+
+        // Map the updated instructor entity to the InstructorProfileDTO
+        return InstructorMapper.MAPPER.instructorToInstructorProfileDTO(instructor);
+    }
 
     public InstructorStatisticsDTO getInstructorStatistics(Long id) {
         Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instructor not found"));
-        Long totalCourses = instructorRepository.countCoursesByInstructorId(id);
-        Long totalPublishedCourses = instructorRepository.countPublishedCoursesByInstructorId(id);
-        Long totalPendingCourses = instructorRepository.countPendingCoursesByInstructorId(id);
-        Long totalStudents = instructorRepository.countStudentsInInstructorCourses(id);
+        int totalCourses = instructorRepository.countCoursesByInstructorId(id);
+        int totalPublishedCourses = instructorRepository.countPublishedCoursesByInstructorId(id);
+        int totalPendingCourses = instructorRepository.countPendingCoursesByInstructorId(id);
+        int totalStudents = instructorRepository.countStudentsInInstructorCourses(id);
+        int totalPurchasedCourses = studentRepository.countPurchasedCoursesByInstructorId(id);
+        int totalTransactions = transactionRepository.countTransactionsByInstructorId(id);
+        int totalDeposits = transactionRepository.countDepositsInTransactionsByInstructorId(id);
+        int totalWithdrawals = transactionRepository.countWithdrawalsInTransactionsByInstructorId(id);
+
         BigDecimal balance = instructor.getWallet() != null
                 ? instructor.getWallet().getBalance()
                 : BigDecimal.ZERO;
 
-        return instructorMapper.toInstructorStatisticsDTO(instructor, totalCourses, totalPublishedCourses, totalPendingCourses, totalStudents, balance);
+        return instructorMapper.toInstructorStatisticsDTO(instructor, totalCourses, totalPublishedCourses, totalPendingCourses, totalStudents,totalPurchasedCourses,totalTransactions,totalDeposits,totalWithdrawals, balance);
     }
 
     public InstructorProfileDTO getProfileByLoggedInInstructor(HttpServletRequest request) {

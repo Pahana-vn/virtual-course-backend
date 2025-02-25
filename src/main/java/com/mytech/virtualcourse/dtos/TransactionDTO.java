@@ -1,11 +1,6 @@
-// src/main/java/com/mytech/virtualcourse/dtos/TransactionDTO.java
-
 package com.mytech.virtualcourse.dtos;
 
-import com.mytech.virtualcourse.enums.PaymentMethod;
-import com.mytech.virtualcourse.enums.PaymentStatus;
-import com.mytech.virtualcourse.enums.TransactionStatus;
-import com.mytech.virtualcourse.enums.TransactionType;
+import com.mytech.virtualcourse.enums.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -19,9 +14,12 @@ import java.sql.Timestamp;
 public class TransactionDTO {
     private Long id;
     private BigDecimal amount;
+    private String title;
     private TransactionType transactionType;
-    private TransactionStatus transactionStatus;
+    private StatusTransaction statusTransaction;
+    private PaymentMethod paymentMethod;
+    private String paypalPayoutId;
     private Timestamp processedAt;
     private Long walletId;
-    private Long paymentId;
+    private BigDecimal walletBalance;
 }
