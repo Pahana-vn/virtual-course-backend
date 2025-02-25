@@ -194,4 +194,5 @@ public class StudentController {
     public StudentQuizDetailDTO getQuizDetails(@PathVariable Long quizId) {
         return studentService.getQuizDetails(quizId);
     }
+
 }
