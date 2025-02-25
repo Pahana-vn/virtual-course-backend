@@ -30,5 +30,16 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Query("SELECT c FROM Course c JOIN c.students s WHERE s.id = :studentId")
     List<Course> findCoursesByStudentId(@Param("studentId") Long studentId);
 
+    @Query("SELECT c FROM Course c WHERE c.category.id = :categoryId")
+    List<Course> findByCategoryId(@Param("categoryId") Long categoryId);
+
     long countByCreatedAtBetween(Date start, Date end);
+
+    @Query("SELECT c FROM Course c WHERE " +
+            "LOWER(c.titleCourse) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(c.instructor.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "LOWER(c.instructor.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Course> searchCoursesFlutter(@Param("keyword") String keyword);
+    // aaads
 }

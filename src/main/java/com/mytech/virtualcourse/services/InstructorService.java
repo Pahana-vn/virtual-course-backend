@@ -41,14 +41,20 @@ public class InstructorService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public List<InstructorDTO> getAllInstructors() {
+    public List<InstructorDTO> getAllInstructors(String platform) {
         List<Instructor> instructors = instructorRepository.findAll();
+
+        // Nếu có tham số platform=flutter, dùng 10.0.2.2 (Android Emulator)
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         return instructors.stream()
                 .map(instructor -> {
                     InstructorDTO dto = instructorMapper.instructorToInstructorDTO(instructor);
                     // Cập nhật đường dẫn ảnh
                     if (instructor.getPhoto() != null) {
-                        dto.setPhoto("http://localhost:8080/uploads/instructor/" + instructor.getPhoto());
+                        dto.setPhoto(baseUrl + "/uploads/instructor/" + instructor.getPhoto());
                     }
                     return dto;
                 })
