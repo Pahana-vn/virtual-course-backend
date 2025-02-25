@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Objects;
@@ -78,18 +79,21 @@ public class CourseService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public List<CourseDTO> getAllCourses() {
+    public List<CourseDTO> getAllCourses(@RequestParam(required = false) String platform) {
         List<Course> courses = courseRepository.findAll();
+
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         return courses.stream()
                 .map(course -> {
                     CourseDTO dto = courseMapper.courseToCourseDTO(course);
                     if (course.getImageCover() != null) {
+                        dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
 
-                        dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
-
-                        // Thêm URL đầy đủ cho instructor photo
                         if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
-                            dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
+                            dto.getInstructorInfo().setPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
                         }
                     }
                     return dto;
@@ -605,48 +609,64 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
-    public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId) {
+    public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId, String platform) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
+
         CourseDetailDTO dto = courseMapper.courseToCourseDetailDTO(course);
 
-        // Lấy tất cả bài giảng trong khóa học
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         List<Lecture> allLectures = course.getSections().stream()
                 .flatMap(section -> section.getLectures().stream())
                 .collect(Collectors.toList());
         int totalLectures = allLectures.size();
 
-        // Lấy danh sách các ID bài giảng đã hoàn thành
         List<Long> completedLectureIds = studentLectureProgressRepository.findCompletedLectureIdsByStudentAndCourse(studentId, courseId);
 
-        // Map sections và bài giảng, đặt trạng thái 'completed'
         List<SectionDTO> sectionsDTO = course.getSections().stream().map(section -> {
             SectionDTO sectionDTO = new SectionDTO();
             sectionDTO.setId(section.getId());
             sectionDTO.setTitleSection(section.getTitleSection());
+
             sectionDTO.setLectures(section.getLectures().stream().map(lecture -> {
                 LectureDTO lectureDTO = new LectureDTO();
                 lectureDTO.setId(lecture.getId());
                 lectureDTO.setTitleLecture(lecture.getTitleLecture());
-                lectureDTO.setLectureVideo(lecture.getLectureVideo());
-                lectureDTO.setLectureResource(lecture.getLectureResource());
+
+                if (lecture.getLectureVideo() != null) {
+                    lectureDTO.setLectureVideo(baseUrl + "/uploads/lectures/videos/" + lecture.getLectureVideo());
+                }
+
+                if (lecture.getLectureResource() != null) {
+                    lectureDTO.setLectureResource(baseUrl + "/uploads/lectures/resources/" + lecture.getLectureResource());
+                }
+
                 lectureDTO.setLectureOrder(lecture.getLectureOrder());
+
                 lectureDTO.setArticles(lecture.getArticles().stream()
-                        .map(article -> new ArticleDTO(article.getId(), article.getContent(), article.getFileUrl(), lecture.getId()))
+                        .map(article -> new ArticleDTO(
+                                article.getId(),
+                                article.getContent(),
+                                article.getFileUrl() != null ? baseUrl + "/uploads/articles/" + article.getFileUrl() : null,
+                                lecture.getId()))
                         .collect(Collectors.toList()));
+
                 lectureDTO.setCompleted(completedLectureIds.contains(lecture.getId()));
+
                 return lectureDTO;
             }).collect(Collectors.toList()));
+
             return sectionDTO;
         }).collect(Collectors.toList());
 
         dto.setSections(sectionsDTO);
 
-        // Kiểm tra xem tất cả bài giảng đã hoàn thành chưa
         boolean allCompleted = completedLectureIds.size() == totalLectures && totalLectures > 0;
         dto.setAllLecturesCompleted(allCompleted);
 
-        // Kiểm tra test cuối khóa
         Optional<Test> finalTestOpt = testRepository.findFinalTestByCourseId(courseId);
         if (finalTestOpt.isPresent()) {
             dto.setFinalTestId(finalTestOpt.get().getId());
@@ -654,8 +674,13 @@ public class CourseService {
         }
 
         if (course.getImageCover() != null) {
-            dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
+            dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
         }
+
+        if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+            dto.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
+        }
+
         return dto;
     }
 
@@ -672,5 +697,52 @@ public class CourseService {
 
     private String getJwtFromCookies(HttpServletRequest request) {
         return jwtUtil.getCookieValueByName(request, "token");
+    }
+
+    public List<CourseDTO> getCoursesByCategoryId(Long categoryId, @RequestParam(required = false) String platform) {
+        List<Course> courses = courseRepository.findByCategoryId(categoryId);
+
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
+        return courses.stream()
+                .map(course -> {
+                    CourseDTO dto = courseMapper.courseToCourseDTO(course);
+                    if (course.getImageCover() != null) {
+                        dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
+                    }
+                    if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                        dto.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public CourseService(CourseRepository courseRepository, CourseMapper courseMapper) {
+        this.courseRepository = courseRepository;
+        this.courseMapper = courseMapper;
+    }
+
+    public List<CourseDTO> searchCoursesFlutter(String keyword, String platform) {
+        List<Course> courses = courseRepository.searchCoursesFlutter(keyword);
+
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
+        return courses.stream()
+                .map(course -> {
+                    CourseDTO dto = courseMapper.courseToCourseDTO(course);
+                    if (course.getImageCover() != null) {
+                        dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
+                    }
+                    if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                        dto.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }
