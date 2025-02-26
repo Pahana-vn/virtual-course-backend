@@ -1,14 +1,12 @@
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.JwtDTO;
-import com.mytech.virtualcourse.dtos.LoginDTO;
-import com.mytech.virtualcourse.dtos.MessageDTO;
-import com.mytech.virtualcourse.dtos.RegisterDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.enums.AuthenticationType;
 import com.mytech.virtualcourse.enums.EAccountStatus;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.AccountMapper;
+import com.mytech.virtualcourse.mappers.InstructorMapper;
 import com.mytech.virtualcourse.mappers.JwtMapper;
 import com.mytech.virtualcourse.repositories.AccountRepository;
 import com.mytech.virtualcourse.repositories.InstructorRepository;
@@ -49,11 +47,82 @@ public class AuthService {
     private JwtMapper jwtMapper;
 
     @Autowired
-    private AccountMapper accountMapper;
+    private InstructorMapper instructorMapper;
+
     @Autowired
     private InstructorRepository instructorRepository;
 
     public ResponseEntity<?> registerUser(RegisterDTO registerRequest) {
+        // Kiểm tra username hoặc email đã tồn tại
+        if (accountRepository.existsByUsername(registerRequest.getUsername())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageDTO("Error: Username is already taken!"));
+        }
+
+        if (accountRepository.existsByEmail(registerRequest.getEmail())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageDTO("Error: Email is already in use!"));
+        }
+
+        // Create Account
+        Account account = new Account();
+        account.setUsername(registerRequest.getUsername());
+        account.setEmail(registerRequest.getEmail());
+        account.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        account.setVerifiedEmail(false);
+        account.setVersion(1);
+        account.setAuthenticationType(AuthenticationType.LOCAL);
+
+        Set<Role> roles = new HashSet<>();
+
+        // Assign roles based on user selection (admin, instructor, or student)
+        if (registerRequest.getRole().equalsIgnoreCase("admin")) {
+            if (accountRepository.findAll().stream()
+                    .anyMatch(a -> a.getRoles().stream()
+                            .anyMatch(r -> r.getName().equals("ADMIN")))) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageDTO("Error: Admin account already exists!"));
+            }
+            Role adminRole = roleRepository.findByName("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Error: Role ADMIN is not found."));
+            roles.add(adminRole);
+            account.setStatus(EAccountStatus.ACTIVE);
+            account.setVerifiedEmail(true);
+        } else if (registerRequest.getRole().equalsIgnoreCase("instructor")) {
+            Role instructorRole = roleRepository.findByName("INSTRUCTOR")
+                    .orElseThrow(() -> new RuntimeException("Error: Role INSTRUCTOR is not found."));
+            roles.add(instructorRole);
+            account.setStatus(EAccountStatus.PENDING);
+        } else {
+            // Register as a student
+            Role studentRole = roleRepository.findByName("STUDENT")
+                    .orElseThrow(() -> new RuntimeException("Error: Role STUDENT is not found."));
+            roles.add(studentRole);
+            account.setStatus(EAccountStatus.ACTIVE);
+
+            // Create Student and link to Account
+            Student student = new Student();
+            student.setFirstName("");  // Empty or default values
+            student.setLastName("");
+            student.setDob(null);  // No dob initially
+            student.setGender(null);  // Gender will be updated later
+            student.setStatusStudent("ACTIVE");
+            student.setAccount(account);  // Link Student to Account
+            account.setStudent(student);  // Link Account to Student
+        }
+
+        account.setRoles(new ArrayList<>(roles));
+
+        // Save Account (this will cascade and also save the Student if role is Student)
+        accountRepository.save(account);
+
+        return ResponseEntity.ok(new MessageDTO("User registered successfully!"));
+    }
+
+    public ResponseEntity<?> registerInstructor(RegisterDTO registerRequest) {
         // Kiểm tra username hoặc email đã tồn tại
         if (accountRepository.existsByUsername(registerRequest.getUsername())) {
             return ResponseEntity

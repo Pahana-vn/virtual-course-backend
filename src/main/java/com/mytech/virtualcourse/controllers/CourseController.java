@@ -84,6 +84,11 @@ public class CourseController {
         return ResponseEntity.ok(courseDTOs);
     }
 
+    @GetMapping("/instructor/{instructorId}/purchased")
+    public ResponseEntity<List<CourseDTO>> getPurchasedCourses(@PathVariable Long instructorId) {
+        List<CourseDTO> courses = courseService.getPurchasedCoursesByInstructor(instructorId);
+        return ResponseEntity.ok(courses);
+    }
 //    @GetMapping("/student-courses/{accountId}")
 //    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
 //        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
