@@ -47,6 +47,8 @@ public class AuthController {
         return authService.registerUser(registerRequest);
     }
 
+
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginRequest, HttpServletResponse response) {
         try {

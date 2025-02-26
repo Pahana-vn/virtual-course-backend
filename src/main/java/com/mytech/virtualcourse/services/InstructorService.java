@@ -120,7 +120,7 @@ public class InstructorService {
 
         int totalCourses = courseRepository.countByInstructorId(instructorId);
         int totalSections = sectionRepository.countByInstructorId(instructorId);
-        int totalStudents = paymentRepository.countDistinctStudentsByInstructorId(instructorId);
+        int totalStudents = studentRepository.countTotalCourseStudentsByInstructor(instructorId);
         double averageRating = instructorRepository.calculateAverageRatingByInstructorId(instructorId);
 
         return InstructorMapper.MAPPER.instructorToInstructorDetailsDTO(
@@ -164,8 +164,8 @@ public class InstructorService {
         int totalCourses = instructorRepository.countCoursesByInstructorId(id);
         int totalPublishedCourses = instructorRepository.countPublishedCoursesByInstructorId(id);
         int totalPendingCourses = instructorRepository.countPendingCoursesByInstructorId(id);
-        int totalStudents = instructorRepository.countStudentsInInstructorCourses(id);
-        int totalPurchasedCourses = studentRepository.countPurchasedCoursesByInstructorId(id);
+        int totalStudents = studentRepository.countTotalCourseStudentsByInstructor(id);
+        int totalPurchasedCourses = studentRepository.countTotalCourseStudentsByInstructor(id);
         int totalTransactions = transactionRepository.countTransactionsByInstructorId(id);
         int totalDeposits = transactionRepository.countDepositsInTransactionsByInstructorId(id);
         int totalWithdrawals = transactionRepository.countWithdrawalsInTransactionsByInstructorId(id);

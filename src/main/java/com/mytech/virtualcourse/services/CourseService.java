@@ -702,6 +702,13 @@ public class CourseService {
         return jwtUtil.getCookieValueByName(request, "token");
     }
 
+    public List<CourseDTO> getPurchasedCoursesByInstructor(Long instructorId) {
+        List<Course> courses = courseRepository.findPurchasedCoursesByInstructor(instructorId);
+        return courses.stream()
+                .map(courseMapper::courseToCourseDTO)
+                .collect(Collectors.toList());
+    }
+
     public Page<CourseDTO> getFilteredCourses(List<Long> categoryIds, List<Long> instructorIds, Double minPrice, Double maxPrice, String search, Pageable pageable) {
         Page<Course> courses = courseRepository.findFilteredCourses(categoryIds, instructorIds, minPrice, maxPrice, search, pageable);
 
