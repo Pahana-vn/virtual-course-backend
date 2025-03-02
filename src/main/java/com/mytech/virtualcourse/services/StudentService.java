@@ -459,19 +459,6 @@ public class StudentService {
         favoriteCourseRepository.delete(favoriteCourse);
     }
 
-    public String getStudentAvatar(Long id) {
-        if (!studentRepository.existsStudentByAccountId(id)) {
-            throw new ResourceNotFoundException("Student not found with account id: " + id);
-        }
-        Optional<Student> optionalStudent = studentRepository.findByAccountId(id);
-
-        if (optionalStudent.isPresent()) {
-            return optionalStudent.get().getAvatar();
-        } else {
-            throw new ResourceNotFoundException("Student not found with account id: " + id);
-        }
-    }
-
     public List<StudentQuizResultDTO> getStudentQuizResults(Long studentId) {
         studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
