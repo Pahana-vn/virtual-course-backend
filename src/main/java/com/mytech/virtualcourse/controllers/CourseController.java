@@ -89,17 +89,7 @@ public class CourseController {
         List<CourseDTO> courses = courseService.getPurchasedCoursesByInstructor(instructorId);
         return ResponseEntity.ok(courses);
     }
-//    @GetMapping("/student-courses/{accountId}")
-//    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
-//        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
-//        return ResponseEntity.ok(courses);
-//    }
 
-    @GetMapping("/student-courses/{studentId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
-        return ResponseEntity.ok(courses);
-    }
 
     @GetMapping("/{id}/course-details")
     public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {

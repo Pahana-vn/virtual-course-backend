@@ -50,11 +50,18 @@ public class StudentController {
         return ResponseEntity.ok(students);
     }
 
-    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
         StudentDTO student = studentService.getStudentById(id);
         return ResponseEntity.ok(student);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
+        StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
+        return ResponseEntity.ok(updatedStudent);
     }
 
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
@@ -77,12 +84,7 @@ public class StudentController {
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
-        StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
-        return ResponseEntity.ok(updatedStudent);
-    }
-
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
@@ -165,7 +167,6 @@ public class StudentController {
         return ResponseEntity.ok(courses);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{id}/avatar")
     public ResponseEntity<Map<String, String>> getStudentAvatar(@PathVariable Long id) {
         String avatarFileName = studentService.getStudentAvatar(id);
@@ -175,7 +176,7 @@ public class StudentController {
                     .body(Collections.singletonMap("error", "Avatar not found"));
         }
 
-        String avatarUrl = "http://localhost:8080/uploads/student/" + avatarFileName;
+        String avatarUrl = "/uploads/student/" + avatarFileName;
 
         Map<String, String> response = new HashMap<>();
         response.put("url", avatarUrl);
@@ -194,5 +195,30 @@ public class StudentController {
     public StudentQuizDetailDTO getQuizDetails(@PathVariable Long quizId) {
         return studentService.getQuizDetails(quizId);
     }
+
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PutMapping("/{studentId}/change-password-student")
+    public ResponseEntity<?> changePasswordStudent(
+            @PathVariable Long studentId,
+            @RequestBody ChangePasswordStudentDTO changePasswordDTO) {
+        try {
+            studentService.changePassword(studentId, changePasswordDTO);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+//    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+//    @GetMapping("/student-courses/{studentId}")
+//    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
+//        if (studentId == null || studentId <= 0) {
+//            return ResponseEntity.badRequest().body(Collections.emptyMap());
+//        }
+//        System.out.println("Received request for student ID: " + studentId);
+//        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
+//        return ResponseEntity.ok(courses);
+//    }
+
 
 }
