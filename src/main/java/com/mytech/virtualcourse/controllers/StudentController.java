@@ -167,23 +167,6 @@ public class StudentController {
         return ResponseEntity.ok(courses);
     }
 
-    @GetMapping("/{id}/avatar")
-    public ResponseEntity<Map<String, String>> getStudentAvatar(@PathVariable Long id) {
-        String avatarFileName = studentService.getStudentAvatar(id);
-
-        if (avatarFileName == null || avatarFileName.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Avatar not found"));
-        }
-
-        String avatarUrl = "/uploads/student/" + avatarFileName;
-
-        Map<String, String> response = new HashMap<>();
-        response.put("url", avatarUrl);
-
-        return ResponseEntity.ok(response);
-    }
-
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/quiz-results")
     public List<StudentQuizResultDTO> getStudentQuizResults(@PathVariable Long studentId) {
