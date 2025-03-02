@@ -14,7 +14,7 @@ public interface TransactionMapper {
     TransactionMapper INSTANCE = Mappers.getMapper(TransactionMapper.class);
     
     @Mapping(source = "wallet.id", target = "walletId")
-    @Mapping(source = "payment.id", target = "paymentId")
+//    @Mapping(source = "payment.id", target = "paymentId")
     TransactionDTO toDTO(Transaction transaction);
     
     @Mapping(target = "wallet", ignore = true)

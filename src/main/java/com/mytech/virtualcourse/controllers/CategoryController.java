@@ -1,8 +1,10 @@
 package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.CategoryDTO;
+import com.mytech.virtualcourse.dtos.CategoryWithStatsDTO;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.services.CategoryService;
+import com.mytech.virtualcourse.services.CategoryStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,9 @@ public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private CategoryStatsService categoryStatsService;
 
     @GetMapping
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
@@ -58,4 +63,22 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
+
+    // New endpoint that returns CategoryWithStatsDTO
+    @GetMapping("/with-stats")
+    public ResponseEntity<List<CategoryWithStatsDTO>> getAllCategoriesWithStats() {
+        List<CategoryDTO> categories = categoryService.getAllCategories();
+        List<CategoryWithStatsDTO> categoriesWithStats = categoryStatsService.enrichCategoriesWithStats(categories);
+        return ResponseEntity.ok(categoriesWithStats);
+    }
+
+    // Get a single category with stats
+    @GetMapping("/{id}/with-stats")
+    public ResponseEntity<CategoryWithStatsDTO> getCategoryWithStats(@PathVariable Long id) {
+        CategoryDTO category = categoryService.getCategoryById(id);
+        CategoryWithStatsDTO categoryWithStats = categoryStatsService.enrichCategoryWithStats(category);
+        return ResponseEntity.ok(categoryWithStats);
+    }
+
+
 }
