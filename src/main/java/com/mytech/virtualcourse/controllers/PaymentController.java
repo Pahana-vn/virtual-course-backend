@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.services.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,8 +24,18 @@ public class PaymentController {
 
     // PayPal
     @PostMapping("/create-paypal-payment")
-    public String createPaypalPayment(@RequestParam Long courseId, HttpServletRequest request) throws Exception {
-        return paymentService.initiatePaypalPayment(courseId, request);
+    public ResponseEntity<?> createPaypalPayment(
+            @RequestParam Long courseId,
+            @RequestParam(required = false) String platform,
+            HttpServletRequest request
+    ) {
+        try {
+            String approvalUrl = paymentService.initiatePaypalPayment(courseId, platform, request);
+            return ResponseEntity.ok(approvalUrl);
+        } catch (Exception e) {
+            e.printStackTrace(); // Hoặc log.error("Error createPayPal", e);
+            return ResponseEntity.badRequest().body(Map.of("message","An error occurred: " + e));
+        }
     }
 
     @PostMapping("/execute-paypal-payment")

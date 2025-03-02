@@ -1,18 +1,15 @@
 package com.mytech.virtualcourse.services;
 
-import com.mytech.virtualcourse.dtos.JwtDTO;
-import com.mytech.virtualcourse.dtos.LoginDTO;
-import com.mytech.virtualcourse.dtos.MessageDTO;
-import com.mytech.virtualcourse.dtos.RegisterDTO;
+import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.enums.AuthenticationType;
 import com.mytech.virtualcourse.enums.EAccountStatus;
+import com.mytech.virtualcourse.enums.StatusWallet;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.AccountMapper;
+import com.mytech.virtualcourse.mappers.InstructorMapper;
 import com.mytech.virtualcourse.mappers.JwtMapper;
-import com.mytech.virtualcourse.repositories.AccountRepository;
-import com.mytech.virtualcourse.repositories.InstructorRepository;
-import com.mytech.virtualcourse.repositories.RoleRepository;
+import com.mytech.virtualcourse.repositories.*;
 import com.mytech.virtualcourse.security.CustomUserDetails;
 import com.mytech.virtualcourse.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.*;
 
 @Service
@@ -49,9 +48,18 @@ public class AuthService {
     private JwtMapper jwtMapper;
 
     @Autowired
-    private AccountMapper accountMapper;
+    private InstructorMapper instructorMapper;
+
     @Autowired
     private InstructorRepository instructorRepository;
+
+    @Autowired
+    private WalletRepository walletRepository;
+
+    @Autowired
+    private SocialRepository socialRepository;
+    @Autowired
+    private StudentRepository studentRepository;
 
     public ResponseEntity<?> registerUser(RegisterDTO registerRequest) {
         // Kiểm tra username hoặc email đã tồn tại
@@ -123,6 +131,60 @@ public class AuthService {
         return ResponseEntity.ok(new MessageDTO("User registered successfully!"));
     }
 
+    public ResponseEntity<?> registerInstructor(InstructorRegistrationDTO registrationDTO) {
+
+        // 1. Tạo tài khoản người dùng (Account)
+        Account account = new Account();
+        account.setUsername(registrationDTO.getUsername());
+        account.setEmail(registrationDTO.getEmail());
+        account.setPassword(passwordEncoder.encode(registrationDTO.getPassword())); // Mã hóa mật khẩu
+        account.setAuthenticationType(registrationDTO.getAuthenticationType() != null ?
+                registrationDTO.getAuthenticationType() : AuthenticationType.LOCAL);
+        account.setVersion(registrationDTO.getVersion());
+
+        Role instructorRole = roleRepository.findByName("INSTRUCTOR")
+                .orElseThrow(() -> new RuntimeException("Role not found: INSTRUCTOR"));
+        account.setRoles(Collections.singletonList(instructorRole));
+
+        account = accountRepository.save(account);
+
+        // 2. Tạo Instructor
+        Instructor instructor = new Instructor();
+        instructor.setFirstName(registrationDTO.getFirstName());
+        instructor.setLastName(registrationDTO.getLastName());
+        instructor.setGender(registrationDTO.getGender());
+        instructor.setAddress(registrationDTO.getAddress());
+        instructor.setPhone(registrationDTO.getPhone());
+        instructor.setBio(registrationDTO.getBio());
+        instructor.setPhoto(registrationDTO.getPhoto());
+        instructor.setTitle(registrationDTO.getTitle());
+        instructor.setWorkplace(registrationDTO.getWorkplace());
+        instructor.setAccount(account);
+        instructor = instructorRepository.save(instructor);
+
+        // 3. Tạo Wallet (Thêm các trường mới: balance, minLimit, statusWallet, lastUpdated)
+        Wallet wallet = new Wallet();
+        wallet.setInstructor(instructor);
+        wallet.setBalance(registrationDTO.getBalance() != null ? registrationDTO.getBalance() : BigDecimal.ZERO);
+        wallet.setMinLimit(registrationDTO.getMinLimit() != null ? registrationDTO.getMinLimit() : BigDecimal.valueOf(1000));
+        wallet.setStatusWallet(registrationDTO.getStatusWallet() != null ? registrationDTO.getStatusWallet() : StatusWallet.ACTIVE);
+        wallet.setLastUpdated(registrationDTO.getLastUpdated() != null ? registrationDTO.getLastUpdated() : new Timestamp(System.currentTimeMillis()));
+        wallet = walletRepository.save(wallet);
+
+        // 4. Tạo Social Info
+        Social social = new Social();
+        social.setInstructor(instructor);
+        social.setFacebookUrl(registrationDTO.getFacebookUrl());
+        social.setGoogleUrl(registrationDTO.getGoogleUrl());
+        social.setInstagramUrl(registrationDTO.getInstagramUrl());
+        social.setLinkedinUrl(registrationDTO.getLinkedinUrl());
+        socialRepository.save(social);
+
+        // 5. Map và trả về InstructorDTO
+        instructorMapper.instructorToInstructorDTO(instructor);
+        return ResponseEntity.ok(new MessageDTO("User registered successfully!"));
+    }
+
     public ResponseEntity<?> authenticateUser(LoginDTO loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -174,6 +236,19 @@ public class AuthService {
             return optionalInstructor.get().getPhoto();
         } else {
             throw new ResourceNotFoundException("Instructor not found with account id: " + accountId);
+        }
+    }
+
+    public String getStudentAvatar(Long accountId) {
+        if (!studentRepository.existsStudentByAccountId(accountId)) {
+            throw new ResourceNotFoundException("Student not found with account id: " + accountId);
+        }
+        Optional<Student> optionalStudent = studentRepository.findByAccountId(accountId);
+
+        if (optionalStudent.isPresent()) {
+            return optionalStudent.get().getAvatar();
+        } else {
+            throw new ResourceNotFoundException("Student not found with account id: " + accountId);
         }
     }
 

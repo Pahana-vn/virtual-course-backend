@@ -12,10 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/instructors")
@@ -26,9 +23,6 @@ public class InstructorController {
 
     @Autowired
     private TestService testService;
-
-    @Autowired
-    private QuestionService questionService;
 
     @Autowired
     private SecurityUtils securityUtils;
@@ -46,7 +40,7 @@ public class InstructorController {
     }
 
     @PostMapping
-    public ResponseEntity<InstructorDTO> createInstructor(@RequestBody InstructorDTO instructorDTO) {
+    public ResponseEntity<InstructorDTO> registerInstructor(@RequestBody InstructorDTO  instructorDTO ) {
         InstructorDTO createdInstructor = instructorService.createInstructor(instructorDTO);
         return new ResponseEntity<>(createdInstructor, HttpStatus.CREATED);
     }

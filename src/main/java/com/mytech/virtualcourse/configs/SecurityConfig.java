@@ -55,6 +55,7 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of(
                             "http://localhost:3000",
+                            "http://10.0.2.2:3000",
                             "http://127.0.0.1:8080",
                             "http://10.0.2.2:8080",
                             "http://192.168.1.100:8080"
@@ -82,13 +83,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
                         .requestMatchers("/api/sections/**").permitAll()
-                        .requestMatchers("/api/students/**").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers("/api/students/**").permitAll()
                         .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/api/transactions/**").permitAll()
                         .requestMatchers("/api/wallet/**").permitAll()
                         .requestMatchers("/api/instructor-transaction/**").permitAll()
                         .requestMatchers("/api/tests/**").permitAll()
                         .requestMatchers("/api/questions/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
+                        .requestMatchers("/ws-chat/**").permitAll()
                         .requestMatchers("/swagger-ui/**","/swagger-resources/**","/v3/api-docs/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )

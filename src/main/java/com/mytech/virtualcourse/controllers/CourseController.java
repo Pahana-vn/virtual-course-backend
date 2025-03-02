@@ -42,6 +42,16 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<List<CourseDTO>> getAllCoursesByStatus(
+            @RequestParam(required = false) String platform,
+            @RequestParam(required = false, defaultValue = "PUBLISHED") String status) {
+
+        List<CourseDTO> courses = courseService.getAllCoursesByStatus(platform, status);
+        return ResponseEntity.ok(courses);
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<CourseDTO> getCourseById(@PathVariable Long id) {
         CourseDTO course = courseService.getCourseById(id);
@@ -84,17 +94,12 @@ public class CourseController {
         return ResponseEntity.ok(courseDTOs);
     }
 
-//    @GetMapping("/student-courses/{accountId}")
-//    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCourses(@PathVariable Long accountId) {
-//        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(accountId);
-//        return ResponseEntity.ok(courses);
-//    }
-
-    @GetMapping("/student-courses/{studentId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
+    @GetMapping("/instructor/{instructorId}/purchased")
+    public ResponseEntity<List<CourseDTO>> getPurchasedCourses(@PathVariable Long instructorId) {
+        List<CourseDTO> courses = courseService.getPurchasedCoursesByInstructor(instructorId);
         return ResponseEntity.ok(courses);
     }
+
 
     @GetMapping("/{id}/course-details")
     public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
@@ -120,9 +125,10 @@ public class CourseController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "PUBLISHED") ECourseStatus status,
             @PageableDefault(size = 9) Pageable pageable) {
 
-        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, pageable);
+        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, status, pageable);
         return ResponseEntity.ok(courses);
     }
 

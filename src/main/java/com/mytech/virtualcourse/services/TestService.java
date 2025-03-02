@@ -256,7 +256,9 @@ public class TestService {
 
         TestResultDTO result = new TestResultDTO();
         result.setTestId(test.getId());
-        result.setStudentId(student.getId());
+        result.setTestTitle(test.getTitle());
+        result.setStudentLastname(student.getLastName());
+        result.setStudentFirstname(student.getFirstName());
         result.setMarksObtained(marksObtained);
         result.setPercentage((marksObtained * 100.0) / test.getTotalMarks());
         result.setPassed(passed);

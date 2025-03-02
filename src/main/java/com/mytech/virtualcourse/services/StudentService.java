@@ -2,6 +2,7 @@ package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.*;
+import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.enums.QuestionType;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CourseMapper;
@@ -9,6 +10,7 @@ import com.mytech.virtualcourse.mappers.StudentMapper;
 import com.mytech.virtualcourse.mappers.StudentQuizMapper;
 import com.mytech.virtualcourse.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +65,13 @@ public class StudentService {
     @Autowired
     private FavoriteCourseRepository favoriteCourseRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+
     private static final String AVATAR_BASE_URL = "http://localhost:8080/uploads/student/";
     private static final String INSTRUCTOR_PHOTO_BASE_URL = "http://localhost:8080/uploads/instructor/";
     private static final String COURSE_IMAGE_BASE_URL = "http://localhost:8080/uploads/course/";
@@ -110,22 +119,31 @@ public class StudentService {
         Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
 
-        existingStudent.setFirstName(studentDTO.getFirstName());
-        existingStudent.setLastName(studentDTO.getLastName());
-        existingStudent.setDob(studentDTO.getDob());
-        existingStudent.setAddress(studentDTO.getAddress());
-        existingStudent.setPhone(studentDTO.getPhone());
-        existingStudent.setAvatar(studentDTO.getAvatar());
-        existingStudent.setVerifiedPhone(studentDTO.getVerifiedPhone());
-        existingStudent.setCategoryPrefer(studentDTO.getCategoryPrefer());
-        existingStudent.setStatusStudent(studentDTO.getStatusStudent());
+        existingStudent.setFirstName(studentDTO.getFirstName() != null ? studentDTO.getFirstName() : existingStudent.getFirstName());
+        existingStudent.setLastName(studentDTO.getLastName() != null ? studentDTO.getLastName() : existingStudent.getLastName());
+        existingStudent.setDob(studentDTO.getDob() != null ? studentDTO.getDob() : existingStudent.getDob());
+        existingStudent.setAddress(studentDTO.getAddress() != null ? studentDTO.getAddress() : existingStudent.getAddress());
+        existingStudent.setGender(studentDTO.getGender() != null ? Gender.valueOf(studentDTO.getGender()) : existingStudent.getGender());
+        existingStudent.setPhone(studentDTO.getPhone() != null ? studentDTO.getPhone() : existingStudent.getPhone());
+        existingStudent.setBio(studentDTO.getBio() != null ? studentDTO.getBio() : existingStudent.getBio());
+
+        if (studentDTO.getUsername() != null) {
+            Account account = existingStudent.getAccount();
+            if (account != null) {
+                account.setUsername(studentDTO.getUsername());
+                accountRepository.save(account);
+            }
+        }
+
+        if (studentDTO.getAvatar() != null && !studentDTO.getAvatar().isEmpty()) {
+            String avatarFileName = studentDTO.getAvatar().replace(AVATAR_BASE_URL, "");
+            existingStudent.setAvatar(avatarFileName);
+        }
+
+
 
         Student updatedStudent = studentRepository.save(existingStudent);
-        StudentDTO dto = studentMapper.studentToStudentDTO(updatedStudent);
-        if (updatedStudent.getAvatar() != null) {
-            dto.setAvatar(AVATAR_BASE_URL + updatedStudent.getAvatar());
-        }
-        return dto;
+        return studentMapper.studentToStudentDTO(updatedStudent);
     }
 
     public void deleteStudent(Long id) {
@@ -214,19 +232,16 @@ public class StudentService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Định nghĩa baseUrl dựa trên platform (Flutter hay Web)
         String baseUrl = (platform != null && platform.equals("flutter"))
                 ? "http://10.0.2.2:8080"
                 : "http://localhost:8080";
 
-        // Hàm tiện ích để map Course -> CourseDTO kèm progress
         Function<Course, CourseDTO> toCourseDTOWithProgress = (course) -> {
             CourseDTO dto = courseMapper.courseToCourseDTO(course);
             Optional<LearningProgress> lpOpt = learningProgressRepository.findByStudentIdAndCourseId(studentId, course.getId());
             int progress = lpOpt.map(LearningProgress::getProgressPercentage).orElse(0);
             dto.setProgress(progress);
 
-            // Cập nhật đường dẫn ảnh cho course
             if (course.getImageCover() != null) {
                 dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
             }
@@ -305,26 +320,21 @@ public class StudentService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        // Lấy danh sách khóa học từ wishlist của sinh viên
         List<FavoriteCourse> wishlistItems = favoriteCourseRepository.findByStudent(student);
 
-        // Xác định đường dẫn ảnh phù hợp với nền tảng
         String baseUrl = (platform != null && platform.equals("flutter"))
                 ? "http://10.0.2.2:8080"
                 : "http://localhost:8080";
 
-        // Chuyển đổi danh sách FavoriteCourse thành danh sách CourseDTO
         return wishlistItems.stream()
                 .map(fav -> {
                     Course course = fav.getCourse();
                     CourseDTO courseDTO = courseMapper.courseToCourseDTO(course);
 
-                    // ✅ Cập nhật ảnh khóa học
                     if (course.getImageCover() != null) {
                         courseDTO.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
                     }
 
-                    // ✅ Cập nhật ảnh giảng viên
                     if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
                         courseDTO.setInstructorPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
                     }
@@ -386,41 +396,33 @@ public class StudentService {
 
 
     public void removeFromCart(Long studentId, Long cartItemId) throws ResourceNotFoundException {
-        // Kiểm tra xem sinh viên có tồn tại không
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
 
-        // Kiểm tra xem cartItem có tồn tại không
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with id: " + cartItemId));
 
-        // Kiểm tra xem CartItem có thuộc về Cart của sinh viên này không
         if (!cartItem.getCart().getStudent().equals(student)) {
             throw new ResourceNotFoundException("Cart item does not belong to the student");
         }
 
-        // Xóa item khỏi giỏ hàng
         cartItemRepository.delete(cartItem);
     }
 
-    public Map<String, List<CourseDTO>> getStudentPurchasedCourses(Long studentId) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
-
-        // Lấy tất cả khóa học đã mua từ ManyToMany
-        List<Course> purchasedCourses = student.getCourses();
-
-        // Map sang DTO
-        List<CourseDTO> purchasedDTOs = mapCoursesWithFullImageUrl(purchasedCourses);
-
-        // Ở đây bạn có thể phân loại tùy thích. Nếu không cần phân loại nữa,
-        // bạn có thể đặt tất cả vào "enrolled"
-        Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
-        categorizedCourses.put("enrolled", purchasedDTOs);
-        categorizedCourses.put("active", new ArrayList<>());
-        categorizedCourses.put("completed", new ArrayList<>());
-        return categorizedCourses;
-    }
+//    public Map<String, List<CourseDTO>> getStudentPurchasedCourses(Long studentId) {
+//        Student student = studentRepository.findById(studentId)
+//                .orElseThrow(() -> new IllegalArgumentException("Student not found with id: " + studentId));
+//
+//        List<Course> purchasedCourses = student.getCourses();
+//
+//        List<CourseDTO> purchasedDTOs = mapCoursesWithFullImageUrl(purchasedCourses);
+//
+//        Map<String, List<CourseDTO>> categorizedCourses = new HashMap<>();
+//        categorizedCourses.put("enrolled", purchasedDTOs);
+//        categorizedCourses.put("active", new ArrayList<>());
+//        categorizedCourses.put("completed", new ArrayList<>());
+//        return categorizedCourses;
+//    }
 
     public void enrollStudentToCourse(Long studentId, Long courseId) {
         Student student = studentRepository.findById(studentId)
@@ -429,13 +431,11 @@ public class StudentService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));
 
-        // Thêm khóa học vào student (nếu chưa)
         if (!student.getCourses().contains(course)) {
             student.getCourses().add(course);
-            studentRepository.save(student); // Lưu để cập nhật student_course mapping
+            studentRepository.save(student);
         }
 
-        // Kiểm tra nếu LearningProgress đã tồn tại
         Optional<LearningProgress> lpOpt = learningProgressRepository.findByStudentIdAndCourseId(studentId, courseId);
         if (lpOpt.isEmpty()) {
             LearningProgress lp = new LearningProgress();
@@ -459,38 +459,21 @@ public class StudentService {
         favoriteCourseRepository.delete(favoriteCourse);
     }
 
-    public String getStudentAvatar(Long id) {
-        if (!studentRepository.existsStudentByAccountId(id)) {
-            throw new ResourceNotFoundException("Student not found with account id: " + id);
-        }
-        Optional<Student> optionalStudent = studentRepository.findByAccountId(id);
-
-        if (optionalStudent.isPresent()) {
-            return optionalStudent.get().getAvatar();
-        } else {
-            throw new ResourceNotFoundException("Student not found with account id: " + id);
-        }
-    }
-
     public List<StudentQuizResultDTO> getStudentQuizResults(Long studentId) {
         studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found"));
 
         List<StudentTestSubmission> submissions = submissionRepository.findByStudentId(studentId);
 
-        // Dùng MapStruct để convert danh sách submission sang DTO
         return studentQuizMapper.toQuizResultDTOList(submissions);
     }
 
-    // Lấy chi tiết bài kiểm tra của sinh viên
     public StudentQuizDetailDTO getQuizDetails(Long quizId) {
-        // 🔹 Lấy bài nộp từ database
         StudentTestSubmission submission = submissionRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
         List<Question> questions = questionRepository.findByTestId(submission.getTest().getId());
 
-        // 🔥 Danh sách câu hỏi có câu trả lời của sinh viên
         List<StudentQuestionDTO> questionDTOs = questions.stream().map(question -> {
             StudentQuestionDTO studentQuestion = new StudentQuestionDTO();
             studentQuestion.setId(question.getId());
@@ -498,7 +481,6 @@ public class StudentService {
             studentQuestion.setType(question.getType());
             studentQuestion.setMarks(question.getMarks());
 
-            // 🔹 Lấy câu trả lời sinh viên đã chọn
             List<StudentAnswer> studentAnswers = submission.getAnswers().stream()
                     .filter(a -> a.getQuestion().getId().equals(question.getId()))
                     .toList();
@@ -508,7 +490,6 @@ public class StudentService {
                     .distinct()
                     .toList();
 
-            // 🔹 Lấy danh sách câu trả lời đúng
             List<AnswerOption> correctOptions = question.getAnswerOptions().stream()
                     .filter(AnswerOption::getIsCorrect)
                     .toList();
@@ -516,7 +497,6 @@ public class StudentService {
                     .map(AnswerOption::getId)
                     .toList();
 
-            // 🔥 Kiểm tra nếu sinh viên chọn đúng tất cả đáp án đúng và không chọn sai
             boolean isCorrect;
             if (question.getType() == QuestionType.MULTIPLE) {
                 isCorrect = selectedOptionIds.size() == correctOptionIds.size()
@@ -525,7 +505,6 @@ public class StudentService {
                 isCorrect = selectedOptionIds.equals(correctOptionIds);
             }
 
-            // ✅ Gán danh sách câu trả lời sinh viên đã chọn
             studentQuestion.setGivenAnswers(selectedOptionIds.stream()
                     .map(id -> {
                         AnswerOption opt = answerOptionRepository.findById(id).orElse(null);
@@ -534,18 +513,15 @@ public class StudentService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList()));
 
-            // ✅ Gán danh sách đáp án đúng
             studentQuestion.setCorrectAnswers(correctOptions.stream()
                     .map(opt -> new AnswerOptionDTO(opt.getId(), opt.getContent(), opt.getIsCorrect(), question.getId()))
                     .collect(Collectors.toList()));
 
-            // ✅ Gán trạng thái đúng/sai
             studentQuestion.setCorrect(isCorrect);
 
             return studentQuestion;
         }).collect(Collectors.toList());
 
-        // 🔹 Trả về kết quả bài kiểm tra chi tiết
         return new StudentQuizDetailDTO(
                 submission.getId(),
                 submission.getTest().getTitle(),
@@ -555,5 +531,26 @@ public class StudentService {
                 submission.getPassed(),
                 questionDTOs
         );
+    }
+
+    public void changePassword(Long studentId, ChangePasswordStudentDTO changePasswordDTO) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+
+        Account account = student.getAccount();
+        if (account == null) {
+            throw new IllegalArgumentException("Student does not have an associated account");
+        }
+
+        if (!passwordEncoder.matches(changePasswordDTO.getCurrentPassword(), account.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
+            throw new IllegalArgumentException("New password and confirm password do not match");
+        }
+
+        account.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        accountRepository.save(account);
     }
 }
