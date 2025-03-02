@@ -1,7 +1,7 @@
 package com.mytech.virtualcourse.services;
 
 import com.mytech.virtualcourse.dtos.*;
-import com.mytech.virtualcourse.entities.Instructor;
+import com.mytech.virtualcourse.entities.*;
 import com.mytech.virtualcourse.enums.Gender;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.InstructorMapper;
@@ -31,17 +31,17 @@ public class InstructorService {
     private SectionRepository sectionRepository;
 
     @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
     private InstructorMapper instructorMapper;
 
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
     private StudentRepository studentRepository;
+
     @Autowired
     private TransactionRepository transactionRepository;
+
 
     public List<InstructorDTO> getAllInstructors(String platform) {
         List<Instructor> instructors = instructorRepository.findAll();
@@ -54,6 +54,8 @@ public class InstructorService {
         return instructors.stream()
                 .map(instructor -> {
                     InstructorDTO dto = instructorMapper.instructorToInstructorDTO(instructor);
+                    int totalCourses = instructorRepository.countPublishedCoursesByInstructorId(instructor.getId());
+                    dto.setTotalCourses(totalCourses);
                     // Cập nhật đường dẫn ảnh
                     if (instructor.getPhoto() != null) {
                         dto.setPhoto(baseUrl + "/uploads/instructor/" + instructor.getPhoto());
@@ -83,6 +85,7 @@ public class InstructorService {
         Instructor savedInstructor = instructorRepository.save(instructor);
         return instructorMapper.instructorToInstructorDTO(savedInstructor);
     }
+
 
     public InstructorDTO updateInstructor(Long id, InstructorDTO instructorDTO) {
         Instructor existingInstructor = instructorRepository.findById(id)

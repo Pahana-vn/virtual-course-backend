@@ -1,9 +1,15 @@
 package com.mytech.virtualcourse.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.mytech.virtualcourse.entities.Role;
 import com.mytech.virtualcourse.enums.AuthenticationType;
 import com.mytech.virtualcourse.enums.Gender;
+import com.mytech.virtualcourse.enums.StatusWallet;
 import lombok.*;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -17,6 +23,8 @@ public class InstructorRegistrationDTO {
     private String email;
     private String password;
     private AuthenticationType authenticationType;
+    private Integer version;
+    private List<Role> roles;
 
     // Instructor Info
     private String firstName;
@@ -28,6 +36,12 @@ public class InstructorRegistrationDTO {
     private String photo;
     private String title;
     private String workplace;
+
+    //Wallet Info
+    private BigDecimal balance;
+    private BigDecimal minLimit;
+    private StatusWallet statusWallet;
+    private Timestamp lastUpdated;
 
     // Social Info
     private String facebookUrl;

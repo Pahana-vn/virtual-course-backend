@@ -29,6 +29,11 @@ public class CourseDetailDTO {
     private String instructorTitle;
     private Integer progress; //Check lại
     private List<SectionDTO> sections;
+    private int TotalSections;
+    private int TotalQuestions;
+    private int TotalLectures;
+    private int TotalArticles;
+    private int TotalPurchasedStudents;
 
     private Boolean allLecturesCompleted;
     private Long finalTestId;

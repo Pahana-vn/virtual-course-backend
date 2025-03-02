@@ -43,4 +43,9 @@ public class CourseDTO {
     private List<QuestionDTO> questions;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private int TotalSections;
+    private int TotalQuestions;
+    private int TotalLectures;
+    private int TotalArticles;
+    private int TotalPurchasedStudents;
 }
