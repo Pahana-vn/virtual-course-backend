@@ -14,9 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
@@ -99,6 +101,52 @@ public class CourseService {
                             dto.getInstructorInfo().setPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
                         }
                     }
+                    dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+                    dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+                    dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+                    dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+                    dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<CourseDTO> getAllCoursesByStatus(String platform, String status) {
+        ECourseStatus courseStatus;
+        try {
+            courseStatus = ECourseStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid course status");
+        }
+
+        List<Course> courses = courseRepository.findByStatus(courseStatus);
+
+        // Xác định base URL theo platform
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
+        return courses.stream()
+                .map(course -> {
+                    CourseDTO dto = courseMapper.courseToCourseDTO(course);
+
+                    // Cập nhật đường dẫn ảnh cover
+                    if (course.getImageCover() != null) {
+                        dto.setImageCover(baseUrl + "/uploads/course/" + course.getImageCover());
+                    }
+
+                    // Cập nhật đường dẫn ảnh của Instructor
+                    if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
+                        dto.getInstructorInfo().setPhoto(baseUrl + "/uploads/instructor/" + course.getInstructor().getPhoto());
+                    }
+
+                    // Thống kê số lượng nội dung khóa học
+                    dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+                    dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+                    dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+                    dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+                    dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -120,6 +168,11 @@ public class CourseService {
                 dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
             }
         }
+        dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+        dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+        dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+        dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+        dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
         return dto;
     }
 
@@ -580,6 +633,11 @@ public class CourseService {
         if (course.getImageCover() != null) {
             dto.setImageCover("http://localhost:8080/uploads/course/" + course.getImageCover());
         }
+        dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+        dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+        dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+        dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+        dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
         return dto;
     }
 
@@ -597,6 +655,12 @@ public class CourseService {
                     dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
                 }
             }
+            dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+            dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+            dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+            dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+            dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
+
             return dto;
         }).collect(Collectors.toList());
     }
@@ -607,9 +671,18 @@ public class CourseService {
 
         List<Course> courses = courseRepository.findByInstructorAndStatus(instructor, status);
 
-        return courses.stream()
-                .map(courseMapper::courseToCourseDTO)
-                .collect(Collectors.toList());
+        return courses.stream().map(course -> {
+            CourseDTO dto = courseMapper.courseToCourseDTO(course);
+
+            // Gán số liệu thống kê cho khóa học
+            dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+            dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+            dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+            dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+            dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId, String platform) {
@@ -704,13 +777,23 @@ public class CourseService {
 
     public List<CourseDTO> getPurchasedCoursesByInstructor(Long instructorId) {
         List<Course> courses = courseRepository.findPurchasedCoursesByInstructor(instructorId);
-        return courses.stream()
-                .map(courseMapper::courseToCourseDTO)
-                .collect(Collectors.toList());
+        return courses.stream().map(course -> {
+            CourseDTO dto = courseMapper.courseToCourseDTO(course);
+
+            // Gán số liệu thống kê cho khóa học
+            dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+            dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+            dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+            dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+            dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
-    public Page<CourseDTO> getFilteredCourses(List<Long> categoryIds, List<Long> instructorIds, Double minPrice, Double maxPrice, String search, Pageable pageable) {
-        Page<Course> courses = courseRepository.findFilteredCourses(categoryIds, instructorIds, minPrice, maxPrice, search, pageable);
+    public Page<CourseDTO> getFilteredCourses(List<Long> categoryIds, List<Long> instructorIds, Double minPrice, Double maxPrice, String search, ECourseStatus status, Pageable pageable) {
+
+        Page<Course> courses = courseRepository.findFilteredCourses(categoryIds, instructorIds, minPrice, maxPrice, search, status, pageable);
 
         return courses.map(course -> {
             CourseDTO dto = courseMapper.courseToCourseDTO(course);
@@ -722,6 +805,11 @@ public class CourseService {
             if (course.getInstructor() != null && course.getInstructor().getPhoto() != null) {
                 dto.getInstructorInfo().setPhoto("http://localhost:8080/uploads/instructor/" + course.getInstructor().getPhoto());
             }
+            dto.setTotalSections(courseRepository.countTotalSections(course.getId()));
+            dto.setTotalLectures(courseRepository.countTotalLectures(course.getId()));
+            dto.setTotalArticles(courseRepository.countTotalArticles(course.getId()));
+            dto.setTotalQuestions(courseRepository.countTotalQuestions(course.getId()));
+            dto.setTotalPurchasedStudents(courseRepository.countTotalPurchasedStudents(course.getId()));
 
             return dto;
         });

@@ -25,9 +25,6 @@ public class InstructorController {
     private TestService testService;
 
     @Autowired
-    private QuestionService questionService;
-
-    @Autowired
     private SecurityUtils securityUtils;
 
     @GetMapping
@@ -43,7 +40,7 @@ public class InstructorController {
     }
 
     @PostMapping
-    public ResponseEntity<InstructorDTO> createInstructor(@RequestBody InstructorDTO instructorDTO) {
+    public ResponseEntity<InstructorDTO> registerInstructor(@RequestBody InstructorDTO  instructorDTO ) {
         InstructorDTO createdInstructor = instructorService.createInstructor(instructorDTO);
         return new ResponseEntity<>(createdInstructor, HttpStatus.CREATED);
     }

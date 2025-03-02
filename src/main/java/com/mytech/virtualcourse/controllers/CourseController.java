@@ -42,6 +42,16 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<List<CourseDTO>> getAllCoursesByStatus(
+            @RequestParam(required = false) String platform,
+            @RequestParam(required = false, defaultValue = "PUBLISHED") String status) {
+
+        List<CourseDTO> courses = courseService.getAllCoursesByStatus(platform, status);
+        return ResponseEntity.ok(courses);
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<CourseDTO> getCourseById(@PathVariable Long id) {
         CourseDTO course = courseService.getCourseById(id);
@@ -115,9 +125,10 @@ public class CourseController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "PUBLISHED") ECourseStatus status,
             @PageableDefault(size = 9) Pageable pageable) {
 
-        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, pageable);
+        Page<CourseDTO> courses = courseService.getFilteredCourses(categoryId, instructorId, minPrice, maxPrice, search, status, pageable);
         return ResponseEntity.ok(courses);
     }
 

@@ -17,4 +17,5 @@ public class CategoryDTO {
     private String description;
     private String image;
     private LocalDateTime createdAt;
+    private int totalCourses;
 }

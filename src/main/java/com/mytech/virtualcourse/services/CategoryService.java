@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.entities.Category;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CategoryMapper;
 import com.mytech.virtualcourse.repositories.CategoryRepository;
+import com.mytech.virtualcourse.repositories.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,9 @@ public class CategoryService {
     @Autowired
     private CategoryMapper categoryMapper;
 
+    @Autowired
+    private CourseRepository courseRepository;
+
     public List<CategoryDTO> getAllCategories(String platform) {
         List<Category> categories = categoryRepository.findAll();
 
@@ -36,6 +40,8 @@ public class CategoryService {
                     if (category.getImage() != null) {
                         dto.setImage(baseUrl + "/uploads/category/" + category.getImage());
                     }
+                    int totalCourses = courseRepository.countPublishedCoursesByCategoryId(category.getId());
+                    dto.setTotalCourses(totalCourses);
                     return dto;
                 })
                 .collect(Collectors.toList());

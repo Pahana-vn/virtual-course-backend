@@ -3,6 +3,7 @@ package com.mytech.virtualcourse.controllers;
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Account;
 import com.mytech.virtualcourse.mappers.JwtMapper;
+import com.mytech.virtualcourse.repositories.AccountRepository;
 import com.mytech.virtualcourse.security.CustomUserDetails;
 import com.mytech.virtualcourse.security.JwtUtil;
 import com.mytech.virtualcourse.services.AuthService;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,13 +43,19 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterDTO registerRequest) {
         return authService.registerUser(registerRequest);
     }
 
-
+    @PostMapping("instructor/register")
+    public ResponseEntity<?> registerInstructor(@RequestBody InstructorRegistrationDTO registrationDTO) {
+        return authService.registerInstructor(registrationDTO);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginRequest, HttpServletResponse response) {
@@ -105,6 +113,23 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{accountId}/student-avatar")
+    public ResponseEntity<Map<String, String>> getStudentAvatar(@PathVariable Long accountId) {
+        String avatarFileName = authService.getStudentAvatar(accountId);
+
+        if (avatarFileName == null || avatarFileName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Avatar not found"));
+        }
+
+        String avatarUrl = "http://localhost:8080/uploads/student/" + avatarFileName;
+
+        Map<String, String> response = new HashMap<>();
+        response.put("url", avatarUrl);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/validate-token")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
         try {
@@ -123,26 +148,15 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(@RequestHeader(value = "Authorization", required = false) String token) {
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(400).body("Missing or invalid Authorization header");
-        }
-        try {
-            String jwtToken = token.replace("Bearer ", "");
-            // Lấy email từ token
-            String email = jwtUtil.getEmailFromJwtToken(jwtToken);
-            Account user = authService.findByEmail(email);
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmailExists(@RequestParam String email) {
+        boolean exists = accountRepository.existsByEmail(email);
+        return ResponseEntity.ok(Collections.singletonMap("exists", exists));
+    }
 
-            if (user == null) {
-                throw new UsernameNotFoundException("User not found");
-            }
-
-            return ResponseEntity.ok(user);
-        }catch (ExpiredJwtException e) {
-            return ResponseEntity.status(401).body("Token has expired");
-        }catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid token or user not found");
-        }
+    @GetMapping("/check-username")
+    public ResponseEntity<?> checkUsernameExists(@RequestParam String username) {
+        boolean exists = accountRepository.existsByUsername(username);
+        return ResponseEntity.ok(Collections.singletonMap("exists", exists));
     }
 }
