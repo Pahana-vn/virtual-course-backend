@@ -17,9 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-
 import java.util.List;
-
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -55,6 +53,7 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of(
                             "http://localhost:3000",
+                            "http://localhost:3001",
                             "http://127.0.0.1:8080",
                             "http://10.0.2.2:8080",
                             "http://192.168.1.100:8080"
@@ -65,33 +64,46 @@ public class SecurityConfig {
                     return config;
                 }))
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Ensure stateless session
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Specific admin endpoints for course approval
+                        .requestMatchers("/api/admin/courses/*/approval-history").hasAnyRole("ADMIN", "INSTRUCTOR")
+                        .requestMatchers("/api/admin/courses/*/approve").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/courses/*/reject").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/courses/pending").hasAnyRole("ADMIN", "INSTRUCTOR")
+
+                        // Specific admin endpoints for instructor management
+                        .requestMatchers("/api/admin/instructors/pending").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/instructors/*/approve").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/instructors/*/reject").hasRole("ADMIN")
+
+                        // General admin endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Course endpoints
                         .requestMatchers("/api/courses/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
+                        .requestMatchers(HttpMethod.POST, "/api/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
+
+                        // Các quy tắc khác giữ nguyên
                         .requestMatchers("/api/categories/**").permitAll()
                         .requestMatchers("/api/files/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructors/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
-                        .requestMatchers("/api/students/**").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasRole("INSTRUCTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasRole("INSTRUCTOR")
+                        .requestMatchers("/api/students/**").hasRole("STUDENT")
                         .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/api/transactions/**").permitAll()
                         .requestMatchers("/api/tests/**").permitAll()
                         .requestMatchers("/swagger-ui/**","/swagger-resources/**","/v3/api-docs/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/statistics/**").permitAll()
+                        .requestMatchers("/api/statistics/trends/**").permitAll()
+                        .requestMatchers("/api/notifications/**").permitAll()
                         .anyRequest().authenticated()
                 )
-//                .oauth2Login(oauth2 -> oauth2
-//                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-//                        .successHandler(oAuth2AuthenticationSuccessHandler)
-//                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
