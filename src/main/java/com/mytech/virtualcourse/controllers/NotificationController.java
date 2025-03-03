@@ -27,14 +27,15 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.createNotification(dto));
     }
 
+    // Trong NotificationController.java
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<NotificationDTO>> getAllNotifications() {
-        return ResponseEntity.ok(notificationService.getAllNotifications());
+        List<NotificationDTO> notifications = notificationService.getAllNotifications();
+        return ResponseEntity.ok(notifications);
     }
 
     @GetMapping("/all/paginated")
-    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<Page<NotificationDTO>> getAllNotificationsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -82,8 +83,12 @@ public class NotificationController {
     @PutMapping("/user/{userId}/type/{type}/mark-all-read")
     public ResponseEntity<Integer> markAllAsReadForUserByType(
             @PathVariable Long userId,
-            @PathVariable NotificationType type) {
-        int count = notificationService.markAllAsReadForUserByType(userId, type);
+            @PathVariable String type) { // Thay đổi từ NotificationType sang String
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        int count = notificationService.markAllAsReadForUserByType(userId, notificationType);
         return ResponseEntity.ok(count);
     }
 
@@ -120,9 +125,14 @@ public class NotificationController {
     @GetMapping("/user/{userId}/type/{type}/count")
     public ResponseEntity<Long> countNotificationsByType(
             @PathVariable Long userId,
-            @PathVariable NotificationType type) {
-        return ResponseEntity.ok(notificationService.countNotificationsByType(userId, type));
+            @PathVariable String type) { // Thay đổi từ NotificationType sang String
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        return ResponseEntity.ok(notificationService.countNotificationsByType(userId, notificationType));
     }
+
 
     @GetMapping("/user/{userId}/recent")
     public ResponseEntity<List<NotificationDTO>> getRecentNotificationsByUser(@PathVariable Long userId) {
@@ -138,32 +148,50 @@ public class NotificationController {
     }
 
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<NotificationDTO>> getNotificationsByType(@PathVariable NotificationType type) {
-        return ResponseEntity.ok(notificationService.getNotificationsByType(type));
+    public ResponseEntity<List<NotificationDTO>> getNotificationsByType(
+            @PathVariable String type) { // Thay đổi từ NotificationType sang String
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        return ResponseEntity.ok(notificationService.getNotificationsByType(notificationType));
     }
 
     @GetMapping("/type/{type}/paginated")
     public ResponseEntity<Page<NotificationDTO>> getNotificationsByTypePaginated(
-            @PathVariable NotificationType type,
+            @PathVariable String type, // Thay đổi từ NotificationType sang String
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(notificationService.getNotificationsByTypePaginated(type, page, size));
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        return ResponseEntity.ok(notificationService.getNotificationsByTypePaginated(notificationType, page, size));
     }
 
     @GetMapping("/user/{userId}/type/{type}")
     public ResponseEntity<List<NotificationDTO>> getNotificationsByUserAndType(
             @PathVariable Long userId,
-            @PathVariable NotificationType type) {
-        return ResponseEntity.ok(notificationService.getNotificationsByUserAndType(userId, type));
+            @PathVariable String type) { // Thay đổi từ NotificationType sang String
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        return ResponseEntity.ok(notificationService.getNotificationsByUserAndType(userId, notificationType));
     }
+
 
     @GetMapping("/user/{userId}/type/{type}/paginated")
     public ResponseEntity<Page<NotificationDTO>> getNotificationsByUserAndTypePaginated(
             @PathVariable Long userId,
-            @PathVariable NotificationType type,
+            @PathVariable String type, // Thay đổi từ NotificationType sang String
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(notificationService.getNotificationsByUserAndTypePaginated(userId, type, page, size));
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        return ResponseEntity.ok(notificationService.getNotificationsByUserAndTypePaginated(userId, notificationType, page, size));
     }
 
     @GetMapping("/payment/{paymentId}")
@@ -216,7 +244,7 @@ public class NotificationController {
     public ResponseEntity<NotificationDTO> sendNotification(
             @RequestParam Long userId,
             @RequestParam String content,
-            @RequestParam NotificationType type,
+            @RequestParam String type, // Thay đổi từ NotificationType sang String
             @RequestParam(required = false) Long courseId,
             @RequestParam(required = false) Long paymentId) {
 
@@ -227,56 +255,64 @@ public class NotificationController {
         System.out.println("courseId: " + courseId);
         System.out.println("paymentId: " + paymentId);
 
-        NotificationDTO notification = notificationService.sendNotification(userId, content, type, courseId, paymentId);
-        System.out.println("Notification created with ID: " + notification.getId());
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
 
+        NotificationDTO notification = notificationService.sendNotification(userId, content, notificationType, courseId, paymentId);
+        System.out.println("Notification created with ID: " + notification.getId());
         return ResponseEntity.ok(notification);
     }
-
     @PostMapping("/send-multiple")
     public ResponseEntity<Integer> sendNotificationToMultipleUsers(
             @RequestParam List<Long> userIds,
             @RequestParam String content,
-            @RequestParam NotificationType type,
+            @RequestParam String type, // Thay đổi từ NotificationType sang String
             @RequestParam(required = false) Long courseId,
             @RequestParam(required = false) Long paymentId) {
-        int count = notificationService.sendNotificationToMultipleUsers(userIds, content, type, courseId, paymentId);
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        int count = notificationService.sendNotificationToMultipleUsers(userIds, content, notificationType, courseId, paymentId);
         return ResponseEntity.ok(count);
     }
 
     @PostMapping("/send-all")
     public ResponseEntity<Integer> sendNotificationToAllUsers(
             @RequestParam String content,
-            @RequestParam NotificationType type) {
-        int count = notificationService.sendNotificationToAllUsers(content, type);
+            @RequestParam String type) { // Thay đổi từ NotificationType sang String
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        int count = notificationService.sendNotificationToAllUsers(content, notificationType);
         return ResponseEntity.ok(count);
     }
-
-//    @PostMapping("/send-course-enrollees")
-//    public ResponseEntity<Integer> sendNotificationToCourseEnrollees(
-//            @RequestParam Long courseId,
-//            @RequestParam String content,
-//            @RequestParam NotificationType type) {
-//        int count = notificationService.sendNotificationToCourseEnrollees(courseId, content, type);
-//        return ResponseEntity.ok(count);
-//    }
 
     @PostMapping("/schedule")
     public ResponseEntity<Void> scheduleNotification(
             @RequestParam Long userId,
             @RequestParam String content,
-            @RequestParam NotificationType type,
+            @RequestParam String type, // Thay đổi từ NotificationType sang String
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime scheduledTime,
             @RequestParam(required = false) Long courseId,
             @RequestParam(required = false) Long paymentId) {
-        notificationService.scheduleNotification(userId, content, type, scheduledTime, courseId, paymentId);
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        notificationService.scheduleNotification(userId, content, notificationType, scheduledTime, courseId, paymentId);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
-//    @GetMapping("/admin/type/{type}")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<List<NotificationDTO>> getNotificationsByTypeForAdmin(@PathVariable NotificationType type) {
-//        return ResponseEntity.ok(notificationService.getNotificationsByTypeForAdmin(type));
-//    }
+    @GetMapping("/admin/type/{type}")
+    public ResponseEntity<List<NotificationDTO>> getNotificationsByTypeForAdmin(
+            @PathVariable String type) { // Thay đổi từ NotificationType sang String
+
+        // Chuyển đổi từ String sang NotificationType
+        NotificationType notificationType = NotificationType.fromString(type);
+
+        return ResponseEntity.ok(notificationService.getNotificationsByTypeForAdmin(notificationType));
+    }
 
 }

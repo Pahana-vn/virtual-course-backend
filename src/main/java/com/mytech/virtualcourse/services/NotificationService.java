@@ -535,9 +535,11 @@ public class NotificationService {
         return notificationsPage.map(notificationMapper::toDTO);
     }
 
-//    public List<NotificationDTO> getNotificationsByTypeForAdmin(NotificationType type) {
-//        return notificationRepository.findByType(type).stream()
-//                .map(notificationMapper::toDTO)
-//                .collect(Collectors.toList());
-//    }
+    public List<NotificationDTO> getNotificationsByTypeForAdmin(NotificationType type) {
+        // Sửa lại phương thức này để đảm bảo repository trả về List<Notification>
+        List<Notification> notifications = notificationRepository.findByTypeOrderBySentAtDesc(type);
+        return notifications.stream()
+                .map(notificationMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

@@ -100,5 +100,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query(value = "SELECT * FROM notification n WHERE n.user_id = :userId AND n.sent_at BETWEEN :startDate AND :endDate ORDER BY n.sent_at DESC", nativeQuery = true)
     List<Notification> findByUserIdAndDateRange(@Param("userId") Long userId, @Param("startDate") String startDate, @Param("endDate") String endDate);
 
-    Collection<Object> findByType(NotificationType type);
+    List<Notification> findByType(NotificationType type);
 }
