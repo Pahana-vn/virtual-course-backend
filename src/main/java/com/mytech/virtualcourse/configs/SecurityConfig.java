@@ -82,6 +82,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/instructors/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
+                        .requestMatchers("/api/curriculums/**").permitAll()
                         .requestMatchers("/api/sections/**").permitAll()
                         .requestMatchers("/api/students/**").permitAll()
                         .requestMatchers("/api/payment/**").permitAll()
