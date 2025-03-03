@@ -27,4 +27,8 @@ public interface TestRepository extends JpaRepository<Test, Long> {
             @Param("instructorId") Long instructorId,
             @Param("status") StatusTest status,
             Pageable pageable);
+
+    @Query("SELECT t FROM Test t WHERE t.instructor.id = :instructorId AND t.course.id = :courseId")
+    List<Test> findByInstructorIdAndCourseId(@Param("instructorId") Long instructorId, @Param("courseId") Long courseId);
+
 }

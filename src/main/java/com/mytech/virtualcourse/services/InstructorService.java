@@ -76,6 +76,9 @@ public class InstructorService {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private PaymentRepository  paymentRepository;
+
     public List<InstructorDTO> getAllInstructors(String platform) {
         List<Instructor> instructors = instructorRepository.findAll();
 

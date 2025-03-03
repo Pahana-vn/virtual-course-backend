@@ -88,126 +88,7 @@ public class WalletService {
         return WalletMapper.INSTANCE.toWalletBalanceDTO(wallet);
     }
 
-    @Transactional
-    public Wallet createWalletForInstructor(Instructor instructor) {
-        logger.info("Creating wallet for instructor ID: {}", instructor.getId());
 
-        // Kiểm tra xem instructor đã có ví chưa
-        if (instructor.getWallet() != null) {
-            logger.info("Wallet already exists for instructor ID: {}", instructor.getId());
-            return instructor.getWallet();
-        }
-
-        // Tạo ví mới
-        Wallet wallet = new Wallet();
-        wallet.setBalance(BigDecimal.ZERO);
-        wallet.setStatusWallet(StatusWallet.ACTIVE);
-        wallet.setMaxLimit(new BigDecimal("10000.00")); // Giới hạn mặc định
-        wallet.setLastUpdated(new Timestamp(System.currentTimeMillis()));
-        wallet.setInstructor(instructor);
-
-        // Lưu ví và cập nhật instructor
-        Wallet savedWallet = walletRepository.save(wallet);
-        instructor.setWallet(savedWallet);
-        instructorRepository.save(instructor);
-
-        logger.info("Wallet created successfully for instructor ID: {}, wallet ID: {}",
-                instructor.getId(), savedWallet.getId());
-        return savedWallet;
-    }
-
-    /**
-     * Lấy thông tin ví của instructor
-     *
-     * @param instructorId ID của instructor
-     * @return Đối tượng Wallet
-     * @throws ResourceNotFoundException Nếu không tìm thấy ví
-     */
-    public Wallet getInstructorWallet(Long instructorId) {
-        logger.debug("Getting wallet for instructor ID: {}", instructorId);
-
-        Instructor instructor = instructorRepository.findById(instructorId)
-                .orElseThrow(() -> {
-                    logger.error("Instructor not found with ID: {}", instructorId);
-                    return new ResourceNotFoundException("Instructor not found with id: " + instructorId);
-                });
-
-        if (instructor.getWallet() == null) {
-            logger.error("Wallet not found for instructor ID: {}", instructorId);
-            throw new ResourceNotFoundException("Wallet not found for instructor with id: " + instructorId);
-        }
-
-        return instructor.getWallet();
-    }
-
-    /**
-     * Cập nhật số dư ví
-     *
-     * @param walletId ID của ví
-     * @param amount Số tiền thay đổi
-     * @param isCredit true nếu là nạp tiền, false nếu là trừ tiền
-     * @return Đối tượng Wallet đã cập nhật
-     * @throws ResourceNotFoundException Nếu không tìm thấy ví
-     * @throws InsufficientBalanceException Nếu số dư không đủ khi rút tiền
-     */
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public Wallet updateBalance(Long walletId, BigDecimal amount, boolean isCredit) {
-        logger.info("Updating balance for wallet ID: {}, amount: {}, isCredit: {}",
-                walletId, amount, isCredit);
-
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
-        }
-
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> {
-                    logger.error("Wallet not found with ID: {}", walletId);
-                    return new ResourceNotFoundException("Wallet not found with id: " + walletId);
-                });
-
-        // Kiểm tra trạng thái ví
-        if (wallet.getStatusWallet() != StatusWallet.ACTIVE) {
-            logger.error("Cannot update balance for wallet ID: {} with status: {}",
-                    walletId, wallet.getStatusWallet());
-            throw new WalletOperationException("Wallet is not active");
-        }
-
-        BigDecimal newBalance;
-        if (isCredit) {
-            // Thêm tiền vào ví
-            newBalance = wallet.getBalance().add(amount);
-
-            // Kiểm tra giới hạn tối đa
-            if (wallet.getMaxLimit() != null && newBalance.compareTo(wallet.getMaxLimit()) > 0) {
-                logger.warn("New balance exceeds max limit for wallet ID: {}", walletId);
-                throw new WalletOperationException("Transaction would exceed wallet maximum limit");
-            }
-        } else {
-            // Trừ tiền từ ví
-            if (wallet.getBalance().compareTo(amount) < 0) {
-                logger.error("Insufficient balance for wallet ID: {}", walletId);
-                throw new InsufficientBalanceException("Insufficient balance");
-            }
-            newBalance = wallet.getBalance().subtract(amount);
-        }
-
-        wallet.setBalance(newBalance);
-        wallet.setLastUpdated(new Timestamp(System.currentTimeMillis()));
-        Wallet updatedWallet = walletRepository.save(wallet);
-
-        logger.info("Balance updated successfully for wallet ID: {}, new balance: {}",
-                walletId, newBalance);
-        return updatedWallet;
-    }
-
-    /**
-     * Cập nhật trạng thái ví
-     *
-     * @param walletId ID của ví
-     * @param status Trạng thái mới
-     * @return Đối tượng Wallet đã cập nhật
-     * @throws ResourceNotFoundException Nếu không tìm thấy ví
-     */
     @Transactional
     public Wallet updateWalletStatus(Long walletId, StatusWallet status) {
         logger.info("Updating status for wallet ID: {} to {}", walletId, status);
@@ -310,7 +191,7 @@ public class WalletService {
                 BigDecimal newBalance = wallet.getBalance().add(transaction.getAmount());
 
                 // Kiểm tra giới hạn tối đa
-                if (wallet.getMaxLimit() != null && newBalance.compareTo(wallet.getMaxLimit()) > 0) {
+                if (wallet.getMinLimit() != null && newBalance.compareTo(wallet.getMinLimit()) > 0) {
                     logger.warn("Transaction would exceed wallet maximum limit");
                     transaction.setStatusTransaction(StatusTransaction.FAILED);
                     return transactionRepository.save(transaction);
