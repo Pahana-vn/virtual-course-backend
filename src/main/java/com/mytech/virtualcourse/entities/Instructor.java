@@ -21,7 +21,6 @@ public class Instructor extends AbstractEntity {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Gender gender;
 
     private String address;

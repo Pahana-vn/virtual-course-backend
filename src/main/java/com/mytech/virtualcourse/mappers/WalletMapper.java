@@ -1,5 +1,6 @@
 package com.mytech.virtualcourse.mappers;
 
+import com.mytech.virtualcourse.dtos.WalletBalanceDTO;
 import com.mytech.virtualcourse.dtos.WalletDTO;
 import com.mytech.virtualcourse.entities.Wallet;
 import org.mapstruct.Mapper;
@@ -23,7 +24,9 @@ public interface WalletMapper {
     @Mapping(source = "lastUpdated", target = "lastUpdated", qualifiedByName = "timestampToLocalDateTime")
     WalletDTO walletToWalletDTO(Wallet wallet);
 
-    @Mapping(target = "instructor", ignore = true) // Liên kết được xử lý trong service
+    WalletBalanceDTO toWalletBalanceDTO(Wallet wallet);
+
+    @Mapping(target = "instructor", ignore = true)
     @Mapping(source = "lastUpdated", target = "lastUpdated", qualifiedByName = "localDateTimeToTimestamp")
     Wallet walletDTOToWallet(WalletDTO walletDTO);
 

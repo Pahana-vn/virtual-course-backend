@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -40,4 +41,11 @@ public class CourseDTO {
     private InstructorInfo instructorInfo;
     private List<SectionDTO> sections;
     private List<QuestionDTO> questions;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private int TotalSections;
+    private int TotalQuestions;
+    private int TotalLectures;
+    private int TotalArticles;
+    private int TotalPurchasedStudents;
 }

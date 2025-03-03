@@ -28,6 +28,11 @@ public interface CourseMapper {
     @Mapping(target = "instructorLastName", source = "instructor.lastName")
     @Mapping(target = "instructorPhoto", expression = "java(course.getInstructor() != null && course.getInstructor().getPhoto() != null ? \"http://localhost:8080/uploads/instructor/\" + course.getInstructor().getPhoto() : null)")
     @Mapping(target = "imageCover", expression = "java(course.getImageCover() != null ? \"http://localhost:8080/uploads/course/\" + course.getImageCover() : null)")
+    @Mapping(target = "totalSections", ignore = true)
+    @Mapping(target = "totalLectures", ignore = true)
+    @Mapping(target = "totalArticles", ignore = true)
+    @Mapping(target = "totalQuestions", ignore = true)
+    @Mapping(target = "totalPurchasedStudents", ignore = true)
     CourseDTO courseToCourseDTO(Course course);
 
     @Mapping(target = "categoryName", source = "category.name")

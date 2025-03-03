@@ -1,25 +1,27 @@
+// src/main/java/com/mytech/virtualcourse/dtos/TransactionDTO.java
+
 package com.mytech.virtualcourse.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.mytech.virtualcourse.enums.*;
+import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class TransactionDTO {
     private Long id;
-    private Long walletId;
     private BigDecimal amount;
-    private String transactionType;
-    private String description;
-    private String referenceId;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String title;
+    private TransactionType transactionType;
+    private StatusTransaction statusTransaction;
+    private PaymentMethod paymentMethod;
+    private String paypalPayoutId;
+    private Timestamp processedAt;
+    private Long walletId;
+    private BigDecimal walletBalance;
 }

@@ -29,4 +29,5 @@ public class InstructorDTO {
     private String workplace;
     private String accountUsername;
     private String accountEmail;
+    private int totalCourses;
 }

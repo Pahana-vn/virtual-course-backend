@@ -5,6 +5,7 @@ import com.mytech.virtualcourse.entities.Category;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
 import com.mytech.virtualcourse.mappers.CategoryMapper;
 import com.mytech.virtualcourse.repositories.CategoryRepository;
+import com.mytech.virtualcourse.repositories.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +23,27 @@ public class CategoryService {
     @Autowired
     private CategoryMapper categoryMapper;
 
-    public List<CategoryDTO> getAllCategories() {
+    @Autowired
+    private CourseRepository courseRepository;
+
+    public List<CategoryDTO> getAllCategories(String platform) {
         List<Category> categories = categoryRepository.findAll();
+
+        String baseUrl = (platform != null && platform.equals("flutter"))
+                ? "http://10.0.2.2:8080"
+                : "http://localhost:8080";
+
         return categories.stream()
-                .map(categoryMapper::categoryToCategoryDTO)
+                .map(category -> {
+                    CategoryDTO dto = categoryMapper.categoryToCategoryDTO(category);
+                    // Cập nhật đường dẫn ảnh cho Flutter
+                    if (category.getImage() != null) {
+                        dto.setImage(baseUrl + "/uploads/category/" + category.getImage());
+                    }
+                    int totalCourses = courseRepository.countPublishedCoursesByCategoryId(category.getId());
+                    dto.setTotalCourses(totalCourses);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

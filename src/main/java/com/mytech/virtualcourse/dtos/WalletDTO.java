@@ -1,25 +1,20 @@
 package com.mytech.virtualcourse.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.mytech.virtualcourse.enums.StatusWallet;
+import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class WalletDTO {
-    private Long id;
-    private Long instructorId;
-//    private Long studentId;
-    private BigDecimal balance;
-    private BigDecimal maxLimit;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private LocalDateTime lastUpdated;
+    private Long id; // ID của Wallet
+    private BigDecimal balance; // Số dư
+    private StatusWallet statusWallet; // Trạng thái ví (ACTIVE, SUSPENDED, CLOSED)
+    private BigDecimal minLimit; // Giới hạn tối đa của ví
+    private Timestamp lastUpdated; // Thời gian cập nhật cuối cùng
+    private Long instructorId; // ID của Instructor (nếu ví thuộc về giảng viên)
 }

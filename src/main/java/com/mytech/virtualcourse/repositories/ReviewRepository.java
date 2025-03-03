@@ -3,6 +3,7 @@
 package com.mytech.virtualcourse.repositories;
 
 import com.mytech.virtualcourse.entities.Review;
+import com.mytech.virtualcourse.entities.Student;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

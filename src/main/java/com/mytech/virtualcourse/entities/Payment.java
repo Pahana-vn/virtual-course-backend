@@ -48,10 +48,6 @@ public class Payment extends AbstractEntity {
     @JsonIgnoreProperties("payments")
     private List<Course> courses;
 
-
-    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions;
-
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;
 }

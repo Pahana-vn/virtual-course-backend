@@ -62,8 +62,8 @@ public class PaymentService {
     private JwtUtil jwtUtil;
 
     // -------------------- PAYPAL -------------------------
-    public String initiatePaypalPayment(Long courseId, HttpServletRequest request) throws Exception {
-        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+    public String initiatePaypalPayment(Long courseId, String platform, HttpServletRequest request) throws Exception {
+        Long studentId = getStudentIdFromRequest(request);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
@@ -75,6 +75,7 @@ public class PaymentService {
             throw new RuntimeException("Course price not found");
         }
 
+        // Tạo Payment Pending
         Payment dbPayment = new Payment();
         dbPayment.setAmount(amount);
         dbPayment.setPaymentDate(Timestamp.from(Instant.now()));
@@ -88,8 +89,17 @@ public class PaymentService {
 
         dbPayment = paymentRepository.save(dbPayment);
 
-        String cancelUrl = "http://localhost:3000/cancel";
-        String successUrl = "http://localhost:3000/success";
+        // -- Thêm logic chọn domain tuỳ platform --
+        String domain;
+        if ("flutter".equalsIgnoreCase(platform)) {
+            // Nếu gọi từ Flutter emulator → dùng 10.0.2.2:3000
+            domain = "http://10.0.2.2:3000";
+        } else {
+            // Mặc định Web → localhost:3000
+            domain = "http://localhost:3000";
+        }
+        String cancelUrl = domain + "/fail";
+        String successUrl = domain + "/success";
 
         com.paypal.api.payments.Payment createdPayment = createPayPalPayment(
                 amount,
@@ -111,6 +121,7 @@ public class PaymentService {
         }
         throw new RuntimeException("No approval URL returned by PayPal");
     }
+
 
 
     public String initiatePaypalPaymentForMultipleCourses(List<Long> courseIds, HttpServletRequest request) throws Exception {
@@ -294,7 +305,6 @@ public class PaymentService {
         String paymentUrl = createVnpayPaymentUrl(dbPayment);
         return paymentUrl;
     }
-
 
     public String initiateVnPayPaymentForMultipleCourses(List<Long> courseIds, HttpServletRequest request) throws Exception {
         Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT

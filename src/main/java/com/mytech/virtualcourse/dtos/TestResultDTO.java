@@ -9,7 +9,9 @@ import lombok.*;
 @ToString
 public class TestResultDTO {
     private Long testId;
-    private Long studentId;
+    private String testTitle;
+    private String studentLastname;
+    private String studentFirstname;
     private Integer marksObtained;
     private Double percentage;
     private Boolean passed;

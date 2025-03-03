@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://10.0.2.2:8080"}, allowCredentials = "true")
 public class StudentController {
 
     @Autowired
@@ -57,6 +57,12 @@ public class StudentController {
         return ResponseEntity.ok(student);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
+        StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
+        return ResponseEntity.ok(updatedStudent);
+    }
 
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/by-account/{accountId}")
@@ -72,18 +78,10 @@ public class StudentController {
         return ResponseEntity.ok(dashboard);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @PostMapping
     public ResponseEntity<StudentDTO> createStudent(@RequestBody StudentDTO studentDTO) {
         StudentDTO createdStudent = studentService.createStudent(studentDTO);
         return new ResponseEntity<>(createdStudent, HttpStatus.CREATED);
-    }
-
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
-    @PutMapping("/{id}")
-    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody StudentDTO studentDTO) {
-        StudentDTO updatedStudent = studentService.updateStudent(id, studentDTO);
-        return ResponseEntity.ok(updatedStudent);
     }
 
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
@@ -103,10 +101,14 @@ public class StudentController {
 
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/wishlist")
-    public ResponseEntity<List<CourseDTO>> getWishlist(@PathVariable Long studentId) {
-        List<CourseDTO> wishlist = studentService.getWishlist(studentId);
+    public ResponseEntity<List<CourseDTO>> getWishlist(
+            @PathVariable Long studentId,
+            @RequestParam(required = false) String platform) {
+
+        List<CourseDTO> wishlist = studentService.getWishlist(studentId, platform);
         return ResponseEntity.ok(wishlist);
     }
+
 
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{studentId}/wishlist/{courseId}")
@@ -127,7 +129,6 @@ public class StudentController {
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/cart-items")
     public ResponseEntity<?> getCartItems(@PathVariable Long studentId) {
-        // 🛠 Kiểm tra nếu studentId = null hoặc <= 0
         if (studentId == null || studentId <= 0) {
             return ResponseEntity.badRequest().body("Invalid studentId");
         }
@@ -149,7 +150,6 @@ public class StudentController {
                 .collect(Collectors.toList()));
     }
 
-
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @DeleteMapping("/{studentId}/cart-items/{cartItemId}")
     public ResponseEntity<String> removeFromCart(@PathVariable Long studentId, @PathVariable Long cartItemId) {
@@ -158,36 +158,49 @@ public class StudentController {
     }
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/student-courses-status/{studentId}")
-    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCoursesWithProgress(@PathVariable Long studentId) {
-        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId);
+    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCoursesWithProgress(
+            @PathVariable Long studentId,
+            @RequestParam(required = false) String platform) {
+
+        Map<String, List<CourseDTO>> courses = studentService.getStudentCourses(studentId, platform);
         return ResponseEntity.ok(courses);
     }
 
-    @GetMapping("/{id}/avatar")
-    public ResponseEntity<Map<String, String>> getStudentAvatar(@PathVariable Long id) {
-        String avatarFileName = studentService.getStudentAvatar(id);
-
-        if (avatarFileName == null || avatarFileName.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Avatar not found"));
-        }
-
-        String avatarUrl = "http://localhost:8080/uploads/student/" + avatarFileName;
-
-        // Trả về đối tượng JSON chứa URL
-        Map<String, String> response = new HashMap<>();
-        response.put("url", avatarUrl);
-
-        return ResponseEntity.ok(response);
-    }
-
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/{studentId}/quiz-results")
     public List<StudentQuizResultDTO> getStudentQuizResults(@PathVariable Long studentId) {
         return studentService.getStudentQuizResults(studentId);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/quiz-details/{quizId}")
     public StudentQuizDetailDTO getQuizDetails(@PathVariable Long quizId) {
         return studentService.getQuizDetails(quizId);
     }
+
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PutMapping("/{studentId}/change-password-student")
+    public ResponseEntity<?> changePasswordStudent(
+            @PathVariable Long studentId,
+            @RequestBody ChangePasswordStudentDTO changePasswordDTO) {
+        try {
+            studentService.changePassword(studentId, changePasswordDTO);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+//    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+//    @GetMapping("/student-courses/{studentId}")
+//    public ResponseEntity<Map<String, List<CourseDTO>>> getStudentPurchasedCourses(@PathVariable Long studentId) {
+//        if (studentId == null || studentId <= 0) {
+//            return ResponseEntity.badRequest().body(Collections.emptyMap());
+//        }
+//        System.out.println("Received request for student ID: " + studentId);
+//        Map<String, List<CourseDTO>> courses = studentService.getStudentPurchasedCourses(studentId);
+//        return ResponseEntity.ok(courses);
+//    }
+
+
 }

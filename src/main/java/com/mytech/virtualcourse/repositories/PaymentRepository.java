@@ -1,6 +1,7 @@
 package com.mytech.virtualcourse.repositories;
 
 import com.mytech.virtualcourse.entities.Payment;
+import com.mytech.virtualcourse.entities.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -40,8 +40,8 @@ public class Account extends AbstractEntity {
     @Column(name = "reset_password_token_expiry")
     private LocalDateTime resetPasswordTokenExpiry;
 
-    @Column(nullable = false)
-    private Integer version;
+    @Version
+    private Integer version = 0;
 
     @Column(name = "authentication_type", nullable = false)
     @Enumerated(EnumType.STRING)

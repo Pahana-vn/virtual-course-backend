@@ -18,17 +18,17 @@ public interface InstructorRepository extends JpaRepository<Instructor, Long> {
     boolean existsInstructorByAccountId(Long accountId);
 
     @Query("SELECT COUNT(c) FROM Course c WHERE c.instructor.id = :instructorId")
-    Long countCoursesByInstructorId(@Param("instructorId") Long instructorId);
+    int countCoursesByInstructorId(@Param("instructorId") Long instructorId);
 
     @Query("SELECT COUNT(c) FROM Course c WHERE c.instructor.id = :instructorId AND c.status = 'PUBLISHED'")
-    Long countPublishedCoursesByInstructorId(@Param("instructorId") Long instructorId);
+    int countPublishedCoursesByInstructorId(@Param("instructorId") Long instructorId);
 
     @Query("SELECT COUNT(c) FROM Course c WHERE c.instructor.id = :instructorId AND c.status = 'PENDING'")
-    Long countPendingCoursesByInstructorId(@Param("instructorId") Long instructorId);
+    int countPendingCoursesByInstructorId(@Param("instructorId") Long instructorId);
 
 
     @Query("SELECT COUNT(DISTINCT s.id) FROM Course c JOIN c.students s WHERE c.instructor.id = :instructorId")
-    Long countStudentsInInstructorCourses(@Param("instructorId") Long instructorId);
+    int countStudentsInInstructorCourses(@Param("instructorId") Long instructorId);
 
     @Query("SELECT COALESCE(AVG(r.rating), 0) FROM Review r JOIN r.course c WHERE c.instructor.id = :instructorId")
     double calculateAverageRatingByInstructorId(@Param("instructorId") Long instructorId);

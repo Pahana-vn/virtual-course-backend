@@ -3,14 +3,14 @@ package com.mytech.virtualcourse.controllers;
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.security.SecurityUtils;
 import com.mytech.virtualcourse.services.InstructorService;
+import com.mytech.virtualcourse.services.QuestionService;
+import com.mytech.virtualcourse.services.TestService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,11 +25,17 @@ public class InstructorController {
     private InstructorService instructorService;
 
     @Autowired
+    private TestService testService;
+
+    @Autowired
+    private QuestionService questionService;
+
+    @Autowired
     private SecurityUtils securityUtils;
 
     @GetMapping
-    public ResponseEntity<List<InstructorDTO>> getAllInstructors() {
-        List<InstructorDTO> instructors = instructorService.getAllInstructors();
+    public ResponseEntity<List<InstructorDTO>> getAllInstructors(@RequestParam(required = false) String platform) {
+        List<InstructorDTO> instructors = instructorService.getAllInstructors(platform);
         return ResponseEntity.ok(instructors);
     }
 
@@ -40,7 +46,7 @@ public class InstructorController {
     }
 
     @PostMapping
-    public ResponseEntity<InstructorDTO> createInstructor(@RequestBody InstructorDTO instructorDTO) {
+    public ResponseEntity<InstructorDTO> registerInstructor(@RequestBody InstructorDTO  instructorDTO ) {
         InstructorDTO createdInstructor = instructorService.createInstructor(instructorDTO);
         return new ResponseEntity<>(createdInstructor, HttpStatus.CREATED);
     }
@@ -59,6 +65,12 @@ public class InstructorController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{id}/courses/{courseId}/tests")
+    public ResponseEntity<List<TestDTO>> getCourseTestsById(@PathVariable Long id, @PathVariable Long courseId) {
+        List<TestDTO> tests = testService.getTestsByInstructorIdAndCourseId(id, courseId);
+        return ResponseEntity.ok(tests);
+    }
+
     @GetMapping("/{id}/instructor-details")
     public ResponseEntity<InstructorDetailsDTO> getInstructorDetails(@PathVariable Long id) {
         InstructorDetailsDTO instructorDetails = instructorService.getInstructorDetails(id);
@@ -74,6 +86,12 @@ public class InstructorController {
     public ResponseEntity<InstructorProfileDTO> getInstructorProfile(@PathVariable Long id) {
         InstructorProfileDTO profileDTO = instructorService.getProfileByInstructorId(id);
         return ResponseEntity.ok(profileDTO);
+    }
+
+    @PutMapping("/{id}/instructor-profile")
+    public ResponseEntity<InstructorProfileDTO> updateInstructorProfile(@PathVariable Long id, @RequestBody InstructorProfileDTO profileDTO) {
+        InstructorProfileDTO updatedProfile = instructorService.updateProfileByInstructorId(id, profileDTO);
+        return ResponseEntity.ok(updatedProfile);
     }
 
     // Cập nhật thông tin hồ sơ của giảng viên đã đăng nhập

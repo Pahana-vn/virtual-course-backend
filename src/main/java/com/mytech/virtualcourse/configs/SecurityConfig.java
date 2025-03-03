@@ -17,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
 import java.util.List;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -54,6 +56,7 @@ public class SecurityConfig {
                     config.setAllowedOrigins(List.of(
                             "http://localhost:3000",
                             "http://localhost:3001",
+                            "http://10.0.2.2:3000",
                             "http://127.0.0.1:8080",
                             "http://10.0.2.2:8080",
                             "http://192.168.1.100:8080"
@@ -64,7 +67,9 @@ public class SecurityConfig {
                     return config;
                 }))
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Ensure stateless session
+                )
                 .authorizeHttpRequests(auth -> auth
                         // Specific admin endpoints for course approval
                         .requestMatchers("/api/admin/courses/*/approval-history").hasAnyRole("ADMIN", "INSTRUCTOR")
@@ -82,28 +87,37 @@ public class SecurityConfig {
 
                         // Course endpoints
                         .requestMatchers("/api/courses/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAnyRole("INSTRUCTOR", "ADMIN")
-
-                        // Các quy tắc khác giữ nguyên
+                        .requestMatchers(HttpMethod.POST, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
                         .requestMatchers("/api/categories/**").permitAll()
                         .requestMatchers("/api/files/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructors/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasRole("INSTRUCTOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasRole("INSTRUCTOR")
-                        .requestMatchers("/api/students/**").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
+                        .requestMatchers("/api/sections/**").permitAll()
+                        .requestMatchers("/api/students/**").permitAll()
                         .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/api/transactions/**").permitAll()
+                        .requestMatchers("/api/wallet/**").permitAll()
+                        .requestMatchers("/api/instructor-transaction/**").permitAll()
                         .requestMatchers("/api/tests/**").permitAll()
+                        .requestMatchers("/api/questions/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
+                        .requestMatchers("/ws-chat/**").permitAll()
                         .requestMatchers("/swagger-ui/**","/swagger-resources/**","/v3/api-docs/**", "/webjars/**").permitAll()
                         .requestMatchers("/api/statistics/**").permitAll()
                         .requestMatchers("/api/statistics/trends/**").permitAll()
                         .requestMatchers("/api/notifications/**").permitAll()
                         .anyRequest().authenticated()
                 )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+//                        .successHandler(oAuth2AuthenticationSuccessHandler)
+//                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
