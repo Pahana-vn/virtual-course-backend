@@ -43,14 +43,14 @@ public class StudentController {
     @Autowired
     private CourseMapper courseMapper;
 
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
         List<StudentDTO> students = studentService.getAllStudents();
         return ResponseEntity.ok(students);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
         StudentDTO student = studentService.getStudentById(id);
@@ -64,7 +64,7 @@ public class StudentController {
         return ResponseEntity.ok(updatedStudent);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
     @GetMapping("/by-account/{accountId}")
     public ResponseEntity<StudentDTO> getStudentByAccountId(@PathVariable Long accountId) {
         StudentDTO student = studentService.getStudentByAccountId(accountId);
@@ -156,7 +156,6 @@ public class StudentController {
         studentService.removeFromCart(studentId, cartItemId);
         return ResponseEntity.status(HttpStatus.OK).body("Course removed from cart successfully");
     }
-
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     @GetMapping("/student-courses-status/{studentId}")
     public ResponseEntity<Map<String, List<CourseDTO>>> getStudentCoursesWithProgress(

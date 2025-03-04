@@ -1,10 +1,8 @@
 package com.mytech.virtualcourse.enums;
 
-public enum EAccountStatus {
+public enum EWalletStatus {
     ACTIVE,
-    PENDING,
     INACTIVE,
-    BANNED,
     SUSPENDED,
-    REJECTED
+    CLOSED
 }

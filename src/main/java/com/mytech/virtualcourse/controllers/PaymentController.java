@@ -33,7 +33,7 @@ public class PaymentController {
             String approvalUrl = paymentService.initiatePaypalPayment(courseId, platform, request);
             return ResponseEntity.ok(approvalUrl);
         } catch (Exception e) {
-            e.printStackTrace(); // Hoặc log.error("Error createPayPal", e);
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message","An error occurred: " + e));
         }
     }
@@ -86,18 +86,14 @@ public class PaymentController {
         }
     }
 
-    // Hàm parse query string mà không decode
-
     private Map<String, String> parseQueryString(String queryString) {
         Map<String, String> params = new HashMap<>();
         if (queryString != null && !queryString.isEmpty()) {
-            // Tách theo '&'
             String[] pairs = queryString.split("&");
             for (String pair : pairs) {
                 int idx = pair.indexOf("=");
                 if (idx != -1) {
                     String key = pair.substring(0, idx);
-                    // Value giữ nguyên, không decode
                     String value = pair.substring(idx + 1);
                     params.put(key, value);
                 }

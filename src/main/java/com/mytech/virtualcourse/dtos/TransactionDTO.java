@@ -1,3 +1,5 @@
+// src/main/java/com/mytech/virtualcourse/dtos/TransactionDTO.java
+
 package com.mytech.virtualcourse.dtos;
 
 import com.mytech.virtualcourse.enums.*;

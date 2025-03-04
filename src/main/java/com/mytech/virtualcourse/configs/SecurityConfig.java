@@ -55,21 +55,37 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of(
                             "http://localhost:3000",
+                            "http://localhost:3001",
                             "http://10.0.2.2:3000",
                             "http://127.0.0.1:8080",
                             "http://10.0.2.2:8080",
                             "http://192.168.1.100:8080"
                     ));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "CONNECT"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Ensure stateless session
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)// Ensure stateless session
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Specific admin endpoints for course approval
+                        .requestMatchers("/api/admin/courses/*/approval-history").hasAnyRole("ADMIN", "INSTRUCTOR")
+                        .requestMatchers("/api/admin/courses/*/approve").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/courses/*/reject").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/courses/pending").hasAnyRole("ADMIN", "INSTRUCTOR")
+
+                        // Specific admin endpoints for instructor management
+                        .requestMatchers("/api/admin/instructors/pending").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/instructors/*/approve").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/instructors/*/reject").hasRole("ADMIN")
+
+                        // General admin endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Course endpoints
                         .requestMatchers("/api/courses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
                         .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasAuthority("ROLE_INSTRUCTOR")
@@ -94,6 +110,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/chat/**").permitAll()
                         .requestMatchers("/ws-chat/**").permitAll()
                         .requestMatchers("/swagger-ui/**","/swagger-resources/**","/v3/api-docs/**", "/webjars/**").permitAll()
+                        .requestMatchers("/api/statistics/**").permitAll()
+                        .requestMatchers("/api/statistics/trends/**").permitAll()
+                        .requestMatchers("/api/notifications/**").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .oauth2Login(oauth2 -> oauth2

@@ -11,7 +11,4 @@ import org.springframework.stereotype.Repository;
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
     Optional<Wallet> findByInstructorId(Long instructorId);
-
-//    Optional<Wallet> findByAccountEmail(String email);
-
 }

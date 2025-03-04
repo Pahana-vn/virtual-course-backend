@@ -17,9 +17,11 @@ import java.util.List;
 public interface QuestionMapper {
     QuestionMapper INSTANCE = Mappers.getMapper(QuestionMapper.class);
 
+//    @Mapping(target = "testId", source = "test.id")
     @Mapping(target = "courseId", source = "course.id")
     QuestionDTO questionToQuestionDTO(Question question);
 
+//    @Mapping(target = "test.id", source = "testId")
     @Mapping(target = "course.id", source = "courseId")
     Question questionDTOToQuestion(QuestionDTO questionDTO);
 
