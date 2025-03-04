@@ -23,7 +23,7 @@ public class Lecture extends AbstractEntity {
     @Column(name = "lecture_resource")
     private String lectureResource;
 
-    @Column(name = "lecture_order", nullable = false)
+    @Column(name = "lecture_order")
     private Integer lectureOrder;
 
     @ManyToOne
