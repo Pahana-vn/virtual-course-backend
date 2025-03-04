@@ -61,14 +61,14 @@ public class SecurityConfig {
                             "http://10.0.2.2:8080",
                             "http://192.168.1.100:8080"
                     ));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "CONNECT"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Ensure stateless session
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)// Ensure stateless session
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Specific admin endpoints for course approval

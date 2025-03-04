@@ -32,7 +32,7 @@ public class QuestionService {
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test not found with ID: " + testId));
 
-        List<Question> questions = test.getQuestions(); // Lấy danh sách câu hỏi từ test
+        List<Question> questions = test.getQuestions();
         return questions.stream()
                 .map(questionMapper::questionToQuestionDTO)
                 .collect(Collectors.toList());
