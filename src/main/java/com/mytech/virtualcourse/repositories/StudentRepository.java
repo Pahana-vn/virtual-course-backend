@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -27,5 +29,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     boolean existsStudentByAccountId(Long accountId);
 
-    long countByCreatedAtBetween(Date start, Date end);
+    @Query("SELECT MIN(a.createdAt) FROM Account a")
+    LocalDate getFirstCreatedDate();
+
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end); // Changed to LocalDateTime
 }

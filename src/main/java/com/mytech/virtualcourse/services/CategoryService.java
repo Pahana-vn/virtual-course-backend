@@ -77,4 +77,9 @@ public class CategoryService {
         }
         categoryRepository.deleteById(id);
     }
+    // Trong CategoryService.java, thêm phương thức mới
+    public List<CategoryDTO> getAllCategories() {
+        return getAllCategories(null);
+    }
+
 }

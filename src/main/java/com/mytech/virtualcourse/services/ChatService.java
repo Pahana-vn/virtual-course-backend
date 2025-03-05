@@ -40,4 +40,12 @@ public class ChatService {
                 user1AccId, user2AccId, user1AccId, user2AccId
         );
     }
+
+    public List<Long> getRecentChats(Long userId) {
+        return chatMessageRepository.findRecentChatsByUserId(userId);
+    }
+
+    public List<Long> getRecentChatsForInstructor(Long instructorId) {
+        return chatMessageRepository.findRecentChatsByInstructorId(instructorId);
+    }
 }

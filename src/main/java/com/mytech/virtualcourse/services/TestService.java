@@ -37,6 +37,9 @@ public class TestService {
     private TestMapper testMapper;
 
     @Autowired
+    private QuestionMapper questionMapper;
+
+    @Autowired
     private SecurityUtils securityUtils;
 
     @Autowired

@@ -70,6 +70,11 @@ public class PaymentService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
+        // Kiểm tra xem học sinh đã mua khóa học này chưa
+        if (student.getCourses().contains(course)) {
+            throw new RuntimeException("You have already purchased this course.");
+        }
+
         BigDecimal amount = course.getBasePrice();
         if (amount == null) {
             throw new RuntimeException("Course price not found");
@@ -122,10 +127,8 @@ public class PaymentService {
         throw new RuntimeException("No approval URL returned by PayPal");
     }
 
-
-
     public String initiatePaypalPaymentForMultipleCourses(List<Long> courseIds, HttpServletRequest request) throws Exception {
-        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Long studentId = getStudentIdFromRequest(request);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
@@ -182,7 +185,7 @@ public class PaymentService {
     private Long getStudentIdFromRequest(HttpServletRequest request) {
         String jwt = parseJwt(request);
         if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
-            return jwtUtil.getStudentIdFromJwtToken(jwt);  // Lấy studentId từ JWT
+            return jwtUtil.getStudentIdFromJwtToken(jwt);
         } else {
             throw new RuntimeException("Student not authenticated");
         }
@@ -191,7 +194,7 @@ public class PaymentService {
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
         if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);  // Lấy JWT token từ header
+            return headerAuth.substring(7);
         }
         return null;
     }
@@ -221,7 +224,6 @@ public class PaymentService {
                 cartItemRepository.deleteByCart(cart);
             }
 
-
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
             }
@@ -234,7 +236,6 @@ public class PaymentService {
             }
             studentRepository.save(student);
 
-            // ✅ Gọi enrollStudentToCourse sau khi cập nhật student
             for (Course c : purchasedCourses) {
                 studentService.enrollStudentToCourse(student.getId(), c.getId());
             }
@@ -277,12 +278,16 @@ public class PaymentService {
 
     // -------------------- VNPAY -------------------------
     public String initiateVnPayPayment(Long courseId, HttpServletRequest request) throws Exception {
-        Long studentId = getStudentIdFromRequest(request); // Lấy studentId từ JWT
+        Long studentId = getStudentIdFromRequest(request);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        if (student.getCourses().contains(course)) {
+            throw new RuntimeException("You have already purchased this course.");
+        }
 
         BigDecimal amount = course.getBasePrice();
         if (amount == null) {
@@ -488,7 +493,6 @@ public class PaymentService {
                 System.out.println("Student has no shopping cart");
             }
 
-            // ✅ Thêm khóa học vào danh sách đã mua của student
             if (student.getCourses() == null) {
                 student.setCourses(new ArrayList<>());
             }
@@ -501,7 +505,6 @@ public class PaymentService {
             }
             studentRepository.save(student);
 
-            // ✅ Gọi enrollStudentToCourse để cập nhật tiến trình học tập
             for (Course c : purchasedCourses) {
                 studentService.enrollStudentToCourse(student.getId(), c.getId());
             }

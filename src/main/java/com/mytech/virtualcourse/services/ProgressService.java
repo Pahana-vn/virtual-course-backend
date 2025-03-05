@@ -38,7 +38,6 @@ public class ProgressService {
         Lecture lecture = lectureRepository.findById(lectureId)
                 .orElseThrow(() -> new ResourceNotFoundException("Lecture not found with id: " + lectureId));
 
-        // Tìm hoặc tạo StudentLectureProgress
         StudentLectureProgress slp = studentLectureProgressRepository.findByStudentIdAndLectureId(studentId, lectureId);
         if (slp == null) {
             slp = new StudentLectureProgress();
@@ -46,36 +45,40 @@ public class ProgressService {
             slp.setLecture(lecture);
         }
 
-        // Đánh dấu completed
         slp.setCompleted(true);
         studentLectureProgressRepository.save(slp);
 
-        // Cập nhật LearningProgress
         updateLearningProgress(studentId, lecture.getSection().getCourse().getId());
     }
 
     private void updateLearningProgress(Long studentId, Long courseId) {
-        // Lấy LearningProgress cho khóa học
         LearningProgress lp = learningProgressRepository.findByStudentIdAndCourseId(studentId, courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Learning Progress not found for studentId: "
                         + studentId + " and courseId: " + courseId));
 
-        // Tính lại số bài giảng đã hoàn thành
         int completedLecturesCount = studentLectureProgressRepository.countCompletedLecturesByStudentAndCourse(studentId, courseId);
 
-        // Tính tổng số bài giảng trong khóa học
         int totalLectures = courseRepository.findById(courseId).get()
                 .getSections().stream()
                 .mapToInt(section -> section.getLectures().size())
                 .sum();
 
-        // Tính phần trăm tiến độ
         int progressPercentage = (int)((completedLecturesCount * 100.0) / totalLectures);
 
-        // Cập nhật LearningProgress
         lp.setProgressPercentage(progressPercentage);
         lp.setCompleted(progressPercentage == 100);
 
         learningProgressRepository.save(lp);
     }
+//    public LearningProgressDTO getProgress(Long studentId, Long courseId) {
+//        LearningProgress lp = learningProgressRepository.findByStudentIdAndCourseId(studentId, courseId)
+//                .orElseThrow(() -> new ResourceNotFoundException("LearningProgress not found for studentId: "
+//                        + studentId + " and courseId: " + courseId));
+//
+//        LearningProgressDTO dto = new LearningProgressDTO();
+//        dto.setCompleted(lp.isCompleted());
+//        dto.setProgressPercentage(lp.getProgressPercentage());
+//        return dto;
+//    }
+
 }

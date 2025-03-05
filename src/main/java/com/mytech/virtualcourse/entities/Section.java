@@ -17,7 +17,7 @@ public class Section extends AbstractEntity {
     @Column(name = "title_section", nullable = false)
     private String titleSection;
 
-    @Column(name = "num_of_lectures", nullable = false)
+    @Column(name = "num_of_lectures")
     private Integer numOfLectures;
 
     @Column(name = "num_of_quiz")
@@ -26,13 +26,13 @@ public class Section extends AbstractEntity {
     @Column(name = "num_of_test")
     private Integer numOfTest;
 
-    @Column(name = "session_duration", nullable = false)
+    @Column(name = "session_duration")
     private Integer sessionDuration;
 
     @Column(name = "pass_score")
     private Integer passScore;
 
-    @Column(name = "sequence_number", nullable = false)
+    @Column(name = "sequence_number")
     private Integer sequenceNumber;
 
     @ManyToOne
