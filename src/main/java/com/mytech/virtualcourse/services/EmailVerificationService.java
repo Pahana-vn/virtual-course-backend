@@ -36,7 +36,7 @@ public class EmailVerificationService {
         account.setTokenExpiry(expiryTime);
         accountRepository.save(account);
 
-        String verificationLink = "http://localhost:8080/api/auth/verify?token=" + rawToken;
+        String verificationLink = "http://localhost:8080/api/auth/verify-email?token=" + rawToken;
         String subject = "Verify your account";
         String content = "Click the link to confirm email: " + verificationLink;
 

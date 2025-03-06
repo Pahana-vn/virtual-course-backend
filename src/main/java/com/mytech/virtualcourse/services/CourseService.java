@@ -620,9 +620,25 @@ public class CourseService {
     }
 
     public void deleteCourse(Long id) {
+        // Kiểm tra nếu khóa học tồn tại
         if (!courseRepository.existsById(id)) {
             throw new ResourceNotFoundException("Course not found with id: " + id);
         }
+
+        // Lấy khóa học từ cơ sở dữ liệu
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + id));
+
+        // Kiểm tra nếu khóa học không có học sinh nào mua và có trạng thái là PENDING hoặc DRAFT
+        if (!course.getStudents().isEmpty()) {
+            throw new IllegalStateException("Course has students enrolled and cannot be deleted.");
+        }
+
+        if (!(course.getStatus() == ECourseStatus.PENDING || course.getStatus() == ECourseStatus.DRAFT)) {
+            throw new IllegalStateException("Course status is not PENDING or DRAFT, cannot be deleted.");
+        }
+
+        // Xóa khóa học
         courseRepository.deleteById(id);
     }
 

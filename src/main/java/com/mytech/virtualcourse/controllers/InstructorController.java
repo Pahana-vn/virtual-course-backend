@@ -103,6 +103,17 @@ public class InstructorController {
         InstructorProfileDTO updatedProfile = instructorService.updateProfileByLoggedInInstructor(request, profileDTO);
         return ResponseEntity.ok(updatedProfile);
     }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePasswordStudent(@RequestBody ChangePasswordDTO changePasswordDTO) {
+        Long instructorId = SecurityUtils.getLoggedInInstructorId();
+        try {
+            instructorService.changePassword(instructorId, changePasswordDTO);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
     // InstructorController.java - Thêm các endpoint mới
 
     // Endpoint để lấy thống kê chi tiết của instructor
