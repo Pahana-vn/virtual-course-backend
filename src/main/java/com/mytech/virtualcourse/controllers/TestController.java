@@ -3,6 +3,8 @@ package com.mytech.virtualcourse.controllers;
 import com.mytech.virtualcourse.dtos.StudentTestSubmissionDTO;
 import com.mytech.virtualcourse.dtos.TestDTO;
 import com.mytech.virtualcourse.dtos.TestResultDTO;
+import com.mytech.virtualcourse.entities.Test;
+import com.mytech.virtualcourse.repositories.TestRepository;
 import com.mytech.virtualcourse.security.SecurityUtils;
 import com.mytech.virtualcourse.services.TestService;
 import jakarta.validation.Valid;
@@ -12,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tests")
@@ -22,6 +27,8 @@ public class TestController {
     private TestService testService;
 
     private final SecurityUtils securityUtils;
+    @Autowired
+    private TestRepository testRepository;
 
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<TestDTO>> getTestsByCourse(@PathVariable Long courseId) {
@@ -49,6 +56,30 @@ public class TestController {
         testService.deleteTest(id, loggedInInstructorId);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{testId}/final-test")
+    public ResponseEntity<Map<String, String>> updateFinalTestStatus(
+            @PathVariable Long testId, @RequestBody Map<String, Boolean> request) {
+        Optional<Test> optionalTest = testRepository.findById(testId);
+
+        if (optionalTest.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("message", "Test not found"));
+        }
+
+        Test test = optionalTest.get();
+        Boolean isFinalTest = request.get("isFinalTest");
+
+        try {
+            test.setIsFinalTest(isFinalTest);
+            testRepository.save(test);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Test final status updated successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "Failed to update final test status."));
+        }
+    }
+
 
     @PostMapping("/submit")
     public ResponseEntity<TestResultDTO> submitTest(@RequestBody StudentTestSubmissionDTO submissionDTO) {

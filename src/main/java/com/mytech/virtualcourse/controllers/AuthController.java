@@ -2,6 +2,7 @@ package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Account;
+import com.mytech.virtualcourse.enums.EAccountStatus;
 import com.mytech.virtualcourse.mappers.JwtMapper;
 import com.mytech.virtualcourse.repositories.AccountRepository;
 import com.mytech.virtualcourse.security.CustomUserDetails;
@@ -69,11 +70,16 @@ public class AuthController {
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginRequest, HttpServletResponse response) {
         try {
             Account account = accountRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("Email không tồn tại"));
+                    .orElseThrow(() -> new UsernameNotFoundException("Email does not exist"));
+
+            if (account.getStatus() == EAccountStatus.PENDING) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageDTO("Your account is pending approval. Please wait for admin approval."));
+            }
 
             if (!account.getVerifiedEmail()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new MessageDTO("Email chưa được xác minh. Vui lòng kiểm tra hộp thư đến."));
+                        .body(new MessageDTO("Email not verified. Please check your inbox."));
             }
 
             Authentication authentication = authenticationManager.authenticate(

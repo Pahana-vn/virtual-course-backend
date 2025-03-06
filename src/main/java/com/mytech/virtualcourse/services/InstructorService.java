@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -78,6 +79,10 @@ public class InstructorService {
 
     @Autowired
     private PaymentRepository  paymentRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AccountRepository accountRepository;
 
     public List<InstructorDTO> getAllInstructors(String platform) {
         List<Instructor> instructors = instructorRepository.findAll();
@@ -246,6 +251,27 @@ public class InstructorService {
         Instructor updatedInstructor = instructorRepository.save(instructor);
 
         return instructorMapper.instructorToInstructorProfileDTO(updatedInstructor);
+    }
+
+    public void changePassword(Long instructorId, ChangePasswordDTO changePasswordDTO) {
+        Instructor instructor = instructorRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + instructorId));
+
+        Account account = instructor.getAccount();
+        if (account == null) {
+            throw new IllegalArgumentException("Instructor does not have an associated account");
+        }
+
+        if (!passwordEncoder.matches(changePasswordDTO.getCurrentPassword(), account.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
+            throw new IllegalArgumentException("New password and confirm password do not match");
+        }
+
+        account.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        accountRepository.save(account);
     }
 
     private Long getInstructorIdFromRequest(HttpServletRequest request) {

@@ -13,5 +13,6 @@ public interface StudentTestSubmissionRepository extends JpaRepository<StudentTe
     Optional<StudentTestSubmission> findTopByTestIdAndStudentIdOrderByMarksObtainedDesc(Long testId, Long studentId);
     List<StudentTestSubmission> findByStudentId(Long studentId);
     Optional<StudentTestSubmission> findById(Long quizId);
+    List<StudentTestSubmission> findByTestId(Long testId);
 }
 
