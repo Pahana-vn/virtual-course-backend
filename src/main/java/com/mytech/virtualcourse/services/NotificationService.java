@@ -530,8 +530,9 @@ public class NotificationService {
     }
 
     public Page<NotificationDTO> getAllNotificationsPaginated(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Notification> notificationsPage = notificationRepository.findAll(pageable);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("sentAt").descending());
+        // Sử dụng method mới từ repository
+        Page<Notification> notificationsPage = notificationRepository.findAllNotifications(pageable);
         return notificationsPage.map(notificationMapper::toDTO);
     }
 

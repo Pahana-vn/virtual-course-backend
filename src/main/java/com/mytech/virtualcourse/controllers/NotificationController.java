@@ -35,7 +35,7 @@ public class NotificationController {
     }
 
     @GetMapping("/all/paginated")
-
+//    @PreAuthorize("hasRole('ADMIN')")  // Đảm bảo chỉ admin mới có thể gọi
     public ResponseEntity<Page<NotificationDTO>> getAllNotificationsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {

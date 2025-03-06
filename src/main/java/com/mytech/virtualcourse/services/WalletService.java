@@ -26,9 +26,12 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -486,4 +489,39 @@ public class WalletService {
 
         return rejectedTransaction;
     }
+    //admin
+    public List<Wallet> getAllWallets() {
+        return walletRepository.findAll();
+    }
+    /**
+     * Get wallet statistics
+     */
+    public Map<String, Object> getWalletStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
+
+        // Total number of wallets
+        long totalWallets = walletRepository.count();
+        statistics.put("totalWallets", totalWallets);
+
+        // Count by status
+        long activeWallets = walletRepository.countByStatusWallet(StatusWallet.ACTIVE);
+        long suspendedWallets = walletRepository.countByStatusWallet(StatusWallet.SUSPENDED);
+        long closedWallets = walletRepository.countByStatusWallet(StatusWallet.CLOSED);
+        statistics.put("activeWallets", activeWallets);
+        statistics.put("suspendedWallets", suspendedWallets);
+        statistics.put("closedWallets", closedWallets);
+
+        // Sum of all wallet balances
+        BigDecimal totalBalance = walletRepository.sumAllBalances();
+        statistics.put("totalBalance", totalBalance != null ? totalBalance : BigDecimal.ZERO);
+
+        // Average wallet balance
+        BigDecimal avgBalance = totalWallets > 0 ?
+                totalBalance.divide(BigDecimal.valueOf(totalWallets), 2, RoundingMode.HALF_UP) :
+                BigDecimal.ZERO;
+        statistics.put("averageBalance", avgBalance);
+
+        return statistics;
+    }
+
 }

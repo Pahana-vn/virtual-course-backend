@@ -101,4 +101,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUserIdAndDateRange(@Param("userId") Long userId, @Param("startDate") String startDate, @Param("endDate") String endDate);
 
     List<Notification> findByType(NotificationType type);
+
+    @Query("SELECT n FROM Notification n ORDER BY n.sentAt DESC")
+    Page<Notification> findAllNotifications(Pageable pageable);
+
 }
