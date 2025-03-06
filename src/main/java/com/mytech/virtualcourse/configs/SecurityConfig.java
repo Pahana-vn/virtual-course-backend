@@ -53,14 +53,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of(
-                            "http://localhost:3000",
-                            "http://localhost:3001",
-                            "http://10.0.2.2:3000",
-                            "http://127.0.0.1:8080",
-                            "http://10.0.2.2:8080",
-                            "http://192.168.1.100:8080"
-                    ));
+                    config.setAllowedOriginPatterns(List.of("*"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "CONNECT"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
@@ -68,7 +61,7 @@ public class SecurityConfig {
                 }))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)// Ensure stateless session
+                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(auth -> auth
                         // Specific admin endpoints for course approval

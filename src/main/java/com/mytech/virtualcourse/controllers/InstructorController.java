@@ -163,8 +163,6 @@ public class InstructorController {
         return ResponseEntity.ok(documents);
     }
 
-
-
     // Endpoint để tải lên tài liệu của instructor
     @PostMapping("/{instructorId}/documents")
     public ResponseEntity<DocumentDTO> uploadInstructorDocument(
@@ -174,4 +172,11 @@ public class InstructorController {
         DocumentDTO document = instructorService.uploadInstructorDocument(instructorId, file, documentType);
         return ResponseEntity.status(HttpStatus.CREATED).body(document);
     }
+
+    @GetMapping("/{id}/account-id")
+    public ResponseEntity<Long> getInstructorAccountId(@PathVariable Long id) {
+        Long accountId = instructorService.getInstructorAccountId(id);
+        return ResponseEntity.ok(accountId);
+    }
+
 }
