@@ -1,39 +1,31 @@
-// src/main/java/com/mytech/virtualcourse/dtos/ReviewDTO.java
-
 package com.mytech.virtualcourse.dtos;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-/**
- * DTO để trao đổi review (đánh giá) giữa client - server.
- */
+import java.time.LocalDateTime;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @ToString
 public class ReviewDTO {
     private Long id;
-
-    private Long studentId; // Thêm trường này
-    private Long instructorId; // Thêm trường này nếu cần
-
-    @NotNull(message = "Course ID is required")
+    private Long studentId;
+    private String studentName;
+    private String studentAvatar;
     private Long courseId;
-
-    @NotNull(message = "Rating is required")
-    @Min(value = 1, message = "Rating must be at least 1")
-    @Max(value = 5, message = "Rating must be at most 5")
+    private String courseTitle;
+    private Long instructorId;
+    private String instructorName;
     private Integer rating;
-
-    @Size(max = 500, message = "Comment cannot exceed 500 characters")
     private String comment;
-
-    private String reply; // Giảng viên trả lời
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
-// Getters and Setters

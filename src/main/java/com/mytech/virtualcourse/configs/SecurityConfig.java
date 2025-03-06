@@ -53,8 +53,15 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOriginPatterns(List.of("*"));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "CONNECT"));
+                    config.setAllowedOrigins(List.of(
+                            "http://localhost:3000",
+                            "http://localhost:3001",
+                            "http://10.0.2.2:3000",
+                            "http://127.0.0.1:8080",
+                            "http://10.0.2.2:8080",
+                            "http://192.168.1.100:8080"
+                    ));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "CONNECT","OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
@@ -68,8 +75,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/courses/*/approval-history").hasAnyRole("ADMIN", "INSTRUCTOR")
                         .requestMatchers("/api/admin/courses/*/approve").hasRole("ADMIN")
                         .requestMatchers("/api/admin/courses/*/reject").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/courses/pending").hasAnyRole("ADMIN", "INSTRUCTOR")
+                        .requestMatchers("/api/admin/transactions/detail/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/transactions/**").permitAll()
 
+                        .requestMatchers("/api/admin/wallets/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/courses/pending").hasAnyRole("ADMIN", "INSTRUCTOR")
+                        .requestMatchers("/api/transactions/**").permitAll()
+                        .requestMatchers("/api/wallet/**").permitAll()
                         // Specific admin endpoints for instructor management
                         .requestMatchers("/api/admin/instructors/pending").hasRole("ADMIN")
                         .requestMatchers("/api/admin/instructors/*/approve").hasRole("ADMIN")
@@ -87,7 +99,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/files/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructors/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/instructors/**").hasAuthority("ROLE_INSTRUCTOR")
@@ -95,8 +106,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/sections/**").permitAll()
                         .requestMatchers("/api/students/**").permitAll()
                         .requestMatchers("/api/payment/**").permitAll()
-                        .requestMatchers("/api/transactions/**").permitAll()
-                        .requestMatchers("/api/wallet/**").permitAll()
+
                         .requestMatchers("/api/instructor-transaction/**").permitAll()
                         .requestMatchers("/api/tests/**").permitAll()
                         .requestMatchers("/api/questions/**").permitAll()
