@@ -774,4 +774,11 @@ public class InstructorService {
         // Mark all notifications as read
         notificationService.markAllAsReadForUser(accountId);
     }
+
+
+    public Long getInstructorAccountId(Long instructorId) {
+        Instructor instructor = instructorRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + instructorId));
+        return instructor.getAccount().getId(); // Lấy accountId từ instructor
+    }
 }
