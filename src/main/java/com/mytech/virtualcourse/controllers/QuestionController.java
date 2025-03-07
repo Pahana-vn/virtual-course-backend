@@ -1,16 +1,17 @@
 package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.QuestionDTO;
+import com.mytech.virtualcourse.dtos.QuestionImportDTO;
+import com.mytech.virtualcourse.entities.Question;
 import com.mytech.virtualcourse.services.QuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -29,5 +30,16 @@ public class QuestionController {
     public ResponseEntity<List<QuestionDTO>> getQuestionsByTest(@PathVariable Long testId) {
         List<QuestionDTO> questionDTOs = questionService.getQuestionsByTest(testId);
         return ResponseEntity.ok(questionDTOs);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<List<QuestionDTO>> importQuestions(@RequestBody List<QuestionDTO> questionDTOs) {
+        return ResponseEntity.ok(questionDTOs);
+    }
+
+    @GetMapping("/export/{courseId}")
+    public ResponseEntity<List<QuestionDTO>> exportQuestions(@PathVariable Long courseId) {
+        List<QuestionDTO> exportedQuestions = questionService.exportQuestions(courseId);
+        return ResponseEntity.ok(exportedQuestions);
     }
 }

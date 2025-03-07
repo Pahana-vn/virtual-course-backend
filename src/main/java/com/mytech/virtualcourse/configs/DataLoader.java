@@ -67,5 +67,33 @@ public class DataLoader implements CommandLineRunner {
 
             accountRepository.save(admin);
         }
+
+        // Create the admin_only account with ALL roles if it doesn't exist
+        if (!accountRepository.existsByEmail("admin_only@gmail.com")) {
+            Role adminRole = roleRepository.findByName("ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Error: Role ADMIN is not found."));
+            Role instructorRole = roleRepository.findByName("INSTRUCTOR")
+                    .orElseThrow(() -> new RuntimeException("Error: Role INSTRUCTOR is not found."));
+            Role studentRole = roleRepository.findByName("STUDENT")
+                    .orElseThrow(() -> new RuntimeException("Error: Role STUDENT is not found."));
+
+            Account adminOnly = new Account();
+            adminOnly.setUsername("admin_only");
+            adminOnly.setEmail("admin_only@gmail.com");
+            adminOnly.setPassword(passwordEncoder.encode("123456"));
+            adminOnly.setStatus(EAccountStatus.ACTIVE);
+            adminOnly.setVerifiedEmail(true);
+            adminOnly.setVersion(1);
+            adminOnly.setAuthenticationType(AuthenticationType.LOCAL);
+
+            // Assign ALL roles to admin_only
+            List<Role> allRoles = new ArrayList<>();
+            allRoles.add(adminRole);
+            allRoles.add(instructorRole);
+            allRoles.add(studentRole);
+            adminOnly.setRoles(allRoles);
+
+            accountRepository.save(adminOnly);
+        }
     }
 }

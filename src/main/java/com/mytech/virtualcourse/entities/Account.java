@@ -34,6 +34,8 @@ public class Account extends AbstractEntity {
 
     private String token;
 
+    private LocalDateTime tokenExpiry;
+
     @Column(name = "reset_password_token")
     private String resetPasswordToken;
 

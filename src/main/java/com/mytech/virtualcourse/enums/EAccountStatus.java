@@ -5,5 +5,6 @@ public enum EAccountStatus {
     PENDING,
     INACTIVE,
     BANNED,
-    SUSPENDED
+    SUSPENDED,
+    REJECTED
 }

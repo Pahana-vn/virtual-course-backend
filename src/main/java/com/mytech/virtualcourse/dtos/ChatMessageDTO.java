@@ -1,8 +1,6 @@
 package com.mytech.virtualcourse.dtos;
 
 import lombok.*;
-
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Getter

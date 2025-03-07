@@ -41,4 +41,3 @@ public class StudentTestSubmission extends AbstractEntity {
     @OneToOne(mappedBy = "finalTestSubmission", cascade = CascadeType.ALL, orphanRemoval = true)
     private LearningProgress learningProgress;
 }
-

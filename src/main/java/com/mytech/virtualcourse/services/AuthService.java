@@ -141,6 +141,7 @@ public class AuthService {
         account.setAuthenticationType(registrationDTO.getAuthenticationType() != null ?
                 registrationDTO.getAuthenticationType() : AuthenticationType.LOCAL);
         account.setVersion(registrationDTO.getVersion());
+        account.setStatus(EAccountStatus.PENDING);
 
         Role instructorRole = roleRepository.findByName("INSTRUCTOR")
                 .orElseThrow(() -> new RuntimeException("Role not found: INSTRUCTOR"));

@@ -13,6 +13,7 @@ public interface StudentLectureProgressRepository extends JpaRepository<StudentL
 
     StudentLectureProgress findByStudentIdAndLectureId(Long studentId, Long lectureId);
 
+    // Đếm số bài giảng đã hoàn thành trong một khóa học
     @Query("SELECT COUNT(slp) FROM StudentLectureProgress slp " +
             "JOIN slp.lecture l " +
             "JOIN l.section sec " +
@@ -20,6 +21,7 @@ public interface StudentLectureProgressRepository extends JpaRepository<StudentL
             "WHERE slp.student.id = :studentId AND c.id = :courseId AND slp.completed = true")
     int countCompletedLecturesByStudentAndCourse(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
+    // Lấy danh sách ID các bài giảng đã hoàn thành
     @Query("SELECT slp.lecture.id FROM StudentLectureProgress slp " +
             "JOIN slp.lecture l " +
             "JOIN l.section sec " +

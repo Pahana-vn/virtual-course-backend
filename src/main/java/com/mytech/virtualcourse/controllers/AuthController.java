@@ -2,11 +2,13 @@ package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.*;
 import com.mytech.virtualcourse.entities.Account;
+import com.mytech.virtualcourse.enums.EAccountStatus;
 import com.mytech.virtualcourse.mappers.JwtMapper;
 import com.mytech.virtualcourse.repositories.AccountRepository;
 import com.mytech.virtualcourse.security.CustomUserDetails;
 import com.mytech.virtualcourse.security.JwtUtil;
 import com.mytech.virtualcourse.services.AuthService;
+import com.mytech.virtualcourse.services.EmailVerificationService;
 import com.mytech.virtualcourse.utils.CookieUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,10 +22,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -45,6 +50,10 @@ public class AuthController {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private EmailVerificationService emailVerificationService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     @PostMapping("/register")
@@ -60,6 +69,19 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginRequest, HttpServletResponse response) {
         try {
+            Account account = accountRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("Email does not exist"));
+
+            if (account.getStatus() == EAccountStatus.PENDING) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageDTO("Your account is pending approval. Please wait for admin approval."));
+            }
+
+            if (!account.getVerifiedEmail()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new MessageDTO("Email not verified. Please check your inbox."));
+            }
+
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
@@ -70,7 +92,6 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtil.generateJwtToken((CustomUserDetails) authentication.getPrincipal());
 
-            // Dùng CookieUtil để lưu cookie
             CookieUtil.addTokenCookie(response, jwt);
 
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -146,6 +167,41 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid token or other error");
         }
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
+        List<Account> accounts = accountRepository.findAll();
+
+        for (Account account : accounts) {
+            if (account.getToken() != null && passwordEncoder.matches(token, account.getToken())) {
+                if (account.getTokenExpiry().isBefore(LocalDateTime.now())) {
+                    return ResponseEntity.badRequest().body("Token has expired. Please request a resend of verification email.");
+                }
+
+                account.setVerifiedEmail(true);
+                account.setToken(null);
+                account.setTokenExpiry(null);
+                accountRepository.save(account);
+
+                return ResponseEntity.ok("Account has been activated successfully!");
+            }
+        }
+
+        return ResponseEntity.badRequest().body("Invalid Token!");
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<String> resendVerificationEmail(@RequestParam("email") String email) {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email does not exist."));
+
+        if (account.getVerifiedEmail()) {
+            return ResponseEntity.badRequest().body("Email has been previously verified.");
+        }
+
+        emailVerificationService.sendVerificationEmail(email);
+        return ResponseEntity.ok("Verification email has been resent!");
     }
 
     @GetMapping("/check-email")

@@ -2,8 +2,6 @@
 
 package com.mytech.virtualcourse.mappers;
 
-import com.mytech.virtualcourse.dtos.StatisticsDTO;
-import com.mytech.virtualcourse.entities.Statistics;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -13,7 +11,4 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface StatisticsMapper {
 
-    StatisticsDTO statisticsToStatisticsDTO(Statistics statistics);
-
-    Statistics statisticsDTOToStatistics(StatisticsDTO statisticsDTO);
 }
