@@ -48,17 +48,17 @@ public class ChatController {
         return ResponseEntity.ok(chatList);
     }
 
-    @PostMapping("/sendMessage")
-    public ResponseEntity<ChatMessageDTO> sendChatMessage(@RequestBody ChatMessageDTO chatMessageDTO) {
-        ChatMessage savedMessage = chatService.saveMessage(chatMessageDTO);
-        ChatMessageDTO result = chatMessageMapper.toDTO(savedMessage);
-
-        messagingTemplate.convertAndSendToUser(
-                chatMessageDTO.getReceiverAccountId().toString(),
-                "/queue/user",
-                result
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-    }
+//    @PostMapping("/sendMessage")
+//    public ResponseEntity<ChatMessageDTO> sendChatMessage(@RequestBody ChatMessageDTO chatMessageDTO) {
+//        ChatMessage savedMessage = chatService.saveMessage(chatMessageDTO);
+//        ChatMessageDTO result = chatMessageMapper.toDTO(savedMessage);
+//
+//        messagingTemplate.convertAndSendToUser(
+//                chatMessageDTO.getReceiverAccountId().toString(),
+//                "/queue/user",
+//                result
+//        );
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+//    }
 }
