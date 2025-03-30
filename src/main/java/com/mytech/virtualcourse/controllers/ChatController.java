@@ -28,12 +28,9 @@ public class ChatController {
     private ChatMessageMapper chatMessageMapper;
 
     @GetMapping("/history")
-    public ResponseEntity<List<ChatMessageDTO>> getChatHistory(@RequestParam Long user1Id, @RequestParam Long user2Id) {
+    public List<ChatMessageDTO> getChatHistory(@RequestParam Long user1Id, @RequestParam Long user2Id) {
         List<ChatMessage> messages = chatService.getChatHistory(user1Id, user2Id);
-        List<ChatMessageDTO> messageDTOs = messages.stream()
-                .map(chatMessageMapper::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(messageDTOs);
+        return messages.stream().map(chatMessageMapper::toDTO).toList();
     }
 
     @GetMapping("/recent-chats")
@@ -48,17 +45,17 @@ public class ChatController {
         return ResponseEntity.ok(chatList);
     }
 
-    @PostMapping("/sendMessage")
-    public ResponseEntity<ChatMessageDTO> sendChatMessage(@RequestBody ChatMessageDTO chatMessageDTO) {
-        ChatMessage savedMessage = chatService.saveMessage(chatMessageDTO);
-        ChatMessageDTO result = chatMessageMapper.toDTO(savedMessage);
-
-        messagingTemplate.convertAndSendToUser(
-                chatMessageDTO.getReceiverAccountId().toString(),
-                "/queue/user",
-                result
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(result);
-    }
+//    @PostMapping("/sendMessage")
+//    public ResponseEntity<ChatMessageDTO> sendChatMessage(@RequestBody ChatMessageDTO chatMessageDTO) {
+//        ChatMessage savedMessage = chatService.saveMessage(chatMessageDTO);
+//        ChatMessageDTO result = chatMessageMapper.toDTO(savedMessage);
+//
+//        messagingTemplate.convertAndSendToUser(
+//                chatMessageDTO.getReceiverAccountId().toString(),
+//                "/queue/user",
+//                result
+//        );
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+//    }
 }
