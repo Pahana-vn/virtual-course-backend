@@ -43,14 +43,14 @@ public class StudentController {
     @Autowired
     private CourseMapper courseMapper;
 
-//    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
         List<StudentDTO> students = studentService.getAllStudents();
         return ResponseEntity.ok(students);
     }
 
-//    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_STUDENT', 'ROLE_INSTRUCTOR')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
         StudentDTO student = studentService.getStudentById(id);

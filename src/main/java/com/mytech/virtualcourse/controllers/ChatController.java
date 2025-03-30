@@ -28,12 +28,9 @@ public class ChatController {
     private ChatMessageMapper chatMessageMapper;
 
     @GetMapping("/history")
-    public ResponseEntity<List<ChatMessageDTO>> getChatHistory(@RequestParam Long user1Id, @RequestParam Long user2Id) {
+    public List<ChatMessageDTO> getChatHistory(@RequestParam Long user1Id, @RequestParam Long user2Id) {
         List<ChatMessage> messages = chatService.getChatHistory(user1Id, user2Id);
-        List<ChatMessageDTO> messageDTOs = messages.stream()
-                .map(chatMessageMapper::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(messageDTOs);
+        return messages.stream().map(chatMessageMapper::toDTO).toList();
     }
 
     @GetMapping("/recent-chats")
