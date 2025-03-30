@@ -701,6 +701,25 @@ public class CourseService {
         }).collect(Collectors.toList());
     }
 
+    public Course updateCourseStatus(Long courseId, String newStatus) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Course not found"));
+
+        String currentStatus = String.valueOf(course.getStatus());
+
+        // Chỉ cho phép chuyển đổi trạng thái theo quy tắc
+        if ((currentStatus.equals("PUBLISHED") && newStatus.equals("DRAFT")) ||
+                (currentStatus.equals("DRAFT") && newStatus.equals("PENDING"))) {
+
+            course.setStatus(ECourseStatus.valueOf(newStatus));
+
+        } else {
+            throw new IllegalArgumentException("Invalid status transition: " + currentStatus + " to " + newStatus);
+        }
+
+        return courseRepository.save(course);
+    }
+
     public CourseDetailDTO getCourseDetailsForStudent(Long courseId, Long studentId, String platform) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with id: " + courseId));

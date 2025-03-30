@@ -2,6 +2,7 @@ package com.mytech.virtualcourse.controllers;
 
 import com.mytech.virtualcourse.dtos.CourseDTO;
 import com.mytech.virtualcourse.dtos.CourseDetailDTO;
+import com.mytech.virtualcourse.dtos.CourseStatusDTO;
 import com.mytech.virtualcourse.entities.Course;
 import com.mytech.virtualcourse.enums.ECourseStatus;
 import com.mytech.virtualcourse.exceptions.ResourceNotFoundException;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/courses")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"}, allowCredentials = "true")
 public class CourseController {
 
     @Autowired
@@ -105,6 +106,18 @@ public class CourseController {
     public ResponseEntity<CourseDetailDTO> getCourseDetailsById(@PathVariable Long id) {
         CourseDetailDTO courseDetails = courseService.getCourseDetailsById(id);
         return ResponseEntity.ok(courseDetails);
+    }
+
+    @PutMapping("/{courseId}/update-status")
+    public ResponseEntity<?> updateCourseStatus(@PathVariable Long courseId, @RequestBody CourseStatusDTO request) {
+        try {
+            Course updatedCourse = courseService.updateCourseStatus(courseId, request.getStatus());
+            return ResponseEntity.ok(Map.of("message", "Course status updated successfully", "status", updatedCourse.getStatus()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to update course status"));
+        }
     }
 
     @PreAuthorize("hasAuthority('ROLE_STUDENT')")

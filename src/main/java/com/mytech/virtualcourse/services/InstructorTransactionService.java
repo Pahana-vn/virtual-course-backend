@@ -97,38 +97,46 @@ public class InstructorTransactionService {
         transaction.setStatusTransaction(StatusTransaction.PENDING);
         transaction.setPaymentMethod(paymentMethod);
         transaction.setWallet(wallet);
-        transaction.setWalletBalance(remainingBalance);
+        transaction.setWalletBalance(wallet.getBalance());
         transactionRepository.save(transaction);
 
-        // Gửi yêu cầu rút tiền qua PayPal Payouts API
-        Payout payout = new Payout();
-        PayoutSenderBatchHeader senderBatchHeader = new PayoutSenderBatchHeader();
-        senderBatchHeader.setSenderBatchId(UUID.randomUUID().toString());
-        senderBatchHeader.setEmailSubject("You have a payout!");
+        try {
+            // Gửi yêu cầu rút tiền qua PayPal Payouts API
+            Payout payout = new Payout();
+            PayoutSenderBatchHeader senderBatchHeader = new PayoutSenderBatchHeader();
+            senderBatchHeader.setSenderBatchId(UUID.randomUUID().toString());
+            senderBatchHeader.setEmailSubject("You have a payout!");
 
-        PayoutItem payoutItem = new PayoutItem();
-        payoutItem.setRecipientType("EMAIL");
-        payoutItem.setReceiver(recipientEmail);
-        payoutItem.setAmount(new com.paypal.api.payments.Currency("USD", amount.toString()));
-        payoutItem.setNote("Withdrawal request");
+            PayoutItem payoutItem = new PayoutItem();
+            payoutItem.setRecipientType("EMAIL");
+            payoutItem.setReceiver(recipientEmail);
+            payoutItem.setAmount(new com.paypal.api.payments.Currency("USD", amount.toString()));
+            payoutItem.setNote("Withdrawal request");
 
-        payout.setSenderBatchHeader(senderBatchHeader);
-        payout.setItems(List.of(payoutItem));
+            payout.setSenderBatchHeader(senderBatchHeader);
+            payout.setItems(List.of(payoutItem));
 
-        PayoutBatch payoutBatch = payout.create(apiContext, new HashMap<>());
+            PayoutBatch payoutBatch = payout.create(apiContext, new HashMap<>());
 
-        // Cập nhật trạng thái giao dịch
-        transaction.setWalletBalance(remainingBalance);
-        transaction.setStatusTransaction(StatusTransaction.COMPLETED);
-        transaction.setProcessedAt(Timestamp.valueOf(LocalDateTime.now()));
-        transaction.setPaypalPayoutId(payoutBatch.getBatchHeader().getPayoutBatchId());
-        transactionRepository.save(transaction);
+            // Cập nhật trạng thái giao dịch
+            transaction.setWalletBalance(remainingBalance);
+            transaction.setStatusTransaction(StatusTransaction.COMPLETED);
+            transaction.setProcessedAt(Timestamp.valueOf(LocalDateTime.now()));
+            transaction.setPaypalPayoutId(payoutBatch.getBatchHeader().getPayoutBatchId());
+            transactionRepository.save(transaction);
 
-        // 🟢 Cập nhật số dư ví instructor sau khi rút tiền
-        wallet.setBalance(remainingBalance);
-        walletRepository.save(wallet);
+            // 🟢 Cập nhật số dư ví instructor sau khi rút tiền
+            wallet.setBalance(remainingBalance);
+            walletRepository.save(wallet);
 
-        return payoutBatch.getBatchHeader().getPayoutBatchId();
+            return payoutBatch.getBatchHeader().getPayoutBatchId();
+        } catch (PayPalRESTException e) {
+            transaction.setStatusTransaction(StatusTransaction.FAILED);
+            transaction.setProcessedAt(Timestamp.valueOf(LocalDateTime.now()));
+            transactionRepository.save(transaction);
+
+            throw new RuntimeException("PayPal withdrawal failed: " + e.getMessage());
+        }
     }
 
     public List<TransactionDTO> getAllInstructorTransactions() {
